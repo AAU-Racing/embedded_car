@@ -1,0 +1,45 @@
+# Object files
+*.o
+*.ko
+*.lst
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.elf
+*elf.map
+*.hex
+*.ee.hex
+
+# Os files
+.DS_Store
+Thumbs.db
+thumbs.db
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Everything in the build dir
+build/*
+
+.clang_complete
+
+#ignore dot-folders / files
+.*
+!/.gitignore # but not the .gitignore file
+
+
+# ctag generated tags
+tags
