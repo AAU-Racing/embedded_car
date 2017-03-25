@@ -1,0 +1,16 @@
+######## HAL ##########
+file(GLOB src STM32F4xx_HAL_Driver/Src/*.c)
+add_library(STM32f4xx_HAL_Driver ${src})
+
+# There is a lot of unused variable warnings in some hal function-prototypes
+target_compile_options(STM32f4xx_HAL_Driver PRIVATE -Wno-extra -Wno-pedantic)
+
+
+######## CMSIS ########
+add_library(CMSIS
+	CMSIS/stm32f415xx/startup_stm32f415xx.s
+	CMSIS/system_stm32f4xx.c
+)
+
+# There is a lot of unused variable warnings in some hal function-prototypes
+target_compile_options(CMSIS PRIVATE -Wno-extra -Wno-pedantic)
