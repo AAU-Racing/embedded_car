@@ -1,6 +1,6 @@
 set(BOOT_START 0x08000000)
 set(APP_START 0x08010000)
-set(LDADDR ${APP_START})
+set(LDADDR ${BOOT_START})
 
 set(ldscript_path ${CMAKE_SOURCE_DIR}/build/nodes/ldscript.ld)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-T${ldscript_path}")
