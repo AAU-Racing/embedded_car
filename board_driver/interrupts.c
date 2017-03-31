@@ -41,7 +41,3 @@ void SysTick_Handler(void) {
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f407xx.s).                                               */
 /******************************************************************************/
-
-void USARTx_IRQHandler(void) {
-	BSP_UARTx_IRQHandler();
-}

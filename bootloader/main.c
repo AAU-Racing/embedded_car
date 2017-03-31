@@ -11,9 +11,9 @@ int main(void) {
 
 	while (1) {
 		uint8_t c;
-		BSP_UARTx_Receive(&c, 1);
+		UARTx_read_byte(&c);
 		if (c == 'k') {
-			BSP_UARTx_transmit((uint8_t[]){'y'}, 1);
+			UARTx_send_buf((uint8_t[]){'y'}, 1);
 			break;
 		}
 	}
@@ -24,18 +24,18 @@ int main(void) {
 
 	for (size_t i = 0; i < len; i++) {
 		uint8_t c;
-		BSP_UARTx_Receive(&c, 1);
+		UARTx_read_byte(&c);
 		data[i] = c;
-		BSP_UARTx_transmit((uint8_t[]){c}, 1);
+		UARTx_send_buf((uint8_t[]){c}, 1);
 	}
 
 	if (write_flash(start_address, data, len)) {
-		BSP_UARTx_transmit((uint8_t[]){"Error\n"}, 6);
+		UARTx_send_buf((uint8_t[]){"Error\n"}, 6);
 		while(1);
 	} else {
-		BSP_UARTx_transmit((uint8_t[]){"flash done\n"}, 11);
+		UARTx_send_buf((uint8_t[]){"flash done\n"}, 11);
 	}
 
-	BSP_UARTx_transmit((uint8_t[]){"Booting application...\n\n"}, 24);
+	UARTx_send_buf((uint8_t[]){"Booting application...\n\n"}, 24);
 	boot(start_address);
 }

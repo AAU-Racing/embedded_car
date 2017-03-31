@@ -27,11 +27,10 @@
 #define USARTx_IRQHandler                USART3_IRQHandler
 
 
-void HAL_UART_MspInit     (UART_HandleTypeDef *huart);
-int  BSP_UART_init        (void);
-void BSP_UARTx_IRQHandler (void);
-int  BSP_UARTx_transmit   (uint8_t* buf, size_t n);
-size_t BSP_UARTx_Receive  (uint8_t *pData, uint16_t size);
+void BSP_UART_init(void);
+int UARTx_read_byte(uint8_t *data);
+void UARTx_send_byte(uint8_t data);
+void UARTx_send_buf(uint8_t *data, size_t n);
 
 #else
 
@@ -57,11 +56,10 @@ size_t BSP_UARTx_Receive  (uint8_t *pData, uint16_t size);
 #define USARTx_IRQHandler                UART4_IRQHandler
 
 
-void HAL_UART_MspInit     (UART_HandleTypeDef *huart);
-int  BSP_UART_init        (void);
-void BSP_UARTx_IRQHandler (void);
-int  BSP_UARTx_transmit   (uint8_t* buf, size_t n);
-size_t BSP_UARTx_Receive(uint8_t *pData, uint16_t size);
+void BSP_UART_init(void);
+int UARTx_read_byte(uint8_t *data);
+void UARTx_send_byte(uint8_t data);
+void UARTx_send_buf(uint8_t *data, size_t n);
 
 #endif
 

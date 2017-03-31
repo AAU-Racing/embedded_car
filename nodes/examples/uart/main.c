@@ -7,13 +7,12 @@
 int main(void) {
 	BSP_UART_init();
 
-	int counter = 0;
-
 	while (1) {
-		uint8_t str[7] = "node  \n";
-		str[5] = ++counter + '0';
-		if (counter == 9) counter = 0;
-		BSP_UARTx_transmit(str, 7);
+		uint8_t input = ' ';
+		UARTx_read_byte(&input);
+		uint8_t str[8] = "echo  \n\r";
+		str[5] = input;
+		UARTx_send_buf(str, 8);
 		HAL_Delay(100);
 	}
 }
