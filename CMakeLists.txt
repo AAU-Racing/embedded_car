@@ -9,8 +9,7 @@ project(AAU-Racing C ASM)
 # Following flags helps with dead code elimination.
 # More info can found at http://stackoverflow.com/a/10809541
 set(gc_flags "-ffunction-sections -fdata-sections -Wl,--gc-sections")
-set(mcu_flags "-mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mlittle-endian \
-	-mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork")
+set(mcu_flags "-mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork")
 set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles")
 set(WARNINGS "-Wall -Wextra")
 set(CFLAGS "-O0 -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
