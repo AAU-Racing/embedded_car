@@ -28,7 +28,7 @@
 
 
 void BSP_UART_init(void);
-int UARTx_read_byte(uint8_t *data);
+uint8_t UARTx_read_byte(void);
 void UARTx_send_byte(uint8_t data);
 void UARTx_send_buf(uint8_t *data, size_t n);
 
@@ -57,7 +57,7 @@ void UARTx_send_buf(uint8_t *data, size_t n);
 
 
 void BSP_UART_init(void);
-int UARTx_read_byte(uint8_t *data);
+uint8_t UARTx_read_byte(void);
 void UARTx_send_byte(uint8_t data);
 void UARTx_send_buf(uint8_t *data, size_t n);
 

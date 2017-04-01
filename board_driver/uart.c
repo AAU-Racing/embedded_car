@@ -83,8 +83,10 @@ void USARTx_IRQHandler(void) {
 	}
 }
 
-int UARTx_read_byte(uint8_t *data) {
-	return rb_pop(&uartx_rec, data);
+uint8_t UARTx_read_byte(void) {
+	uint8_t data;
+	while (rb_pop(&uartx_rec, &data));
+	return data;
 }
 
 void UARTx_send_byte(uint8_t data) {
