@@ -2,7 +2,7 @@ set(BOOT_START 0x08000000)
 set(APP_START 0x08010000)
 set(LDADDR ${BOOT_START})
 
-set(ldscript_path ${CMAKE_SOURCE_DIR}/build/nodes/ldscript.ld)
+set(ldscript_path ${CMAKE_BINARY_DIR}/nodes/ldscript.ld)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-T${ldscript_path}")
 
 add_custom_command(OUTPUT ldscript.ld
