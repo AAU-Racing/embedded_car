@@ -1,17 +1,18 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <board_driver/uart.h>
 
 
 int main(void) {
 	BSP_UART_init();
+	printf("Starting\n\n");
+	printf("Write something in the terminal and hit Enter:\n");
 
 	while (1) {
-		uint8_t input = UARTx_read_byte();
-		uint8_t str[8] = "echo  \n\r";
-		str[5] = input;
-		UARTx_send_buf(str, 8);
+		char input = getchar();
+		printf("getchat: %c\n", input);
 		HAL_Delay(100);
 	}
 }
