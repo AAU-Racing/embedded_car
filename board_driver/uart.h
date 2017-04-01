@@ -26,14 +26,7 @@
 #define USARTx_IRQn                      USART3_IRQn
 #define USARTx_IRQHandler                USART3_IRQHandler
 
-
-void BSP_UART_init(void);
-uint8_t UARTx_read_byte(void);
-void UARTx_send_byte(uint8_t data);
-void UARTx_send_buf(uint8_t *data, size_t n);
-
 #else
-
 
 #define USARTx                           UART4
 #define USARTx_CLK_ENABLE()              __HAL_RCC_UART4_CLK_ENABLE()
@@ -55,13 +48,13 @@ void UARTx_send_buf(uint8_t *data, size_t n);
 #define USARTx_IRQn                      UART4_IRQn
 #define USARTx_IRQHandler                UART4_IRQHandler
 
+#endif
+
 
 void BSP_UART_init(void);
 uint8_t UARTx_read_byte(void);
 void UARTx_send_byte(uint8_t data);
 void UARTx_send_buf(uint8_t *data, size_t n);
-
-#endif
 
 
 #endif /* UART_H */
