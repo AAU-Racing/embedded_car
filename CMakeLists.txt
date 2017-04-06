@@ -37,7 +37,7 @@ function(open_ocd_write_flash elf_file)
 		COMMAND ${OPEN_OCD}
 			-f ${OPEN_OCD_CONFIG}
 			-c "init; reset halt"
-			-c "flash write_image erase ${elf_file}"
+			-c "program ${elf_file}"
 			-c "reset run; exit;"
 		DEPENDS ${elf_file}
 		VERBATIM
