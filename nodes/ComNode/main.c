@@ -332,7 +332,7 @@ int main(void) {
 	uint8_t requestType = 0;
 	uint8_t latestResponse[64];
 	uint8_t latestResponseLenght = 0;
-//	char arr[] = {"Hel\r\n"};
+	//	char arr[] = {"Hel\r\n"};
     while (1){
 		//BSP_UARTx_transmit(arr, 5);
 		//BSP_UARTx_Receive(arr, 3);
@@ -387,7 +387,7 @@ int main(void) {
 				if(handelingReq && currAckNack < 2){
 					if(rData.type == COM_TYPE_ACK_NACK && currAckNack == 0){
 						//resend last response
-						//sendResponse(latestResponse, latestResponseLenght);
+						sendResponse(latestResponse, latestResponseLenght);
 					}
 					else if(rData.type == COM_TYPE_ACK_NACK && currAckNack == 1){
 						//send next response
