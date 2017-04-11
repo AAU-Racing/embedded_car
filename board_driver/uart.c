@@ -100,3 +100,24 @@ void UARTx_send_buf(uint8_t *data, size_t n) {
 		UARTx_send_byte(data[i]);
 	}
 }
+
+int UARTx_read_buf(uint8_t *data, size_t n, size_t timeout) {
+	for (size_t i = 0; i < n; i++) {
+		while(1) {
+			uint8_t input;
+			if(rb_pop(&uartx_rec, &input)) {
+				HAL_Delay(1);
+				timeout--;
+			} else {
+				data[i] = input;
+				break;
+			}
+
+			if(!timeout) {
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}

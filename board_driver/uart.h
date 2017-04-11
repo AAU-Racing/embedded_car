@@ -55,6 +55,6 @@ void BSP_UART_init(void);
 uint8_t UARTx_read_byte(void);
 void UARTx_send_byte(uint8_t data);
 void UARTx_send_buf(uint8_t *data, size_t n);
-
+int UARTx_read_buf(uint8_t *data, size_t n, size_t timeout);
 
 #endif /* UART_H */
