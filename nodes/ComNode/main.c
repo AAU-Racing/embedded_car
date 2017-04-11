@@ -376,9 +376,9 @@ int main(void) {
 			if(handshakeState){
 
 				switch(rData.type) {
-				case COM_TYPE_HANDSHAKE: handshakeReaction(&handshakeState, checksumAccepted, rData); break;
+				case COM_TYPE_HANDSHAKE: handshakeState = handshakeReaction(handshakeState, checksumAccepted, rData); break;
 				case COM_TYPE_ACK_NACK: currAckNack = ackNackReaction(checksumAccepted, rData); break;
-				case COM_TYPE_REQ_RES: handelingReq = reqResReaction(checksumAccepted, rData, handelingReq, &requestType); currAckNack = 1; break;
+				case COM_TYPE_REQ_RES: handelingReq = reqResReaction(checksumAccepted, rData, handelingReq, &requestType); currAckNack = 1; break; //currAckNack is set to one so that the first package will be sent
 				case COM_TYPE_DATA: dataReaction(checksumAccepted, rData); break; 
 				default: break;
 				}
@@ -402,7 +402,7 @@ int main(void) {
 				}
 			}
 			else if(rData.type == COM_TYPE_HANDSHAKE){
-				handshakeReaction(&handshakeState, checksumAccepted, rData);
+				handshakeState = handshakeReaction(handshakeState, checksumAccepted, rData);
 			}
 
 
