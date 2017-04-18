@@ -14,3 +14,12 @@ add_library(CMSIS
 
 # There is a lot of unused variable warnings in some hal function-prototypes
 target_compile_options(CMSIS PRIVATE -Wno-extra -Wno-pedantic)
+
+######## USB DEVICE LIBRARY ########
+add_library(STM32_USB_Device_Library
+	STM32_USB_Device_Library/Core/Src/usbd_core.c
+	STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c
+	STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
+)
+
+target_compile_options(STM32_USB_Device_Library PRIVATE -Wno-unused-parameter)

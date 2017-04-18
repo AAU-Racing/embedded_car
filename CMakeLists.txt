@@ -26,6 +26,10 @@ include_directories(
 
 	# STM32 HAL
 	libs/STM32F4xx_HAL_Driver/Inc
+
+	# STM32 USB
+	libs/STM32_USB_Device_Library/Class/CDC/Inc
+	libs/STM32_USB_Device_Library/Core/Inc
 )
 
 # Make it possible to Flash using openOCD
