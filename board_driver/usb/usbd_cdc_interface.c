@@ -72,8 +72,7 @@ uint32_t UserTxBufPtrOut = 0; /* Increment this pointer or roll it back to
 
 /* UART handler declaration */
 UART_HandleTypeDef UartHandle;
-/* TIM handler declaration */
-TIM_HandleTypeDef  TimHandle;
+
 /* USB handler declaration */
 extern USBD_HandleTypeDef  USBD_Device;
 
@@ -85,7 +84,6 @@ static int8_t CDC_Itf_Receive(uint8_t* pbuf, uint32_t *Len);
 
 static void Error_Handler(void);
 static void ComPort_Config(void);
-static void TIM_Config(void);
 
 USBD_CDC_ItfTypeDef USBD_CDC_fops =
 {
@@ -133,17 +131,6 @@ static int8_t CDC_Itf_Init(void)
   if(HAL_UART_Receive_IT(&UartHandle, (uint8_t *)UserTxBuffer, 1) != HAL_OK)
   {
     /* Transfer error in reception process */
-    Error_Handler();
-  }
-
-  /*##-3- Configure the TIM Base generation  #################################*/
-  TIM_Config();
-
-  /*##-4- Start the TIM Base generation in interrupt mode ####################*/
-  /* Start Channel1 */
-  if(HAL_TIM_Base_Start_IT(&TimHandle) != HAL_OK)
-  {
-    /* Starting Error */
     Error_Handler();
   }
 
@@ -408,33 +395,6 @@ static void ComPort_Config(void)
 
   /* Start reception: provide the buffer pointer with offset and the buffer size */
   HAL_UART_Receive_IT(&UartHandle, (uint8_t *)(UserTxBuffer + UserTxBufPtrIn), 1);
-}
-
-/**
-  * @brief  TIM_Config: Configure TIMx timer
-  * @param  None.
-  * @retval None
-  */
-static void TIM_Config(void)
-{
-  /* Set TIMx instance */
-  TimHandle.Instance = TIMx;
-
-  /* Initialize TIM3 peripheral as follow:
-       + Period = 10000 - 1
-       + Prescaler = ((SystemCoreClock/2)/10000) - 1
-       + ClockDivision = 0
-       + Counter direction = Up
-  */
-  TimHandle.Init.Period = (CDC_POLLING_INTERVAL*1000) - 1;
-  TimHandle.Init.Prescaler = 84-1;
-  TimHandle.Init.ClockDivision = 0;
-  TimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  if(HAL_TIM_Base_Init(&TimHandle) != HAL_OK)
-  {
-    /* Initialization Error */
-    Error_Handler();
-  }
 }
 
 /**
