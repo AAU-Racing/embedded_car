@@ -4,7 +4,7 @@
 #include <stm32f4xx_hal.h>
 
 
-#if 0
+#if 1
 
 #define USARTx                           USART3
 #define USARTx_CLK_ENABLE()              __HAL_RCC_USART3_CLK_ENABLE()
