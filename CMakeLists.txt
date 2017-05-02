@@ -14,7 +14,7 @@ set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles -Wl,-Map=./result.map"
 set(WARNINGS "-Wall -Wextra")
 set(CFLAGS "-O0 -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
 set(CMAKE_C_FLAGS "${CFLAGS} ${CMAKE_C_FLAGS}")
-add_definitions(-DHSE_VALUE=16000000 -DSTM32F415xx)
+add_definitions(-DHSE_VALUE=24000000 -DSTM32F407xx)
 
 include_directories(
 	# Root
@@ -23,6 +23,7 @@ include_directories(
 	# CMSIS
 	libs/CMSIS/Include
 	libs/CMSIS/stm32f415xx
+	libs/CMSIS/stm32f407xx
 
 	# STM32 HAL
 	libs/STM32F4xx_HAL_Driver/Inc
