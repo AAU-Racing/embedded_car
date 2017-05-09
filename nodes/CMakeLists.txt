@@ -15,10 +15,16 @@ add_custom_target(ldscript DEPENDS ldscript.ld)
 
 # This overwrites the add_executable for all sub executables and generates a
 # target for writing to flash and a binary.
-# This also links all targets with linkerscript and newlib_calls.c
+# This also links all targets with linkerscript,
+# newlib_calls.c and interrupts.c
+# newlib_calls.c is necessary to compile with target (not in a lib) to ensure
+# its added to binary. Otherwise GCC might cause a fuss.
+# interrupts.c is compiled against target to insure individual ISRs aren't
+# optimized out prematurely (can happen when compiled with board_driver).
 function(add_executable target_name)
 	_add_executable(${target_name}
 		${CMAKE_SOURCE_DIR}/nodes/newlib_calls.c
+		${CMAKE_SOURCE_DIR}/nodes/interrupts.c
 		${ARGN}
 	)
 	add_dependencies(${target_name} ldscript)
