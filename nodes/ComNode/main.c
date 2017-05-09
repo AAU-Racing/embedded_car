@@ -74,7 +74,6 @@ typedef struct
 uint8_t checksumCalculation(uint8_t payload[], uint8_t bytesRecieved){
 	uint8_t calculatedChecksum = 0;
 
-	//Minus one because type and Length is increments bytesrecieved
 	for(uint8_t j = 0; j < bytesRecieved; j++){
 		calculatedChecksum = calculatedChecksum ^ payload[j];
 	}
@@ -97,12 +96,6 @@ packageBits_t packaging(uint8_t type, uint8_t data[], uint8_t payloadLength){
 
 	//Calculating checksum
 	package.checksum = checksumCalculation(data, payloadLength);
-
-	/*package.checksum = 0;
-	for(uint8_t j = 0; j < payloadLength; j++){
-		package.checksum = package.checksum ^ package.payload[j];
-	}*/
-
 
 	return package;
 }
@@ -203,7 +196,6 @@ void sendTelemetryData(void){
 	telemetry[i++] = 9; //item 1
 	telemetry[i++] = 8; //item 2
 	telemetry[i++] = 7; //item 3
-	//And so on.. Is this the best solution?
 
 	sendData(telemetry, i);
 }
@@ -332,30 +324,12 @@ int main(void) {
 	uint8_t requestType = 0;
 	uint8_t latestResponse[64];
 	uint8_t latestResponseLenght = 0;
-	//	char arr[] = {"Hel\r\n"};
+
     while (1){
-		//BSP_UARTx_transmit(arr, 5);
-		//BSP_UARTx_Receive(arr, 3);
-
-
-		//Date_Time_t printdate;
-		//RTC_Get_Date_Time(&printdate);
-		/*printf("%02d:%02d:%02d:%03d ", printdate.hours, printdate.minutes, printdate.seconds, (uint16_t)((float)3.93 * (UINT8_MAX - printdate.subseconds)));
-		printf("%02d-%02d-%02d\n", printdate.date, printdate.month, 2000 + printdate.year); */
-		//HAL_Delay(1);
-    	//continue;
 		uint8_t c = 0;
-		//uint8_t t[11] = {0};
 		c = UARTx_read_byte();
-		//d = BSP_UARTx_Receive(t,11);
-		//_uart_putc(c);
-		//continue;
 
 		printf("c = %02X\n", c);
-		
-		//if(d){continue;}
-		//continue;
-		//printf("%d %d %d\n", handshakeState, receivingPayload, bytesRecieved);
 
 		//Handle the byte
 		receivingPayload = dataIn(&bytesRecieved, receivingPayload, c, &rData);
@@ -405,8 +379,6 @@ int main(void) {
 				handshakeState = handshakeReaction(handshakeState, checksumAccepted, rData);
 			}
 
-
-
 			//Resetting for next loop
 			bufferReset(&rData);
 			bytesRecieved = 0;
@@ -416,24 +388,5 @@ int main(void) {
 		if(handshakeState){
 			sendTelemetryData();			
 		}
-
-
-		/*
-		testExportData.typeAndLength 	= payloadType << 6;
-		testExportData.typeAndLength 	= testExportData.typeAndLength + payloadLength;
-
-		testExportData.payload[0]	= 168;
-		testExportData.payload[1]	= 11;
-		testExportData.payload[2]	= 71;
-		testExportData.payload[3]	= 88;
-		testExportData.payload[4]	= 0;
-		testExportData.payload[5]	= 0;
-		testExportData.payload[6]	= 0;
-		testExportData.payload[7]	= 0;
-		testExportData.payload[8]	= 0;
-
-		testExportData.checksum 	= 0;
-		*/
-
 	}
 }
