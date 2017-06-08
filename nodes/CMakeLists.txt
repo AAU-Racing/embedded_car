@@ -44,3 +44,4 @@ endfunction()
 
 add_subdirectory(examples/uart)
 add_subdirectory(examples/can)
+add_subdirectory(examples/usb)

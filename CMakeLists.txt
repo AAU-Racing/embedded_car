@@ -14,7 +14,7 @@ set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles -Wl,-Map=./result.map"
 set(WARNINGS "-Wall -Wextra")
 set(CFLAGS "-O0 -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
 set(CMAKE_C_FLAGS "${CFLAGS} ${CMAKE_C_FLAGS}")
-add_definitions(-DHSE_VALUE=24000000 -DSTM32F407xx)
+add_definitions(-DHSE_VALUE=24000000 -DSTM32F407xx -DUSE_USB_FS)
 
 include_directories(
 	# Root
@@ -27,6 +27,10 @@ include_directories(
 
 	# STM32 HAL
 	libs/STM32F4xx_HAL_Driver/Inc
+
+	# STM32 USB
+	libs/STM32_USB_Device_Library/Class/CDC/Inc
+	libs/STM32_USB_Device_Library/Core/Inc
 )
 
 # Make it possible to Flash using openOCD

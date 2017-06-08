@@ -41,3 +41,16 @@ void SysTick_Handler(void) {
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f407xx.s).                                               */
 /******************************************************************************/
+
+extern PCD_HandleTypeDef hpcd; // TODO make a get function for this instead!?
+
+#ifdef USE_USB_FS
+void OTG_FS_IRQHandler(void)
+#else
+void OTG_HS_IRQHandler(void)
+#endif
+{
+	HAL_PCD_IRQHandler(&hpcd);
+}
+
+// TODO are we missing the uart interupts here for using uart over usb?
