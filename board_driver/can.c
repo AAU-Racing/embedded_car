@@ -7,10 +7,11 @@
 #define MAX_FRAME_LEN 8
 #define MAX_STD_ID 0x7FF
 #define NUMBER_BANKS 28
+#define BUFFER_SIZE 64
 
 typedef struct {
-	CAN_Frame array[20];
-	uint8_t count;
+	CAN_Frame array[BUFFER_SIZE];
+	uint64_t bitvector;
 } Buffer;
 
 CAN_HandleTypeDef CanHandle;
@@ -151,16 +152,11 @@ bool CAN_Receive(uint8_t filter_num, CAN_Frame* output_frame) {
 	assert_param(filter_num < NUMBER_BANKS);
 	*output_frame = EMPTY_FRAME;
 	// Loop through buffer
-	for (int i = 0; i < receive_buffer.count; i++) {
+	for (int i = 0; i < BUFFER_SIZE; i++) {
 		// Until meeting correct response
-		if (receive_buffer.array[i].Filter == filter_num) {
-			// Copy frame
+		if (receive_buffer.bitvector & (1 << i) && receive_buffer.array[i].Filter == filter_num) {
 			*output_frame = receive_buffer.array[i];
-			// Decrease number of responses in receive_buffer and move remaining entries down
-			receive_buffer.count--;
-			for (int j = i; j < receive_buffer.count; j++) {
-				receive_buffer.array[j] = receive_buffer.array[j + 1];
-			}
+			receive_buffer.bitvector ^= 1 << i;
 			return true;
 		}
 	}
@@ -180,11 +176,16 @@ void CAN_Send(uint16_t id, uint8_t msg[], uint8_t length) {
 	}
 	// Transmit with interrupts
 	if (HAL_CAN_Transmit_IT(&CanHandle) != HAL_OK) {
-		CAN_Frame transmit_frame;
-		transmit_frame.Id = id;
-		transmit_frame.Dlc = length;
-		safe_memcpy(transmit_frame.Msg, msg, length);
-		transmit_buffer.array[transmit_buffer.count++] = transmit_frame;
+		for (int i = 0; i < BUFFER_SIZE; i++) {
+			if (!(transmit_buffer.bitvector & (1 << i))) {
+				volatile CAN_Frame *transmit_frame = &transmit_buffer.array[i];
+				transmit_frame->Id = id;
+				transmit_frame->Dlc = length;
+				safe_memcpy(transmit_frame->Msg, msg, length);
+				transmit_buffer.bitvector ^= 1 << i;
+				break;
+			}
+		}
 	}
 }
 
@@ -195,36 +196,48 @@ void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan) {
 	(void) hcan;
 	stats.transmit++;
 	/* Move from queue to transmit mailboxes */
-	if (transmit_buffer.count > 0) {
-		CanHandle.pTxMsg->StdId = transmit_buffer.array[transmit_buffer.count].Id;
-		transmit_buffer.count--;
-		CanHandle.pTxMsg->DLC = transmit_buffer.array[transmit_buffer.count].Dlc;
-		// Copy data
-		for (uint8_t i = 0; i < MAX_FRAME_LEN; i++) {
-			CanHandle.pTxMsg->Data[i] =
-			(i < transmit_buffer.array[transmit_buffer.count].Dlc ?
-				transmit_buffer.array[transmit_buffer.count].Msg[i] :
-				0);
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		if (transmit_buffer.bitvector & (1 << i)) {
+			CanHandle.pTxMsg->StdId = transmit_buffer.array[i].Id;
+			CanHandle.pTxMsg->DLC = transmit_buffer.array[i].Dlc;
+			// Copy data
+			for (uint8_t j = 0; j < MAX_FRAME_LEN; j++) {
+				CanHandle.pTxMsg->Data[j] =
+				(i < transmit_buffer.array[i].Dlc ?
+					transmit_buffer.array[i].Msg[j] :
+					0);
+			}
+
+			// Transmit with interrupts
+			if (HAL_CAN_Transmit_IT(&CanHandle) != HAL_OK) {
+				Error_Handler(&CanHandle);
+			}
+
+			transmit_buffer.bitvector ^= 1 << i;
+			break;
 		}
-		// Transmit with interrupts
-		if (HAL_CAN_Transmit_IT(&CanHandle) != HAL_OK) {
-			transmit_buffer.count++;
-		}
+
 	}
 }
 
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan) {
 	stats.receive++;
-	CAN_Frame received; // Create local frame variable
-	received.Id = hcan->pRxMsg->StdId; // Copy ID
-	received.Dlc = hcan->pRxMsg->DLC; // Copy DLC
-	received.Filter = hcan->pRxMsg->FMI;
-	safe_memcpy(received.Msg, hcan->pRxMsg->Data, 8); // Copy data to frame variable
-	receive_buffer.array[receive_buffer.count++] = received; // Insert into buffer
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		if (!(receive_buffer.bitvector & (1 << i))) {
+			volatile CAN_Frame *receive_frame = &receive_buffer.array[i];
+			receive_frame->Id = hcan->pRxMsg->StdId; // Copy ID
+			receive_frame->Dlc = hcan->pRxMsg->DLC; // Copy DLC
+			receive_frame->Filter = hcan->pRxMsg->FMI;
+			safe_memcpy(receive_frame->Msg, hcan->pRxMsg->Data, 8); // Copy data to frame variable
+			receive_buffer.bitvector ^= 1 << i; // Insert into buffer
+			break;
+		}
+	}
 
-	if(HAL_CAN_Receive_IT(hcan, CAN_FIFO0) != HAL_OK)
-	Error_Handler(hcan);
+	if(HAL_CAN_Receive_IT(hcan, CAN_FIFO0) != HAL_OK) {
+		Error_Handler(hcan);
+	}
 }
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
