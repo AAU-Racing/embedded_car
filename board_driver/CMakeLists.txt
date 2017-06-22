@@ -1,6 +1,7 @@
 add_library(board_driver
 	init.c
 	uart.c
+	adc.c
 	flash.c
 	can.c
 	obdii.c

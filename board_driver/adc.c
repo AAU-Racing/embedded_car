@@ -1,57 +1,110 @@
 #include <stm32f4xx_hal.h>
 
-int init_adc() {
-    ADC_HandleTypeDef    AdcHandle;
-  	AdcHandle.Instance          = ADCx;
+#include "adc.h"
 
-  	if (HAL_ADC_DeInit(&AdcHandle) != HAL_OK) {
-	  return -1;
-	}
+ADC_HandleTypeDef    AdcHandle;
+static int rank = 0;
+__IO uint32_t values[16];
 
-	AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV4;          /* Asynchronous clock mode, input ADC clock not divided */
-	AdcHandle.Init.Resolution            = ADC_RESOLUTION_12B;             /* 12-bit resolution for converted data */
-	AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;           /* Right-alignment for converted data */
-	AdcHandle.Init.ScanConvMode          = DISABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
-	AdcHandle.Init.EOCSelection          = DISABLE;           			/* EOC flag picked-up to indicate conversion end */
-	AdcHandle.Init.ContinuousConvMode    = DISABLE;                       /* Continuous mode disabled to have only 1 conversion at each conversion trig */
-	AdcHandle.Init.NbrOfConversion       = 1;                             /* Parameter discarded because sequencer is disabled */
-	AdcHandle.Init.DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because sequencer is disabled */
-	AdcHandle.Init.NbrOfDiscConversion   = 0;                             /* Parameter discarded because sequencer is disabled */
-	AdcHandle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T1_CC1;            /* Software start to trig the 1st conversion manually, without external event */
-	AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE; /* Parameter discarded because software trigger chosen */
-	AdcHandle.Init.DMAContinuousRequests = DISABLE;                       /* DMA one-shot mode selected (not applied to this example) */
+// HAL init function. DO NOT CALL.
+void HAL_ADC_MspInit(ADC_HandleTypeDef * hadc) {
+	(void) hadc;
+	static DMA_HandleTypeDef  hdma_adc;
 
+	ADCx_CLK_ENABLE();
+  	DMAx_CLK_ENABLE();
 
-	  if (HAL_ADC_Init(&AdcHandle) != HAL_OK) {
-		  return -1;
-	  }
+	hdma_adc.Instance = ADCx_DMA_STREAM;
 
-	  sConfig.Channel      = ADCx_CHANNEL;                /* Sampled channel number */
-	  sConfig.Rank         = 1;          /* Rank of sampled channel number ADCx_CHANNEL */
-	  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;    /* Sampling time (number of clock cycles unit) */
-	  sConfig.Offset = 0;                                 /* Parameter discarded because offset correction is disabled */
+	hdma_adc.Init.Channel  = ADCx_DMA_CHANNEL;
+	hdma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_adc.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+	hdma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+	hdma_adc.Init.Mode = DMA_CIRCULAR;
+	hdma_adc.Init.Priority = DMA_PRIORITY_HIGH;
+	hdma_adc.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_adc.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
+	hdma_adc.Init.MemBurst = DMA_MBURST_SINGLE;
+	hdma_adc.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
-	  if (HAL_ADC_ConfigChannel(&AdcHandle, &sConfig) != HAL_OK) {
-	    return -1
-	  }
+	HAL_DMA_Init(&hdma_adc);
 
-	  if (HAL_ADC_Start(&AdcHandle) != HAL_OK) {
-		  return -1
-	  }
+	__HAL_LINKDMA(hadc, DMA_Handle, hdma_adc);
+
+	HAL_NVIC_SetPriority(ADCx_DMA_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(ADCx_DMA_IRQn);
 }
 
-void HAL_ADC_MspInit (ADC_HandleTypeDef * hadc) {
-	__HAL_RCC_ADC_CLK_ENABLE();
-}
+// HAL deinit function. DO NOT CALL.
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef * hadc) {
+	(void) hadc;
+	static DMA_HandleTypeDef  hdma_adc;
 
-void HAL_ADC_DeInit() {
-    ADCx_FORCE_RESET();
+	ADCx_FORCE_RESET();
     ADCx_RELEASE_RESET();
 
-    HAL_GPIO_DeInit(ADCx_CHANNEL_GPIO_PORT, ADCx_CHANNEL_PIN);
+	HAL_DMA_DeInit(&hdma_adc);
+	HAL_NVIC_DisableIRQ(ADCx_DMA_IRQn);
 }
 
-void get_adc_value() {
-    HAL_ADC_PollForConversion(&AdcHandle, 10);
- 	return HAL_ADC_GetValue(&AdcHandle);
+// DMA interrupt service routine. DO NOT CALL.
+void ADCx_DMA_IRQHandler(void)
+{
+	HAL_DMA_IRQHandler(AdcHandle.DMA_Handle);
+}
+
+HAL_StatusTypeDef init_adc() {
+  	AdcHandle.Instance          = ADCx;
+
+	AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV8;
+	AdcHandle.Init.Resolution            = ADC_RESOLUTION_12B;
+	AdcHandle.Init.ScanConvMode          = ENABLE;
+	AdcHandle.Init.ContinuousConvMode    = ENABLE;
+	AdcHandle.Init.DiscontinuousConvMode = DISABLE;
+	AdcHandle.Init.NbrOfDiscConversion   = 0;
+	AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+	AdcHandle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+	AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+	AdcHandle.Init.NbrOfConversion       = 2;
+	AdcHandle.Init.DMAContinuousRequests = ENABLE;
+	AdcHandle.Init.EOCSelection          = DISABLE;
+
+	return HAL_ADC_Init(&AdcHandle);
+}
+
+void init_analog_pins(GPIO_TypeDef *port, uint32_t pin) {
+	GPIO_InitTypeDef GPIO_InitStruct = {
+		.Pin  = pin,
+		.Mode = GPIO_MODE_ANALOG,
+		.Pull = GPIO_NOPULL,
+	};
+
+	HAL_GPIO_Init(port, &GPIO_InitStruct);
+}
+
+HAL_StatusTypeDef init_adc_channel(uint32_t channel, uint8_t *number) {
+	*number = rank;
+
+	ADC_ChannelConfTypeDef cConfig = {
+		.Channel      	= channel,                		/* Sampled channel number */
+		.Rank         	= rank++,          				/* Rank of sampled channel number ADCx1_CHANNEL */
+		.SamplingTime 	= ADC_SAMPLETIME_15CYCLES,    	/* Sampling time (number of clock cycles unit) */
+		.Offset 		= 0,                            /* Parameter discarded because offset correction is disabled */
+	};
+
+	return HAL_ADC_ConfigChannel(&AdcHandle, &cConfig);
+}
+
+HAL_StatusTypeDef start_adc() {
+	return HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*) values, rank);
+}
+
+HAL_StatusTypeDef stop_adc() {
+	return HAL_ADC_Stop_DMA(&AdcHandle) != HAL_OK;
+}
+
+int read_adc_value(uint8_t number) {
+	return values[number];
 }
