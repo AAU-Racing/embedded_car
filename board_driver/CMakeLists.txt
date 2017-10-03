@@ -1,8 +1,25 @@
+add_custom_target(force_rtc_rebuild ALL
+DEPENDS
+	rm_rtc_obj
+)
+
+# This commands removes the rtc.c.obj so a rebuild og rtc.c is forced.
+# This is done to ensure that the correct timestamp is compiled into the program.
+add_custom_command(
+	OUTPUT rm_rtc_obj
+	COMMENT "Removing rtc.c.obj"
+	COMMAND rm -f ${CMAKE_SOURCE_DIR}/build/board_driver/CMakeFiles/board_driver.dir/rtc.c.obj
+)
+
 add_library(board_driver
 	init.c
 	uart.c
 	flash.c
 	rtc.c
+)
+
+add_dependencies(board_driver
+	force_rtc_rebuild
 )
 
 target_link_libraries(board_driver

@@ -53,3 +53,8 @@ add_subdirectory(bootloader)
 # The directory 'nodes' must be added last since it overides
 # the 'add_executable' and 'add_library' functions.
 add_subdirectory(nodes)
+
+add_custom_target(rebuild
+	COMMAND cmake -E echo
+	COMMENT "asdsad"
+)
