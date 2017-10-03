@@ -1,5 +1,6 @@
 #include <stm32f4xx_hal.h>
 #include <board_driver/uart.h>
+// #include <shield_drivers/com_node/sd_setup.h>
 
 
 /******************************************************************************/
@@ -54,3 +55,16 @@ void OTG_HS_IRQHandler(void)
 }
 
 // TODO are we missing the uart interupts here for using uart over usb?
+
+/*void DMA2_Stream3_IRQHandler(void) {
+	SD_DMA_Rx_IRQHandler();
+}
+
+void DMA2_Stream6_IRQHandler(void) {
+	SD_DMA_Tx_IRQHandler();
+}
+
+void SDIO_IRQHandler(void) {
+	SD_IRQHandler();
+}
+*/

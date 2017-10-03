@@ -25,3 +25,19 @@ add_subdirectory(STM32_USB_Device_Library)
 # )
 #
 # target_compile_options(STM32_USB_Device_Library PRIVATE -Wno-unused-parameter)
+
+# add_library(FatFs/src/
+# 	FatFs/src/diskio.c
+# 	FatFs/src/ff_gen_drv.c
+# 	FatFs/src/ff.c
+# 	FatFs/src/option/cc932.c
+# 	FatFs/src/option/cc936.c
+# 	FatFs/src/option/cc949.c
+# 	FatFs/src/option/cc950.c
+# 	FatFs/src/option/ccsbcs.c
+# 	FatFs/src/option/syscall.c
+# 	FatFs/src/option/unicode.c
+# 	FatFs/src/drivers/sd_diskio.c
+# 	FatFs/src/drivers/sdram_diskio.c
+# 	FatFs/src/drivers/usbh_diskio.c
+# )

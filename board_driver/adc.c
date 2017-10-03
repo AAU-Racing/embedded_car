@@ -3,8 +3,9 @@
 #include "adc.h"
 
 ADC_HandleTypeDef    AdcHandle;
-static int rank = 0;
+static int rank = 1;
 __IO uint32_t values[16];
+int number_of_conversions = 0;
 
 // HAL init function. DO NOT CALL.
 void HAL_ADC_MspInit(ADC_HandleTypeDef * hadc) {
@@ -55,7 +56,8 @@ void ADCx_DMA_IRQHandler(void)
 	HAL_DMA_IRQHandler(AdcHandle.DMA_Handle);
 }
 
-HAL_StatusTypeDef init_adc() {
+HAL_StatusTypeDef init_adc(int num_conv) {
+	number_of_conversions = num_conv;
   	AdcHandle.Instance          = ADCx;
 
 	AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV8;
@@ -67,7 +69,7 @@ HAL_StatusTypeDef init_adc() {
 	AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
 	AdcHandle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
 	AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
-	AdcHandle.Init.NbrOfConversion       = 2;
+	AdcHandle.Init.NbrOfConversion       = num_conv;
 	AdcHandle.Init.DMAContinuousRequests = ENABLE;
 	AdcHandle.Init.EOCSelection          = DISABLE;
 
@@ -85,12 +87,12 @@ void init_analog_pins(GPIO_TypeDef *port, uint32_t pin) {
 }
 
 HAL_StatusTypeDef init_adc_channel(uint32_t channel, uint8_t *number) {
-	*number = rank;
+	*number = rank - 1;
 
 	ADC_ChannelConfTypeDef cConfig = {
 		.Channel      	= channel,                		/* Sampled channel number */
 		.Rank         	= rank++,          				/* Rank of sampled channel number ADCx1_CHANNEL */
-		.SamplingTime 	= ADC_SAMPLETIME_15CYCLES,    	/* Sampling time (number of clock cycles unit) */
+		.SamplingTime 	= ADC_SAMPLETIME_56CYCLES,    	/* Sampling time (number of clock cycles unit) */
 		.Offset 		= 0,                            /* Parameter discarded because offset correction is disabled */
 	};
 
@@ -98,7 +100,7 @@ HAL_StatusTypeDef init_adc_channel(uint32_t channel, uint8_t *number) {
 }
 
 HAL_StatusTypeDef start_adc() {
-	return HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*) values, rank);
+	return HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*) values, number_of_conversions);
 }
 
 HAL_StatusTypeDef stop_adc() {
