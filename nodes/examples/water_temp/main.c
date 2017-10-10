@@ -9,7 +9,7 @@
 #include <shield_drivers/traction_control/water_temp.h>
 
 int main(void) {
-	BSP_UART_init();
+	uart_init();
 	printf("uart init complete\n");
 
 	init_adc();

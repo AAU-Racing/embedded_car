@@ -48,7 +48,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 	HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 }
 
-void BSP_UART_init(void) {
+void uart_init(void) {
 	UartHandle.Instance = USARTx;
 
 	UartHandle.Init.BaudRate     = 115200;
@@ -83,20 +83,20 @@ void USARTx_IRQHandler(void) {
 	}
 }
 
-uint8_t UARTx_read_byte(void) {
+uint8_t uart_read_byte(void) {
 	uint8_t data;
 	while (rb_pop(&uartx_rec, &data));
 	return data;
 }
 
-void UARTx_send_byte(uint8_t data) {
+void uart_send_byte(uint8_t data) {
 	while (rb_isFull(&uartx_send));
 	rb_push(&uartx_send, data);
 	SET_BIT(UartHandle.Instance->CR1, USART_CR1_TXEIE);
 }
 
-void UARTx_send_buf(uint8_t *data, size_t n) {
+void uart_send_buf(uint8_t *data, size_t n) {
 	for (size_t i = 0; i < n; i++) {
-		UARTx_send_byte(data[i]);
+		uart_send_byte(data[i]);
 	}
 }

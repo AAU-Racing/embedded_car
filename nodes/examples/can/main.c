@@ -11,7 +11,7 @@
 extern volatile CAN_Statistics stats;
 
 int main(void) {
-	BSP_UART_init();
+	uart_init();
 
 	uint8_t filter_num = CAN_Filter(0, 0x7FF);
 	CAN_Start();

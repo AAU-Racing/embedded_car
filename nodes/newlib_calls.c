@@ -29,8 +29,8 @@ int _write(int file, char *ptr, int len) {
 	int i;
 	for (i = 0; i < len; i++) {
 		if (*ptr == '\n')
-			UARTx_send_byte('\r');
-		UARTx_send_byte(*ptr);
+			uart_send_byte('\r');
+		uart_send_byte(*ptr);
 		++ptr;
 	}
 
@@ -44,9 +44,9 @@ int _read(int file, char *ptr, int len) {
 
 	int i;
 	for (i = 0; i < len; i++) {
-		ptr[i] = UARTx_read_byte();
+		ptr[i] = uart_read_byte();
 #ifdef UART_AUTO_ECHO
-		UARTx_send_byte(ptr[i]);
+		uart_send_byte(ptr[i]);
 #endif
 		/* Return partial buffer if we get EOL */
 		if (ptr[i] == '\r') {
