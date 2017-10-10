@@ -1,12 +1,9 @@
-#ifndef CAN_GUARD
-#define CAN_GUARD
-
 #include <stm32f4xx_hal.h>
 #include <stdbool.h>
 
 typedef struct {
-	uint8_t transmit;
-	uint8_t receive;
+	uint32_t transmit;
+	uint32_t receive;
 	uint8_t error_total;
 	uint8_t error_ewg; /* Error warning */
 	uint8_t error_epv; /* Error passive (when transmit error counter, TEC, reaches 127) */
@@ -19,131 +16,98 @@ typedef struct {
 	uint8_t error_crc; /* CRC error */
 } CAN_Statistics;
 
-typedef struct {
-	uint16_t Id;
-	uint8_t Msg[8];
-	uint8_t Dlc;
-	uint8_t Filter;
-} CAN_Frame;
+typedef enum {
+	CAN_OK 				= 0U,
+	CAN_DRIVER_ERROR 	= 1U,
+	CAN_INVALID_ID 		= 2U,
+	CAN_INVALID_FRAME 	= 3U
+} CAN_StatusTypeDef;
 
-#define EMPTY_FRAME (CAN_Frame) {0}
-#define CAN_PA11
+typedef void (*CAN_RX_Callback) (CanRxMsgTypeDef *msg);
 
-//////////////////////////////////////////
-// CAN1 RX: PA11
-// CAN1 TX: PA12
-/////////////////////////////////////////
-#ifdef CAN_PA11
+// Definitions for CAN configurations
+#define CAN_PA11 	0
+#define CAN_PB5 	1
+#define CAN_PB8		2
+#define CAN_PB12	3
+#define CAN_PD0 	4
 
-#define CANx    CAN1
-#define CANx_CLK_ENABLE()         __HAL_RCC_CAN1_CLK_ENABLE()
-#define CANx_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOA_CLK_ENABLE()
+// Definitions for ranges of ids for data and their individual ids
+#define CAN_FATAL_INFO_ID_START 	0x000
+#define CAN_OIL_PRESSURE 			0x000
+#define CAN_FATAL_INFO_ID_END 		0x0ff
+#define CAN_FATAL_INFO_MASK			0x780
 
-#define CANx_FORCE_RESET()        __HAL_RCC_CAN1_FORCE_RESET()
-#define CANx_RELEASE_RESET()      __HAL_RCC_CAN1_RELEASE_RESET()
+#define CAN_MISSION_CRITICAL_ID_START 	0x1c0
+#define CAN_GEAR_BUTTONS 				0x1d0
+#define CAN_GEAR_NUMBER					0x1e0
+#define CAN_IGNITION_CUT				0x1f0
+#define CAN_NODE_STARTED				0x1f2
+#define CAN_MISSION_CRITICAL_ID_END 	0x1ff
+#define CAN_MISSION_CRITICAL_MASK		0x7c0
 
-#define CANx_TX_PIN           GPIO_PIN_12
-#define CANx_TX_GPIO_PORT     GPIOA
-#define CANx_TX_AF            GPIO_AF9_CAN1
-#define CANx_RX_PIN           GPIO_PIN_11
-#define CANx_RX_GPIO_PORT     GPIOA
-#define CANx_RX_AF            GPIO_AF9_CAN1
+#define CAN_ERROR_HANDLE_ID_START 	0x240
+#define CAN_SPI_ERROR				0x242
+#define CAN_UART_ERROR				0x244
+#define CAN_I2C_ERROR				0x246
+#define CAN_TELEMETRY_ERROR			0x248
+#define CAN_PWM_ERROR				0x250
+#define CAN_GPS_ERROR				0x252
+#define CAN_SD_ERROR				0x254
+#define CAN_LCD_ERROR				0x256
+#define	CAN_LED_ERROR				0x258
+#define CAN_ADC_ERROR				0x260
+#define CAN_ERROR					0x262
+#define CAN_ERROR_HANDLE_ID_END		0x27f
+#define CAN_ERROR_HANDLE_MASK		0x7c0
 
-#define CANx_RX_IRQn          CAN1_RX0_IRQn
-#define CANx_RX_IRQHandler    CAN1_RX0_IRQHandler
+#define CAN_SENSOR_DATA_ID_START 	0x4b0
+#define CAN_WATER_TEMPERATURE_IN 	0x4b0
+#define CAN_WATER_TEMPERATURE_OUT 	0x4b1
+#define CAN_GEAR_FEEDBACK 			0x4b2
+#define CAN_WHEEL_SPEED_RL 			0x4b4
+#define CAN_WHEEL_SPEED_RR 			0x4b5
+#define CAN_WHEEL_SPEED_FL 			0x4b6
+#define CAN_WHEEL_SPEED_FR 			0x4b7
+#define CAN_BRAKE_PRESSURE_FRONT 	0x4c0
+#define CAN_BRAKE_PRESSURE_REAR		0x4c1
+#define CAN_SPEEDER_POSITION		0x4c2
+#define CAN_CLUTCH_POSITION			0x4c3
+#define CAN_GYRO_X					0x4d0
+#define CAN_GYRO_Y					0x4d1
+#define CAN_GYRO_Z					0x4d2
+#define CAN_SUSPENSION_TRAVEL_RL	0x4e0
+#define CAN_SUSPENSION_TRAVEL_RR	0x4e1
+#define CAN_SUSPENSION_TRAVEL_FL	0x4e2
+#define CAN_SUSPENSION_TRAVEL_FR	0x4e3
+#define CAN_STEERING_WHEEL_POSITION	0x4f0
+#define CAN_BATTERY_CURRENT			0x4f2
+#define CAN_INVERTER_CURRENT		0x4f3
+#define CAN_FUEL_TEMPERATURE		0x500
+#define CAN_SENSOR_DATA_ID_END 		0x640
 
-#define CANx_TX_IRQn          CAN1_TX_IRQn
-#define CANx_TX_IRQHandler    CAN1_TX_IRQHandler
+#define CAN_OBD_ID_START 	0x7df
+#define CAN_OBD_ID_END 		0x7ff
 
-#endif
+// Definitions for discrete valued data
+#define CAN_GEAR_BUTTON_UP 		1
+#define CAN_GEAR_BUTTON_DOWN 	2
 
-//////////////////////////////////////////
-// CAN2 RX: PB5
-// CAN2 TX: PB6
-/////////////////////////////////////////
-#ifdef CAN_PB5
+#define CAN_OIL_PRESSURE_ON		1
+#define CAN_OIL_PRESSURE_OFF	0
 
-#define CANx    CAN2
-#define CANx_CLK_ENABLE()         do {__HAL_RCC_CAN1_CLK_ENABLE(); __HAL_RCC_CAN2_CLK_ENABLE();} while(0)
-#define CANx_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOB_CLK_ENABLE()
+#define CAN_ADC_INIT_ERROR				1
+#define CAN_ADC_START_ERROR				2
+#define CAN_ADC_WATER_TEMP_ERROR 		3
+#define CAN_ADC_GEAR_ERROR				4
+#define CAN_ADC_CURRENT_CLAMPS_ERROR	5
 
-#define CANx_FORCE_RESET()        __HAL_RCC_CAN2_FORCE_RESET()
-#define CANx_RELEASE_RESET()      __HAL_RCC_CAN2_RELEASE_RESET()
+#define CAN_NODE_COM_NODE_STARTED			0
+#define CAN_NODE_TRACTION_CONTROL_STARTED	1
+#define CAN_NODE_DASHBOARD_STARTED			2
 
-#define CANx_TX_PIN           GPIO_PIN_6
-#define CANx_TX_GPIO_PORT     GPIOB
-#define CANx_TX_AF            GPIO_AF9_CAN2
-#define CANx_RX_PIN           GPIO_PIN_5
-#define CANx_RX_GPIO_PORT     GPIOB
-#define CANx_RX_AF            GPIO_AF9_CAN2
-
-#define CANx_RX_IRQn          CAN2_RX0_IRQn
-#define CANx_RX_IRQHandler    CAN2_RX0_IRQHandler
-
-#define CANx_TX_IRQn          CAN2_TX_IRQn
-#define CANx_TX_IRQHandler    CAN2_TX_IRQHandler
-
-#endif
-
-//////////////////////////////////////////
-// CAN1 RX: PB8
-// CAN1 TX: PB9
-/////////////////////////////////////////
-#ifdef CAN_PB8
-
-#define CANx    CAN1
-#define CANx_CLK_ENABLE()         __HAL_RCC_CAN1_CLK_ENABLE()
-#define CANx_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOB_CLK_ENABLE()
-
-#define CANx_FORCE_RESET()        __HAL_RCC_CAN1_FORCE_RESET()
-#define CANx_RELEASE_RESET()      __HAL_RCC_CAN1_RELEASE_RESET()
-
-#define CANx_TX_PIN           GPIO_PIN_9
-#define CANx_TX_GPIO_PORT     GPIOB
-#define CANx_TX_AF            GPIO_AF9_CAN1
-#define CANx_RX_PIN           GPIO_PIN_8
-#define CANx_RX_GPIO_PORT     GPIOB
-#define CANx_RX_AF            GPIO_AF9_CAN1
-
-#define CANx_RX_IRQn          CAN1_RX0_IRQn
-#define CANx_RX_IRQHandler    CAN1_RX0_IRQHandler
-
-#define CANx_TX_IRQn          CAN1_TX_IRQn
-#define CANx_TX_IRQHandler    CAN1_TX_IRQHandler
-
-#endif
-
-//////////////////////////////////////////
-// CAN2 RX: PB12
-// CAN2 TX: PB13
-/////////////////////////////////////////
-#ifdef CAN_PB12
-
-#define CANx    CAN2
-#define CANx_CLK_ENABLE()         do {__HAL_RCC_CAN1_CLK_ENABLE(); __HAL_RCC_CAN2_CLK_ENABLE();} while(0)
-#define CANx_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOB_CLK_ENABLE()
-
-#define CANx_FORCE_RESET()        __HAL_RCC_CAN2_FORCE_RESET()
-#define CANx_RELEASE_RESET()      __HAL_RCC_CAN2_RELEASE_RESET()
-
-#define CANx_TX_PIN           GPIO_PIN_13
-#define CANx_TX_GPIO_PORT     GPIOB
-#define CANx_TX_AF            GPIO_AF9_CAN2
-#define CANx_RX_PIN           GPIO_PIN_12
-#define CANx_RX_GPIO_PORT     GPIOB
-#define CANx_RX_AF            GPIO_AF9_CAN2
-
-#define CANx_RX_IRQn          CAN2_RX0_IRQn
-#define CANx_RX_IRQHandler    CAN2_RX0_IRQHandler
-
-#define CANx_TX_IRQn          CAN2_TX_IRQn
-#define CANx_TX_IRQHandler    CAN2_TX_IRQHandler
-
-#endif
-
-void CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
-bool CAN_Receive(uint8_t filter_num, CAN_Frame* output_frame);
-uint8_t CAN_Filter(uint16_t id, uint16_t mask);
-void CAN_Start();
-
-#endif /* CAN_GUARD */
+CAN_StatusTypeDef CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
+// !!!!!!!!!!!!!!!! Printf is not allow inside the callback !!!!!!!!!!!!!!!
+CAN_StatusTypeDef CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
+CAN_StatusTypeDef CAN_Start();
+CAN_StatusTypeDef CAN_Init(uint8_t config);

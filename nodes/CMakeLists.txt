@@ -48,5 +48,6 @@ add_subdirectory(examples/usb)
 add_subdirectory(examples/water_temp)
 add_subdirectory(examples/hbridge)
 add_subdirectory(examples/gpio)
+add_subdirectory(examples/obdii)
 
 add_subdirectory(traction_control)

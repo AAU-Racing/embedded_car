@@ -9,9 +9,9 @@ add_library(board_driver
 	usb/usbd_conf.c
 	usb/usbd_desc.c
 	usb/usb.c
-	adc.c
 	gpio.c
 	pwm.c
+	i2c.c
 )
 
 target_link_libraries(board_driver

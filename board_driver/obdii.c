@@ -9,8 +9,7 @@
 #define DTC_LEN 2
 #define DTC_FIRST_FRAME 2
 #define DTC_PR_FRAME 3
-
-static uint8_t OBDII_FilterNum = 0;
+#define MODE1_MAX_PID 0x7F
 
 typedef enum {
 	Single      = 0,
@@ -20,30 +19,31 @@ typedef enum {
 	Unknown     = -1,
 } MF_CANMode;
 
-typedef struct {
-	OBDII_Frame array[20];
-	uint8_t count;
-} Buffer;
+OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
 
-Buffer buffer;
-
-static OBDII_Frame CAN_TO_OBDII(CAN_Frame* can_frame) {
-	OBDII_Frame frame = (OBDII_Frame) {
-		.Mode   = (OBDII_Mode) can_frame->Msg[1] - 40,
-		.Pid    = (OBDII_Pid) can_frame->Msg[2],
-		.Length = can_frame->Msg[0] - 2,
+/////////////////////////////////////
+// Convert to OBDII frame
+////////////////////////////////////
+static OBDII_Mode1_Frame can_to_obdii_mode1(const CanRxMsgTypeDef* can_frame) {
+	OBDII_Mode1_Frame frame = (OBDII_Mode1_Frame) {
+		.Pid    = (OBDII_Mode1_Pid) can_frame->Data[2],
+		.Length = can_frame->Data[0] - 2,
+		.New 	= true,
 	};
 	for (uint8_t i = 0; i < frame.Length; i++) {
-		frame.Msg[i] = can_frame->Msg[4 + i];
+		frame.Msg[i] = can_frame->Data[3 + i];
 	}
 	return frame;
 }
 
-static MF_CANMode MultiFrameMode(const CAN_Frame* can_frame) {
+/////////////////////////////////////////////
+// Diagnostics Trouble Codes helper functions
+/////////////////////////////////////////////
+/*static MF_CANMode MultiFrameMode(const CanRxMsgTypeDef* can_frame) {
 	return can_frame->Msg[0] >> 4 & 0xF;
 }
 
-static uint8_t SingleFrameMessageAmount(const CAN_Frame* can_frame) {
+static uint8_t SingleFrameMessageAmount(const CanRxMsgTypeDef* can_frame) {
 	return (can_frame->Msg[0] & 0xF) / DTC_LEN;
 }
 
@@ -59,13 +59,34 @@ static DTC_Message ByteToDTC(const uint8_t *message) {
 		.FourthChar = message[1] >> 4 & 0xF,
 		.FifthChar  = message[1] & 0xF,
 	};
+}*/
+
+////////////////////////////////////
+// Receive callback
+////////////////////////////////////
+static void obdii_response_handler(CanRxMsgTypeDef *msg) {
+	if (msg->Data[1] == 0x41) {
+		OBDII_Mode1_Frame frame = can_to_obdii_mode1(msg);
+		mode1_buffer[frame.Pid] = frame;
+	}
 }
 
-void OBDII_Init() {
-	OBDII_FilterNum = CAN_Filter(OBDII_RESPONSE_ID, OBDII_RESPONSE_ID);
+///////////////////////////////////
+// Public functions
+///////////////////////////////////
+HAL_StatusTypeDef OBDII_Init() {
+	for (int i = 0; i < MODE1_MAX_PID; i++) {
+		mode1_buffer[i] = (OBDII_Mode1_Frame) {
+			.Pid = MODE1_MAX_PID + 1,
+			.Length = 0,
+			.New = false,
+		};
+	}
+
+	return CAN_Filter(OBDII_RESPONSE_ID, 0x7F8, obdii_response_handler);
 }
 
-bool GetTroubleCodes(DTC_Message message[], size_t* len) {
+/*bool GetTroubleCodes(DTC_Message message[], size_t* len) {
 	static bool running = false;
 	static MF_CANMode frameType = Unknown;
 	static size_t length = 0;
@@ -142,43 +163,57 @@ bool GetTroubleCodes(DTC_Message message[], size_t* len) {
 
 void ClearTroubleCodes() {
 	CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {1, ClearDTC, FILL, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
-}
+}*/
 
-void OBDII_Mode1_Request(OBDII_Pid pid) {
+HAL_StatusTypeDef OBDII_Mode1_Request(OBDII_Mode1_Pid pid) {
 	assert_param(pid != FreezeDTC);
-	CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowCurrent, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+	return CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowCurrent, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 }
 
-void OBDII_Mode2_Request(OBDII_Pid pid) {
+/*void OBDII_Mode2_Request(OBDII_Pid pid) {
 	assert_param(pid != MonitorStatus);
 	CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowFreeze, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+}*/
+
+OBDII_Mode1_Frame OBDII_Mode1_Response(OBDII_Mode1_Pid pid) {
+	OBDII_Mode1_Frame frame = mode1_buffer[pid];
+
+	if (frame.New) {
+		mode1_buffer[pid].New = false;
+	}
+
+	return frame;
 }
 
-OBDII_Frame OBDII_Response(OBDII_Mode mode, OBDII_Pid pid) {
-	OBDII_Frame frame = {0};
-	for (uint8_t i = 0; i < buffer.count; i++) {
-		if (buffer.array[i].Mode == mode && buffer.array[i].Pid == pid) {
-			frame = buffer.array[i];
-			buffer.count--;
-			for (uint8_t j = i; j < buffer.count; j++)
-			buffer.array[j] = buffer.array[j + 1];
+uint32_t OBDII_Mode1_UID(OBDII_Mode1_Pid pid) {
+	return (CAN_OBD_ID_START << 8) | pid;
+}
 
-			return frame;
-		}
-	}
-
-	CAN_Frame received_frame;
-
-	while(CAN_Receive(OBDII_FilterNum, &received_frame)) {
-		frame = CAN_TO_OBDII(&received_frame);
-
-		if (mode == frame.Mode && pid == frame.Pid) {
-			return frame;
-		}
-		else {
-			buffer.array[buffer.count++] = frame;
-		}
-	}
-
-	return (OBDII_Frame) {0};
+void OBDII_Burst(void) {
+	OBDII_Mode1_Request(MonitorStatus);
+	OBDII_Mode1_Request(FuelSystemStatus);
+	OBDII_Mode1_Request(CalculatedEngineLoad);
+	OBDII_Mode1_Request(EngineCoolantTemperature);
+	OBDII_Mode1_Request(ShortTermFuelTrim);
+	OBDII_Mode1_Request(LongTermFuelTrim);
+	OBDII_Mode1_Request(IntakeManifoldPressure);
+	OBDII_Mode1_Request(EngineRPM);
+	OBDII_Mode1_Request(VehicleSpeed);
+	OBDII_Mode1_Request(TimingAdvance);
+	OBDII_Mode1_Request(IntakeAirTemperature);
+	OBDII_Mode1_Request(ThrottlePosition);
+	OBDII_Mode1_Request(OxygenSensorsPresent);
+	OBDII_Mode1_Request(RuntimeEngineStart);
+	OBDII_Mode1_Request(DistanceWithMIL);
+	OBDII_Mode1_Request(DistanceSinceClear);
+	OBDII_Mode1_Request(OxygenSensorFARatio);
+	OBDII_Mode1_Request(MonitorStatusDriveCycle);
+	OBDII_Mode1_Request(ControlModuleVoltage);
+	OBDII_Mode1_Request(FARatioCommanded);
+	OBDII_Mode1_Request(RelativeThrottlePosition);
+	OBDII_Mode1_Request(AbsoluteThrottlePosition);
+	OBDII_Mode1_Request(EngineFuelRate);
+	OBDII_Mode1_Request(DriverDemandTorque);
+	OBDII_Mode1_Request(EngineReferenceTorque);
+	OBDII_Mode1_Request(EnginePercentTorque);
 }
