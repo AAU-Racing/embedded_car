@@ -1,8 +1,13 @@
 add_library(shield_drivers
 	traction_control/water_temp.c
-	traction_control/hbridge.c
+	traction_control/wheel_sensor.c
+	traction_control/brake_pressure.c
 	traction_control/gear_feedback.c
-	
+	traction_control/gear.c
+	traction_control/oil_pressure.c
+	traction_control/hbridge.c
+	traction_control/current_clamps.c
+
 	dashboard/buttons.c
 	dashboard/steering_wheel_buttons.c
 	dashboard/rpm.c
@@ -16,8 +21,8 @@ add_library(shield_drivers
 	dashboard/Fonts/font20.c
 	dashboard/Fonts/font24.c
 
-	com_node/sd.c
-	com_node/sd_setup.c
+	#com_node/sd.c
+	#com_node/sd_setup.c
 	com_node/water_temperature.c
 	com_node/current_clamps.c
 	com_node/wheel_speed.c

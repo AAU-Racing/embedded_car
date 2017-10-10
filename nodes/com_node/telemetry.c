@@ -12,7 +12,7 @@ static bool xbee_initialized = false;
 
 void init_telemtry() {
 	if (init_xbee() != HAL_OK) {
-		log_error(CAN_TELEMETRY_ERROR, "Xbee init error");
+		// log_error(CAN_TELEMETRY_ERROR, "Xbee init error");
 	}
 	else {
 		xbee_initialized = true;

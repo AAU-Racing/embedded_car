@@ -7,7 +7,7 @@
 #include <math.h>
 
 #include <board_driver/uart.h>
-#include <board_driver/rtc.h>
+// #include <board_driver/rtc.h>
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 #include <shield_drivers/dashboard/oil.h>
@@ -16,7 +16,7 @@
 #include <shield_drivers/com_node/wheel_speed.h>
 #include <shield_drivers/com_node/error.h>
 
-#include "sd.h"
+// #include "sd.h"
 #include "telemetry.h"
 
 static uint32_t last_obd_burst = 0;
@@ -25,14 +25,14 @@ void setup(void){
 	uart_init();
 	printf("UART init complete\n");
 
-	(void)BSP_RTC_Init();
+	//BSP_RTC_Init();
 
-	init_sd();
+	//init_sd();
 	init_telemtry();
 
 	//Setting up CAN and it's filters
 	if (CAN_Init(CAN_PB12) != CAN_OK) {
-		log_error(CAN_ERROR, "CAN init error");
+		//log_error(CAN_ERROR, "CAN init error");
 	}
 
 	oil_init();
@@ -43,7 +43,7 @@ void setup(void){
 	OBDII_Init();
 
 	if (CAN_Start() != CAN_OK) {
-		log_error(CAN_ERROR, "CAN start error");
+		//log_error(CAN_ERROR, "CAN start error");
 	}
 
 	// Wait for everything to be ready
@@ -51,7 +51,7 @@ void setup(void){
 
 	// Signal all others that the com node is ready
 	if (CAN_Send(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_COM_NODE_STARTED }, 1) != CAN_OK) {
-		log_error(CAN_ERROR, "CAN send error");
+		//log_error(CAN_ERROR, "CAN send error");
 	}
 }
 
@@ -63,7 +63,7 @@ void loop(void){
 	}
 
 	// Handle logging and telemetry which are the main responsability of the com node
-	handle_logging();
+	//handle_logging();
 	handle_telemetry();
 	HAL_Delay(1);
 }
