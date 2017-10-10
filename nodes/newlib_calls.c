@@ -7,9 +7,15 @@
 //#define UART_AUTO_ECHO
 #define STACK_POINTER (__get_MSP())
 
+/* Symbol from linkerscript */
+extern uint32_t _start_addr;
+
+
 void _init(void) {
 	init_board();
 	set_system_clock_168mhz();
+	set_interrupt_offset((uint32_t)&_start_addr);
+	enable_all_interrupts();
 }
 
 void _exit(int exitcode) {
@@ -23,8 +29,8 @@ int _write(int file, char *ptr, int len) {
 	int i;
 	for (i = 0; i < len; i++) {
 		if (*ptr == '\n')
-			uart_send_byte('\r');
-		uart_send_byte(*ptr);
+			UARTx_send_byte('\r');
+		UARTx_send_byte(*ptr);
 		++ptr;
 	}
 
@@ -38,9 +44,9 @@ int _read(int file, char *ptr, int len) {
 
 	int i;
 	for (i = 0; i < len; i++) {
-		ptr[i] = uart_read_byte();
+		ptr[i] = UARTx_read_byte();
 #ifdef UART_AUTO_ECHO
-		uart_send_byte(ptr[i]);
+		UARTx_send_byte(ptr[i]);
 #endif
 		/* Return partial buffer if we get EOL */
 		if (ptr[i] == '\r') {

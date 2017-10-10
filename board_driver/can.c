@@ -1,69 +1,28 @@
- #include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 #include "can.h"
 
 #define MAX_FRAME_LEN 8
 #define MAX_STD_ID 0x7FF
 #define NUMBER_BANKS 28
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 64
 
-#define CAN_INSTANCE ((CAN_TypeDef* const []) { \
-	CAN1, \
-	CAN2, \
-	CAN1, \
-	CAN2, \
-	CAN1, \
-})
+typedef struct {
+	CAN_Frame array[BUFFER_SIZE];
+	uint64_t bitvector;
+} Buffer;
 
-#define CAN_RX_PIN ((const uint32_t const []) { \
-	GPIO_PIN_11, \
-	GPIO_PIN_5,	 \
-	GPIO_PIN_8,	 \
-	GPIO_PIN_12, \
-	GPIO_PIN_0,  \
-})
-
-#define CAN_RX_PORT ((GPIO_TypeDef* const []) { \
-	GPIOA, \
-	GPIOB, \
-	GPIOB, \
-	GPIOB, \
-	GPIOD, \
-})
-
-#define CAN_TX_PIN ((const uint32_t const []) { \
-	GPIO_PIN_12, \
-	GPIO_PIN_6,	 \
-	GPIO_PIN_9,	 \
-	GPIO_PIN_13, \
-	GPIO_PIN_1,  \
-})
-
-#define CAN_TX_PORT ((GPIO_TypeDef* const []) { \
-	GPIOA, \
-	GPIOB, \
-	GPIOB, \
-	GPIOB, \
-	GPIOD, \
-})
-
-CAN_HandleTypeDef can_handle;
+CAN_HandleTypeDef CanHandle;
 volatile CAN_Statistics stats;
-static int filter_num = 0;
-static volatile CAN_RX_Callback rx_callback[14];
-static uint8_t top = 0;
-static volatile uint16_t head = 0;
-static volatile uint16_t tail = 0;
-static volatile uint16_t size = 0;
-static volatile CanTxMsgTypeDef transmit_buffer[BUFFER_SIZE];
+volatile Buffer receive_buffer;
+volatile Buffer transmit_buffer;
 
 /////////////////////
 // Local functions //
 /////////////////////
-static void error_handler(CAN_HandleTypeDef* hcan) {
+static void Error_Handler(CAN_HandleTypeDef* hcan) {
 	uint32_t state = HAL_CAN_GetError(hcan);
 	stats.error_total++;
 	switch(state) {
@@ -97,114 +56,28 @@ static void error_handler(CAN_HandleTypeDef* hcan) {
 	}
 }
 
-static void init_gpio_clock(GPIO_TypeDef *port) {
-	if (port == GPIOA) {
-		__HAL_RCC_GPIOA_CLK_ENABLE();
-	}
-	else if (port == GPIOB) {
-		__HAL_RCC_GPIOB_CLK_ENABLE();
-	}
-	else if (port == GPIOC) {
-		__HAL_RCC_GPIOC_CLK_ENABLE();
-	}
-	else if (port == GPIOD) {
-		__HAL_RCC_GPIOD_CLK_ENABLE();
-	}
-	else if (port == GPIOE) {
-		__HAL_RCC_GPIOE_CLK_ENABLE();
-	}
-	else if (port == GPIOF) {
-		__HAL_RCC_GPIOF_CLK_ENABLE();
-	}
-	else if (port == GPIOG) {
-		__HAL_RCC_GPIOG_CLK_ENABLE();
-	}
-	else if (port == GPIOH) {
-		__HAL_RCC_GPIOH_CLK_ENABLE();
-	}
-	else if (port == GPIOI) {
-		__HAL_RCC_GPIOI_CLK_ENABLE();
-	}
-}
-
-static void configure_gpio_pin(GPIO_TypeDef *port, uint32_t pin) {
-	init_gpio_clock(port);
-
-	HAL_GPIO_Init(port, &(GPIO_InitTypeDef) {
-		.Pin       = pin,
-		.Mode      = GPIO_MODE_AF_PP,
-		.Speed     = GPIO_SPEED_FAST,
-		.Pull      = GPIO_PULLUP,
-		.Alternate = GPIO_AF9_CAN1, // CAN1 and CAN2 uses the same Alternate Function (AF9), so init using one.
-	});
-}
-
-static void configure_pins(uint8_t config) {
-	configure_gpio_pin(CAN_RX_PORT[config], CAN_RX_PIN[config]);
-	configure_gpio_pin(CAN_TX_PORT[config], CAN_TX_PIN[config]);
-}
-
-//////////////////////
-// Public interface //
-//////////////////////
-CAN_StatusTypeDef CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback) {
-	if (id > MAX_STD_ID) {
-		return CAN_INVALID_ID;
-	}
-
-	if (mask > MAX_STD_ID) {
-		return CAN_INVALID_ID;
-	}
-
-	rx_callback[top++] = callback;
-
-	HAL_StatusTypeDef result = HAL_CAN_ConfigFilter(&can_handle, &(CAN_FilterConfTypeDef) {
-		.FilterNumber         = filter_num++,
-		.FilterMode           = CAN_FILTERMODE_IDMASK,
-		.FilterScale          = CAN_FILTERSCALE_32BIT,
-		.FilterIdHigh         = id << 5,
-		.FilterIdLow          = 0,
-		.FilterMaskIdHigh     = mask << 5,
-		.FilterMaskIdLow      = 0,
-		.FilterFIFOAssignment = CAN_FILTER_FIFO0,
-		.FilterActivation     = ENABLE,
-		.BankNumber			  = 14,
-	});
-
-	if (result != HAL_OK) {
-		error_handler(&can_handle); 	// Filter configuration Error
-		return CAN_DRIVER_ERROR;
-	}
-
-	return CAN_OK;
-}
-
-CAN_StatusTypeDef CAN_Init(uint8_t config) {
+static void Init_Handle() {
 	static CanTxMsgTypeDef        TxMessage;
 	static CanRxMsgTypeDef        RxMessage;
 
 	// Configure the CAN peripheral
-	can_handle.Instance = CAN_INSTANCE[config];
-	can_handle.pTxMsg = &TxMessage;
-	can_handle.pRxMsg = &RxMessage;
+	CanHandle.Instance = CANx;
+	CanHandle.pTxMsg = &TxMessage;
+	CanHandle.pRxMsg = &RxMessage;
 
-	can_handle.Init.TTCM = DISABLE; // Time triggered communication
-	can_handle.Init.ABOM = ENABLE; // Try to rejoin the bus when bus becomes off
-	can_handle.Init.AWUM = ENABLE; // Automatic wakeup
-	can_handle.Init.NART = DISABLE; // Non-automatic retransmission
-	can_handle.Init.RFLM = DISABLE; // Receive FIFO locked mode (disable means overwriting when receiving a new message)
-	can_handle.Init.TXFP = DISABLE; // Transmit FIFO priority (Choose the most important of the three transmit mailboxes)
-	can_handle.Init.Mode = CAN_MODE_NORMAL;
+	CanHandle.Init.TTCM = DISABLE; // Time triggered communication
+	CanHandle.Init.ABOM = ENABLE; // Try to rejoin the bus when bus becomes off
+	CanHandle.Init.AWUM = DISABLE; // Automatic wakeup
+	CanHandle.Init.NART = DISABLE; // Non-automatic retransmission
+	CanHandle.Init.RFLM = DISABLE; // Receive FIFO locked mode (disable means overwriting when receiving a new message)
+	CanHandle.Init.TXFP = ENABLE; // Transmit FIFO priority (Choose the most important of the three transmit mailboxes)
+	CanHandle.Init.Mode = CAN_MODE_NORMAL;
 
 	/* 500 kbps with 87.5% sample point */
-	can_handle.Init.SJW = CAN_SJW_1TQ;
-	can_handle.Init.BS1 = CAN_BS1_13TQ;
-	can_handle.Init.BS2 = CAN_BS2_2TQ;
-	can_handle.Init.Prescaler = 21;
-
-	configure_pins(config);
-	filter_num = CAN_INSTANCE[config] == CAN1 ? 0 : 14;
-
+	CanHandle.Init.SJW = CAN_SJW_1TQ;
+	CanHandle.Init.BS1 = CAN_BS1_13TQ;
+	CanHandle.Init.BS2 = CAN_BS2_2TQ;
+	CanHandle.Init.Prescaler = 21;
 	// AHBCLK = SYSCLOCK / 1 = 168 / 1 MHz = 168 MHz
 	// APB1CLK = AHBCLK / 1 = 168 / 1 MHz = 168 MHz
 
@@ -212,62 +85,108 @@ CAN_StatusTypeDef CAN_Init(uint8_t config) {
 	// NBT = 1 / bitrate
 	// TQ per bit = NBT / 1 tq
 
-	HAL_StatusTypeDef result = HAL_CAN_Init(&can_handle);
-
-	if (result != HAL_OK) {
-		error_handler(&can_handle); // Initialization Error
-		return CAN_DRIVER_ERROR;
+	if(HAL_CAN_Init(&CanHandle) != HAL_OK) {
+		Error_Handler(&CanHandle); // Initialization Error
 	}
 
-	return CAN_OK;
+	// Configure Transmission data
+	CanHandle.pTxMsg->StdId = 0x01;
+	CanHandle.pTxMsg->ExtId = 0x01;
+	CanHandle.pTxMsg->RTR = CAN_RTR_DATA;
+	CanHandle.pTxMsg->IDE = CAN_ID_STD;
+	CanHandle.pTxMsg->DLC = 0;
 }
 
-CAN_StatusTypeDef CAN_Start() {
-	// Start reception
-	HAL_StatusTypeDef result = HAL_CAN_Receive_IT(&can_handle, CAN_FIFO0);
-
-	if (result != HAL_OK) {
-		error_handler(&can_handle);
-		return CAN_DRIVER_ERROR;
+static void safe_memcpy(volatile void *arr1, volatile void *arr2, size_t bytes) {
+	for (size_t i = 0; i < bytes; i++) {
+		*((uint8_t*) arr1 + i) = *((uint8_t*) arr2 + i);
 	}
-
-	return CAN_OK;
 }
 
-CAN_StatusTypeDef CAN_Send(uint16_t id, uint8_t msg[], uint8_t length) {
-	if (id > MAX_STD_ID)
-		return CAN_INVALID_ID;
-
-	if (length > MAX_FRAME_LEN)
-		return CAN_INVALID_FRAME;
-
-	// Set transmit parameters
-	can_handle.pTxMsg->StdId = id;
-	can_handle.pTxMsg->ExtId = 0x01;
-	can_handle.pTxMsg->RTR = CAN_RTR_DATA;
-	can_handle.pTxMsg->IDE = CAN_ID_STD;
-	can_handle.pTxMsg->DLC = length;
-	// Copy data
-	for (uint8_t i = 0; i < length; i++) {
-		can_handle.pTxMsg->Data[i] = msg[i];
-	}
-
-	// Transmit with interrupts
-	HAL_StatusTypeDef result = HAL_CAN_Transmit_IT(&can_handle);
-
-	if (result != HAL_OK) {
-		if (size < BUFFER_SIZE) {
-			transmit_buffer[head] = *can_handle.pTxMsg;
-
-			head = (head + 1) % BUFFER_SIZE;
-			size++;
+//////////////////////
+// Public interface //
+//////////////////////
+uint8_t CAN_Filter(uint16_t id, uint16_t mask) {
+	static int filter_num = CANx == CAN1 ? 0 : 14;
+	static int init = 0;
+	assert_param(id <= MAX_STD_ID);
+	assert_param(mask <= MAX_STD_ID);
+	assert_param(filter_num + 1 < NUMBER_BANKS);
+	// If not initialized
+	if (!init) {
+		// Reset statistics
+		for (size_t i = 0; i < sizeof(CAN_Statistics); i++) {
+			*((uint8_t*) &stats + i) = 0;
 		}
-
-		error_handler(&can_handle);
-		return CAN_DRIVER_ERROR;
+		// Initialize handle
+		Init_Handle();
+		// And now it is initialized
+		init = 1;
 	}
 
-	return CAN_OK;
+	if(HAL_CAN_ConfigFilter(&CanHandle, &(CAN_FilterConfTypeDef) {
+		.FilterNumber         = filter_num++,
+		.FilterMode           = CAN_FILTERMODE_IDMASK,
+		.FilterScale          = CAN_FILTERSCALE_32BIT,
+		.FilterIdHigh         = id << 5,
+		.FilterIdLow          = 0,
+		.FilterMaskIdHigh     = mask << 5,
+		.FilterMaskIdLow      = 0,
+		.FilterFIFOAssignment = 0,
+		.FilterActivation     = ENABLE,
+	}) != HAL_OK) {
+		Error_Handler(&CanHandle); 	// Filter configuration Error
+	}
+
+	return filter_num - 1;
+}
+
+void CAN_Start() {
+	// Start reception
+	if (HAL_CAN_Receive_IT(&CanHandle, CAN_FIFO0) != HAL_OK) {
+		Error_Handler(&CanHandle);
+	}
+}
+
+bool CAN_Receive(uint8_t filter_num, CAN_Frame* output_frame) {
+	assert_param(filter_num < NUMBER_BANKS);
+	*output_frame = EMPTY_FRAME;
+	// Loop through buffer
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		// Until meeting correct response
+		if (receive_buffer.bitvector & (1 << i) && receive_buffer.array[i].Filter == filter_num) {
+			*output_frame = receive_buffer.array[i];
+			receive_buffer.bitvector ^= 1 << i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void CAN_Send(uint16_t id, uint8_t msg[], uint8_t length) {
+	assert_param(length <= MAX_FRAME_LEN);
+	assert_param(id <= MAX_STD_ID);
+	// Set transmit parameters
+	CanHandle.pTxMsg->StdId = id;
+	CanHandle.pTxMsg->DLC = length;
+	// Copy data
+	for (uint8_t i = 0; i < MAX_FRAME_LEN; i++) {
+		CanHandle.pTxMsg->Data[i] = (i < length ? msg[i] : 0);
+	}
+	// Transmit with interrupts
+	if (HAL_CAN_Transmit_IT(&CanHandle) != HAL_OK) {
+		for (int i = 0; i < BUFFER_SIZE; i++) {
+			if (!(transmit_buffer.bitvector & (1 << i))) {
+				volatile CAN_Frame *transmit_frame = &transmit_buffer.array[i];
+				transmit_frame->Id = id;
+				transmit_frame->Dlc = length;
+				safe_memcpy(transmit_frame->Msg, msg, length);
+				transmit_buffer.bitvector ^= 1 << i;
+				break;
+			}
+		}
+	}
 }
 
 ////////////////////////
@@ -276,29 +195,53 @@ CAN_StatusTypeDef CAN_Send(uint16_t id, uint8_t msg[], uint8_t length) {
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan) {
 	(void) hcan;
 	stats.transmit++;
+	/* Move from queue to transmit mailboxes */
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		if (transmit_buffer.bitvector & (1 << i)) {
+			CanHandle.pTxMsg->StdId = transmit_buffer.array[i].Id;
+			CanHandle.pTxMsg->DLC = transmit_buffer.array[i].Dlc;
+			// Copy data
+			for (uint8_t j = 0; j < MAX_FRAME_LEN; j++) {
+				CanHandle.pTxMsg->Data[j] =
+				(i < transmit_buffer.array[i].Dlc ?
+					transmit_buffer.array[i].Msg[j] :
+					0);
+			}
 
-	if (size > 0) {
-		static CanTxMsgTypeDef transmit;
-		transmit = transmit_buffer[tail];
-		hcan->pTxMsg = &transmit;
-		tail = (tail + 1) % BUFFER_SIZE;
-		size--;
-		HAL_CAN_Transmit_IT(hcan);
+			// Transmit with interrupts
+			if (HAL_CAN_Transmit_IT(&CanHandle) != HAL_OK) {
+				Error_Handler(&CanHandle);
+			}
+
+			transmit_buffer.bitvector ^= 1 << i;
+			break;
+		}
+
 	}
 }
 
+
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan) {
 	stats.receive++;
-
-	rx_callback[hcan->pRxMsg->FMI](hcan->pRxMsg);
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		if (!(receive_buffer.bitvector & (1 << i))) {
+			volatile CAN_Frame *receive_frame = &receive_buffer.array[i];
+			receive_frame->Id = hcan->pRxMsg->StdId; // Copy ID
+			receive_frame->Dlc = hcan->pRxMsg->DLC; // Copy DLC
+			receive_frame->Filter = hcan->pRxMsg->FMI;
+			safe_memcpy(receive_frame->Msg, hcan->pRxMsg->Data, 8); // Copy data to frame variable
+			receive_buffer.bitvector ^= 1 << i; // Insert into buffer
+			break;
+		}
+	}
 
 	if(HAL_CAN_Receive_IT(hcan, CAN_FIFO0) != HAL_OK) {
-		error_handler(hcan);
+		Error_Handler(hcan);
 	}
 }
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
-	error_handler(hcan);
+	Error_Handler(hcan);
 }
 
 /////////////////////////
@@ -306,50 +249,45 @@ void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
 /////////////////////////
 void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan) {
 	(void) hcan;
-	__HAL_RCC_CAN1_CLK_ENABLE(); // Enable CAN clock
-	__HAL_RCC_CAN2_CLK_ENABLE();
+	CANx_CLK_ENABLE(); // Enable CAN clock
+	CANx_GPIO_CLK_ENABLE(); // Enable GPIO clock (CAN-pins)
+
+	// Initialize pins
+	HAL_GPIO_Init(CANx_TX_GPIO_PORT, &(GPIO_InitTypeDef) {
+		.Pin       = CANx_TX_PIN,
+		.Mode      = GPIO_MODE_AF_PP,
+		.Speed     = GPIO_SPEED_FAST,
+		.Pull      = GPIO_PULLUP,
+		.Alternate = CANx_TX_AF,
+	});
+
+	HAL_GPIO_Init(CANx_RX_GPIO_PORT, &(GPIO_InitTypeDef) {
+		.Pin       = CANx_RX_PIN,
+		.Mode      = GPIO_MODE_AF_PP,
+		.Speed     = GPIO_SPEED_FAST,
+		.Pull      = GPIO_PULLUP,
+		.Alternate = CANx_RX_AF,
+	});
 
 	// Set interrupt priority
-	HAL_NVIC_SetPriority(hcan->Instance == CAN1 ? CAN1_RX0_IRQn : CAN2_RX0_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(hcan->Instance == CAN1 ? CAN1_RX0_IRQn : CAN2_RX0_IRQn);
+	HAL_NVIC_SetPriority(CANx_RX_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ(CANx_RX_IRQn);
 
-	HAL_NVIC_SetPriority(hcan->Instance == CAN1 ? CAN1_TX_IRQn : CAN2_TX_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(hcan->Instance == CAN1 ? CAN1_TX_IRQn : CAN2_TX_IRQn);
+	HAL_NVIC_SetPriority(CANx_TX_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ(CANx_TX_IRQn);
 }
 
 void HAL_CAN_MspDeInit(CAN_HandleTypeDef *hcan) {
 	(void) hcan;
 	// Release
-	__HAL_RCC_CAN1_FORCE_RESET();
-	__HAL_RCC_CAN1_RELEASE_RESET();
-	__HAL_RCC_CAN2_FORCE_RESET();
-	__HAL_RCC_CAN2_RELEASE_RESET();
+	CANx_FORCE_RESET();
+	CANx_RELEASE_RESET();
+
+	// Deinitialize pins
+	HAL_GPIO_DeInit(CANx_TX_GPIO_PORT, CANx_TX_PIN);
+	HAL_GPIO_DeInit(CANx_RX_GPIO_PORT, CANx_RX_PIN);
 
 	// Stop interrupts
-	HAL_NVIC_DisableIRQ(hcan->Instance == CAN1 ? CAN1_RX0_IRQn : CAN2_RX0_IRQn);
-	HAL_NVIC_DisableIRQ(hcan->Instance == CAN1 ? CAN1_TX_IRQn : CAN2_TX_IRQn);
-}
-
-void CAN1_RX0_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
-}
-
-void CAN2_RX0_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
-}
-
-void CAN1_RX1_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
-}
-
-void CAN2_RX1_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
-}
-
-void CAN1_TX_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
-}
-
-void CAN2_TX_IRQHandler(void) {
-	HAL_CAN_IRQHandler(&can_handle);
+	HAL_NVIC_DisableIRQ(CANx_RX_IRQn);
+	HAL_NVIC_DisableIRQ(CANx_TX_IRQn);
 }

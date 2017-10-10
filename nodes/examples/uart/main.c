@@ -6,7 +6,7 @@
 
 
 int main(void) {
-	uart_init();
+	BSP_UART_init();
 	printf("Starting\n\n");
 	printf("Write something in the terminal and hit Enter:\n");
 

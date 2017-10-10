@@ -2,18 +2,13 @@ add_library(board_driver
 	init.c
 	uart.c
 	adc.c
-	i2c.c
-	spi.c
 	flash.c
-	gpio.c
 	can.c
 	obdii.c
-	pwm.c
 	usb/usbd_cdc_interface.c
 	usb/usbd_conf.c
 	usb/usbd_desc.c
 	usb/usb.c
-	rtc.c
 )
 
 target_link_libraries(board_driver

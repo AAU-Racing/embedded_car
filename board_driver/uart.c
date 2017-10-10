@@ -6,7 +6,7 @@
 
 #define BUF_SIZE 1024
 
-static UART_HandleTypeDef UartHandle;
+UART_HandleTypeDef UartHandle;
 ringbuffer_t uartx_rec;
 ringbuffer_t uartx_send;
 uint8_t uartx_rec_buf[BUF_SIZE];
@@ -48,7 +48,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 	HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 }
 
-void uart_init(void) {
+void BSP_UART_init(void) {
 	UartHandle.Instance = USARTx;
 
 	UartHandle.Init.BaudRate     = 115200;
@@ -83,20 +83,20 @@ void USARTx_IRQHandler(void) {
 	}
 }
 
-uint8_t uart_read_byte(void) {
+uint8_t UARTx_read_byte(void) {
 	uint8_t data;
 	while (rb_pop(&uartx_rec, &data));
 	return data;
 }
 
-void uart_send_byte(uint8_t data) {
+void UARTx_send_byte(uint8_t data) {
 	while (rb_isFull(&uartx_send));
 	rb_push(&uartx_send, data);
 	SET_BIT(UartHandle.Instance->CR1, USART_CR1_TXEIE);
 }
 
-void uart_send_buf(uint8_t *data, size_t n) {
+void UARTx_send_buf(uint8_t *data, size_t n) {
 	for (size_t i = 0; i < n; i++) {
-		uart_send_byte(data[i]);
+		UARTx_send_byte(data[i]);
 	}
 }

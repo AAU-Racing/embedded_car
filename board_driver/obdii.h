@@ -1,10 +1,6 @@
 #ifndef OBDII_GUARD
 #define OBDII_GUARD
 
-#include <stm32f4xx_hal.h>
-
-#include <stdbool.h>
-
 #define OBDII_REQUEST_ID 0x7DF
 #define OBDII_RESPONSE_ID 0x7E8
 
@@ -17,7 +13,7 @@ typedef enum{
 } OBDII_Mode;
 
 typedef enum{
-	/* Supported pids bit encoded */
+	/* Supported pixels bit encoded */
 	SupportedPid0x01_0x20 = 0x00,
 	SupportedPid0x21_0x40 = 0x20,
 	SupportedPid0x41_0x60 = 0x40,
@@ -25,7 +21,7 @@ typedef enum{
 
 	/* General fields */
 	MonitorStatus            = 0x01, // Mode 1 only
-	//FreezeDTC                = 0x02, // Mode 2 only
+	FreezeDTC                = 0x02, // Mode 2 only
 	FuelSystemStatus         = 0x03,
 	CalculatedEngineLoad     = 0x04,
 	EngineCoolantTemperature = 0x05,
@@ -38,7 +34,7 @@ typedef enum{
 	IntakeAirTemperature     = 0x0F,
 	ThrottlePosition         = 0x11,
 	OxygenSensorsPresent     = 0x13,
-	OBDConformity            = 0x1C, // NO
+	OBDConformity            = 0x1C,
 	RuntimeEngineStart       = 0x1F,
 	DistanceWithMIL          = 0x21,
 	DistanceSinceClear       = 0x31,
@@ -52,7 +48,7 @@ typedef enum{
 	DriverDemandTorque       = 0x61,
 	EngineReferenceTorque    = 0x63,
 	EnginePercentTorque      = 0x64,
-} OBDII_Mode1_Pid;
+} OBDII_Pid;
 
 typedef enum{
 	Powertrain = 0,
@@ -70,24 +66,16 @@ typedef struct{
 } DTC_Message;
 
 typedef struct{
-	OBDII_Mode1_Pid Pid;
-	size_t Length;
-	uint8_t Msg[4];
-	bool New;
-} OBDII_Mode1_Frame;
-
-/*typedef struct{
+	OBDII_Mode Mode;
 	OBDII_Pid Pid;
 	size_t Length;
 	uint8_t Msg[4];
-} OBDII_Mode2_Frame;*/
+} OBDII_Frame;
 
-HAL_StatusTypeDef OBDII_Init();
-//bool GetTroubleCodes(DTC_Message dtc[], size_t* len);
-//void ClearTroubleCodes();
-HAL_StatusTypeDef OBDII_Mode1_Request(OBDII_Mode1_Pid pid);
-OBDII_Mode1_Frame OBDII_Mode1_Response(OBDII_Mode1_Pid pid);
-void OBDII_Burst(void);
-uint32_t OBDII_Mode1_UID(OBDII_Mode1_Pid pid);
+void OBDII_Init();
+bool GetTroubleCodes(DTC_Message dtc[], size_t* len);
+void ClearTroubleCodes();
+void OBDII_Request(OBDII_Mode mode, OBDII_Pid pid);
+OBDII_Frame OBDII_Response(OBDII_Mode mode, OBDII_Pid pid);
 
 #endif

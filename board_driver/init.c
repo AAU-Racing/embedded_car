@@ -5,6 +5,7 @@
 
 #include "init.h"
 
+
 void set_system_clock_168mhz(void) {
 	__HAL_RCC_PWR_CLK_ENABLE();
 
@@ -33,7 +34,7 @@ void set_system_clock_168mhz(void) {
 		.ClockType      = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2),
 		.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK,
 		.AHBCLKDivider  = RCC_SYSCLK_DIV1,
-		.APB1CLKDivider = RCC_HCLK_DIV1,
+		.APB1CLKDivider = RCC_HCLK_DIV4,
 		.APB2CLKDivider = RCC_HCLK_DIV2,
 	};
 	// We set FLASH_LATENCY_5 as we are in vcc range 2.7-3.6 at 168mhz
