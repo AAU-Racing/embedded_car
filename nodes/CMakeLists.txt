@@ -51,6 +51,8 @@ add_subdirectory(examples/gpio)
 add_subdirectory(examples/obdii)
 add_subdirectory(examples/led)
 add_subdirectory(examples/rpm)
+add_subdirectory(examples/xbee)
 
 add_subdirectory(dashboard)
 add_subdirectory(traction_control)
+add_subdirectory(com_node)

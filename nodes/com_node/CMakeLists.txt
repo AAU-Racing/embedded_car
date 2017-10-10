@@ -1,0 +1,14 @@
+set(target_name com_node)
+
+set(SRC_FILES
+	main.c
+	sd.c
+	telemetry.c
+)
+
+add_executable(${target_name} ${SRC_FILES})
+target_link_libraries(${target_name}
+	board_driver
+	shield_drivers
+	m
+)
