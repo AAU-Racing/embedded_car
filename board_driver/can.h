@@ -1,3 +1,6 @@
+#ifndef CAN_GUARD
+#define CAN_GUARD
+
 #include <stm32f4xx_hal.h>
 #include <stdbool.h>
 
@@ -111,3 +114,5 @@ CAN_StatusTypeDef CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
 CAN_StatusTypeDef CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
 CAN_StatusTypeDef CAN_Start();
 CAN_StatusTypeDef CAN_Init(uint8_t config);
+
+#endif /* CAN_GUARD */

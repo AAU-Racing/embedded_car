@@ -2,9 +2,19 @@ add_library(shield_drivers
 	traction_control/water_temp.c
 	traction_control/hbridge.c
 	traction_control/gear_feedback.c
-	dashboard/TLC59116.c
+	
 	dashboard/buttons.c
 	dashboard/steering_wheel_buttons.c
+	dashboard/rpm.c
+	dashboard/gear.c
+	dashboard/oil.c
+	dashboard/TLC59116.c
+	dashboard/ea_dogxl160w-7.c
+	dashboard/Fonts/font8.c
+	dashboard/Fonts/font12.c
+	dashboard/Fonts/font16.c
+	dashboard/Fonts/font20.c
+	dashboard/Fonts/font24.c
 )
 
 target_link_libraries(shield_drivers

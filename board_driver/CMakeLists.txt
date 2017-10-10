@@ -12,6 +12,7 @@ add_library(board_driver
 	gpio.c
 	pwm.c
 	i2c.c
+	spi.c
 )
 
 target_link_libraries(board_driver

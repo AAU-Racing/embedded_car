@@ -49,5 +49,8 @@ add_subdirectory(examples/water_temp)
 add_subdirectory(examples/hbridge)
 add_subdirectory(examples/gpio)
 add_subdirectory(examples/obdii)
+add_subdirectory(examples/led)
+add_subdirectory(examples/rpm)
 
+add_subdirectory(dashboard)
 add_subdirectory(traction_control)
