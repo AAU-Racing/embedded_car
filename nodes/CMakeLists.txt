@@ -52,6 +52,7 @@ add_subdirectory(examples/obdii)
 add_subdirectory(examples/led)
 add_subdirectory(examples/rpm)
 add_subdirectory(examples/xbee)
+add_subdirectory(examples/iwdg)
 
 add_subdirectory(dashboard)
 add_subdirectory(traction_control)

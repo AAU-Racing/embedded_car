@@ -13,6 +13,7 @@ add_library(board_driver
 	pwm.c
 	i2c.c
 	spi.c
+	iwdg.c
 )
 
 target_link_libraries(board_driver
