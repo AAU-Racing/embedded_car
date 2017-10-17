@@ -4,6 +4,7 @@ add_library(board_driver
 	adc.c
 	flash.c
 	can.c
+	rng.c
 	obdii.c
 	usb/usbd_cdc_interface.c
 	usb/usbd_conf.c
