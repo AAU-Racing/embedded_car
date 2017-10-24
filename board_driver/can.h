@@ -4,6 +4,8 @@
 #include <stm32f4xx_hal.h>
 #include <stdbool.h>
 
+#include "gpio.h"
+
 typedef struct {
 	uint32_t transmit;
 	uint32_t receive;

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "can.h"
+#include "gpio.h"
 
 #define MAX_FRAME_LEN 8
 #define MAX_STD_ID 0x7FF
@@ -18,12 +19,12 @@
 	CAN1, \
 })
 
-#define CAN_RX_PIN ((const uint32_t const []) { \
-	GPIO_PIN_11, \
-	GPIO_PIN_5,	 \
-	GPIO_PIN_8,	 \
-	GPIO_PIN_12, \
-	GPIO_PIN_0,  \
+#define CAN_RX_PIN ((const GPIO_Pin const []) { \
+	PIN_11, \
+	PIN_5,	 \
+	PIN_8,	 \
+	PIN_12, \
+	PIN_0,  \
 })
 
 #define CAN_RX_PORT ((GPIO_TypeDef* const []) { \
@@ -34,12 +35,12 @@
 	GPIOD, \
 })
 
-#define CAN_TX_PIN ((const uint32_t const []) { \
-	GPIO_PIN_12, \
-	GPIO_PIN_6,	 \
-	GPIO_PIN_9,	 \
-	GPIO_PIN_13, \
-	GPIO_PIN_1,  \
+#define CAN_TX_PIN ((const GPIO_Pin const []) { \
+	PIN_12, \
+	PIN_6,	 \
+	PIN_9,	 \
+	PIN_13, \
+	PIN_1,  \
 })
 
 #define CAN_TX_PORT ((GPIO_TypeDef* const []) { \
@@ -51,6 +52,7 @@
 })
 
 CAN_HandleTypeDef can_handle;
+CAN_TypeDef *registers;
 volatile CAN_Statistics stats;
 static int filter_num = 0;
 static volatile CAN_RX_Callback rx_callback[14];
@@ -97,39 +99,7 @@ static void error_handler(CAN_HandleTypeDef* hcan) {
 	}
 }
 
-static void init_gpio_clock(GPIO_TypeDef *port) {
-	if (port == GPIOA) {
-		__HAL_RCC_GPIOA_CLK_ENABLE();
-	}
-	else if (port == GPIOB) {
-		__HAL_RCC_GPIOB_CLK_ENABLE();
-	}
-	else if (port == GPIOC) {
-		__HAL_RCC_GPIOC_CLK_ENABLE();
-	}
-	else if (port == GPIOD) {
-		__HAL_RCC_GPIOD_CLK_ENABLE();
-	}
-	else if (port == GPIOE) {
-		__HAL_RCC_GPIOE_CLK_ENABLE();
-	}
-	else if (port == GPIOF) {
-		__HAL_RCC_GPIOF_CLK_ENABLE();
-	}
-	else if (port == GPIOG) {
-		__HAL_RCC_GPIOG_CLK_ENABLE();
-	}
-	else if (port == GPIOH) {
-		__HAL_RCC_GPIOH_CLK_ENABLE();
-	}
-	else if (port == GPIOI) {
-		__HAL_RCC_GPIOI_CLK_ENABLE();
-	}
-}
-
-static void configure_gpio_pin(GPIO_TypeDef *port, uint32_t pin) {
-	init_gpio_clock(port);
-
+static void configure_gpio_pin(GPIO_TypeDef *port, GPIO_Pin pin) {
 	HAL_GPIO_Init(port, &(GPIO_InitTypeDef) {
 		.Pin       = pin,
 		.Mode      = GPIO_MODE_AF_PP,
