@@ -1,11 +1,17 @@
-#include <stm32f4xx_hal.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
+#include <string.h>
 
-#include "rtc.h"
+#include <board_driver/uart.h>
+#include <board_driver/rtc.h>
+
 
 RTC_HandleTypeDef RTCHandle;
 RTC_TimeTypeDef RTCtime;
 RTC_DateTypeDef RTCdate;
+RTC_TypeDef *RTCBR = RTC;
 
 //This function initialises the hardware used by the RTC. It is automatically called by HAL_RTC_Init()
 void HAL_RTC_MspInit(RTC_HandleTypeDef *RTCHandle)
@@ -39,16 +45,64 @@ int BSP_RTC_Init()
 	RTCtime.TimeFormat 			= RTC_HOURFORMAT_24;
 	RTCtime.DayLightSaving 		= RTC_DAYLIGHTSAVING_NONE;
 	RTCtime.StoreOperation 		= RTC_STOREOPERATION_RESET;
-	HAL_RTC_SetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
+	//HAL_RTC_SetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
 
 	//the date is defined in the header file
 	RTCdate.WeekDay 	= RTC_WEEKDAY_WEDNESDAY;
 	RTCdate.Month 		= RTC_MONTH_NOVEMBER;
 	RTCdate.Date 		= DATE;
 	RTCdate.Year 		= YEAR;
-	HAL_RTC_SetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
+	//HAL_RTC_SetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
+
+	
+	uint32_t unixtime = RTC_UNIX_INIT();
+	uint32_t RTC_Time = RTC_Get_Time_Unix();
+
+	if(unixtime > RTC_Time)
+		RTC_Update_Date_Time(unixtime);
 
 	return HAL_RTC_GetState(&RTCHandle) == HAL_RTC_STATE_READY ? 0 : -1;
+}
+
+uint32_t RTC_UNIX_INIT()
+{
+	struct tm ti;
+
+    char month[3];
+
+    sscanf(__DATE__, "%s %d %d", month, &ti.tm_mday, &ti.tm_year);
+
+    ti.tm_year -= 1900;
+
+    if(!strcmp(month, "Jan"))
+        ti.tm_mon = 1;
+    else if(!strcmp(month, "Feb"))
+        ti.tm_mon = 2;
+    else if(!strcmp(month, "Mar"))
+        ti.tm_mon = 3;
+    else if(!strcmp(month, "Apr"))
+        ti.tm_mon = 4;
+    else if(!strcmp(month, "May"))
+        ti.tm_mon = 5;
+    else if(!strcmp(month, "Jun"))
+        ti.tm_mon = 6;
+    else if(!strcmp(month, "Jul"))
+        ti.tm_mon = 7;
+    else if(!strcmp(month, "Aug"))
+        ti.tm_mon = 8;
+    else if(!strcmp(month, "Sep"))
+        ti.tm_mon = 9;
+    else if(!strcmp(month, "Oct"))
+        ti.tm_mon = 10;
+    else if(!strcmp(month, "Nov"))
+        ti.tm_mon = 11;
+    else if(!strcmp(month, "Dec"))
+        ti.tm_mon = 12;
+
+    sscanf(__TIME__, "%d:%d:%d", &ti.tm_hour, &ti.tm_min, &ti.tm_sec);
+
+    return mktime(&ti);
+    //RTC_Update_Date_Time(unixTime);
 }
 
 //This function gets the current date and time
@@ -64,4 +118,40 @@ void RTC_Get_Date_Time(Date_Time_t* now)
 	now->date 		= RTCdate.Date;
 	now->month		= RTCdate.Month;
 	now->year 		= RTCdate.Year;
+}
+
+uint32_t RTC_Get_Time_Unix()
+{
+	struct tm ti;
+
+	HAL_RTC_GetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
+	HAL_RTC_GetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
+	ti.tm_sec 	= RTCtime.Seconds;
+	ti.tm_min 	= RTCtime.Minutes;
+	ti.tm_hour = RTCtime.Hours;
+	ti.tm_mday	= RTCdate.Date;
+	ti.tm_mon	= RTCdate.Month;
+	ti.tm_year	= RTCdate.Year;
+
+	return mktime(&ti);
+}
+
+void RTC_Update_Date_Time(uint32_t unixTime){
+
+    time_t t = unixTime;
+    struct tm ti;
+    localtime_r(&t, &ti);
+
+    RTCtime.Hours       = (uint8_t)ti.tm_hour;
+    RTCtime.Minutes     = (uint8_t)ti.tm_min;
+    RTCtime.Seconds     = (uint8_t)ti.tm_sec;
+    RTCtime.SubSeconds  = ((uint8_t)0);
+
+    RTCdate.Month       = (uint8_t)(ti.tm_mon);
+    RTCdate.Date        = (uint8_t)ti.tm_mday;
+    RTCdate.Year        = (uint8_t)ti.tm_year;
+
+    HAL_RTC_SetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
+    HAL_RTC_SetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
+
 }

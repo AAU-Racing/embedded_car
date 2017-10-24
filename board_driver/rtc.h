@@ -39,5 +39,10 @@ int BSP_RTC_Init();
 
 void RTC_Get_Date_Time(Date_Time_t*);
 
+void RTC_Update_Date_Time(uint32_t);
+
+uint32_t RTC_UNIX_INIT();
+
+uint32_t RTC_Get_Time_Unix();
 
 #endif /* RTC_H */
