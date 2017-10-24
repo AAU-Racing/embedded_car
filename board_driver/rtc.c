@@ -36,34 +36,18 @@ int BSP_RTC_Init()
 	RTCHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
 	RTCHandle.Init.OutPutType 	= RTC_OUTPUT_TYPE_OPENDRAIN;
 	HAL_RTC_Init(&RTCHandle);
-
-	//the time is defined in the header file
-	RTCtime.Hours 				= HOUR;
-	RTCtime.Minutes				= MINUTE;
-	RTCtime.Seconds 			= SECOND;
-	RTCtime.SubSeconds 			= SUBSECOND;
-	RTCtime.TimeFormat 			= RTC_HOURFORMAT_24;
-	RTCtime.DayLightSaving 		= RTC_DAYLIGHTSAVING_NONE;
-	RTCtime.StoreOperation 		= RTC_STOREOPERATION_RESET;
-	//HAL_RTC_SetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
-
-	//the date is defined in the header file
-	RTCdate.WeekDay 	= RTC_WEEKDAY_WEDNESDAY;
-	RTCdate.Month 		= RTC_MONTH_NOVEMBER;
-	RTCdate.Date 		= DATE;
-	RTCdate.Year 		= YEAR;
-	//HAL_RTC_SetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
-
 	
 	uint32_t unixtime = RTC_UNIX_INIT();
 	uint32_t RTC_Time = RTC_Get_Time_Unix();
 
+	//Compares compiled time with RTC time
 	if(unixtime > RTC_Time)
-		RTC_Update_Date_Time(unixtime);
+		RTC_Update_Date_Time(unixtime); //If compile time is the newest, use this as new RTC time
 
 	return HAL_RTC_GetState(&RTCHandle) == HAL_RTC_STATE_READY ? 0 : -1;
 }
 
+//Gets computer time and converts to unix timestamp
 uint32_t RTC_UNIX_INIT()
 {
 	struct tm ti;
@@ -102,7 +86,6 @@ uint32_t RTC_UNIX_INIT()
     sscanf(__TIME__, "%d:%d:%d", &ti.tm_hour, &ti.tm_min, &ti.tm_sec);
 
     return mktime(&ti);
-    //RTC_Update_Date_Time(unixTime);
 }
 
 //This function gets the current date and time
@@ -120,6 +103,7 @@ void RTC_Get_Date_Time(Date_Time_t* now)
 	now->year 		= RTCdate.Year;
 }
 
+//Converts RTC Time to Unix Timestamp 
 uint32_t RTC_Get_Time_Unix()
 {
 	struct tm ti;
@@ -136,6 +120,7 @@ uint32_t RTC_Get_Time_Unix()
 	return mktime(&ti);
 }
 
+//Sets new RTC time
 void RTC_Update_Date_Time(uint32_t unixTime){
 
     time_t t = unixTime;
