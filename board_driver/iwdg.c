@@ -10,6 +10,7 @@
 #define RESET_IWDG 0xAAAA
 
 IWDG_TypeDef *IwdgHandle = IWDG;
+RCC_TypeDef *rccHandle = RCC;
 
 void setup_dog()
 {
@@ -17,22 +18,22 @@ void setup_dog()
     IwdgHandle->PR = SET_PRESCALER32;
     IwdgHandle->RLR = SET_RELOAD_TIME;
 
-    while(!(IwdgHandle->SR & IWDG_SR_PVU_Msk == 1) && !(IwdgHandle->SR & IWDG_SR_RVU_Msk == 1))
+    while(!((IwdgHandle->SR & IWDG_SR_PVU_Msk) == 1) && !((IwdgHandle->SR & IWDG_SR_RVU_Msk) == 1));
 }
 
 //At startup check if through IWDGRSTF if reset was caused by IWDG
 int pre_init_dog()
 {
-    return !!(RCC_SCR & RCC_CSR_IWDGRSTF_Msk)
+    return !!(rccHandle->CSR & RCC_CSR_IWDGRSTF_Msk);
 }
 
-int init_dog()
+void init_dog()
 {
     IwdgHandle->KR = START_IDWG;
 }
 
 //Refreshes the IWDG.
-int reset_dog()
+void reset_dog()
 {
     IwdgHandle->KR = RESET_IWDG;
 }

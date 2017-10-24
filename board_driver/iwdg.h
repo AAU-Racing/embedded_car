@@ -3,7 +3,7 @@
 
 void setup_dog();
 int pre_init_dog();
-int init_dog();
-int reset_dog();
+void init_dog();
+void reset_dog();
 
 #endif

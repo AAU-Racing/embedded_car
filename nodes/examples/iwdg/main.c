@@ -15,12 +15,10 @@ int main(void) {
   init_dog();
   char start[] = "Starting\r\n";
   usb_transmit(start, sizeof(start)/sizeof(start[0]));
-
+  
   while (1) {
 		char str[] = "Hello usb\r\n";
 		usb_transmit(str, sizeof(str)/sizeof(str[0]));
-    reset_dog();
-
     HAL_Delay(500);
 	}
 }
