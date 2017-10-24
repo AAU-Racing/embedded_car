@@ -10,30 +10,36 @@
 #define RESET_IWDG 0xAAAA
 
 IWDG_TypeDef *IwdgHandle = IWDG;
-RCC_TypeDef *rccHandle = RCC;
+RCC_TypeDef *RCCHandle = RCC;
 
-void setup_dog()
+//Sets up the IWDG, by writing to the registers: Key, Prescale and reaload.
+//If not key register is set to 0x5555 it is not allowed to set the proscale and
+//reload register.
+void setup_IWDG()
 {
     IwdgHandle->KR = ENABLE_WRITE_ACCESS;
     IwdgHandle->PR = SET_PRESCALER32;
     IwdgHandle->RLR = SET_RELOAD_TIME;
 
-    while(!((IwdgHandle->SR & IWDG_SR_PVU_Msk) == 1) && !((IwdgHandle->SR & IWDG_SR_RVU_Msk) == 1));
+    //Busy loop: Should not continue if the Reload Value Update (RVU) or the
+    //Prescare Value Update (PVU) bit is set.
+    while(!!(IwdgHandle->SR & IWDG_SR_PVU_Msk) && !!(IwdgHandle->SR & IWDG_SR_RVU_Msk);
 }
 
-//At startup check if through IWDGRSTF if reset was caused by IWDG
-int pre_init_dog()
+//At startup check if through IWDGRSTF if reset was caused by IWDG.
+int pre_init_IWDG()
 {
-    return !!(rccHandle->CSR & RCC_CSR_IWDGRSTF_Msk);
+    return !!(RCCHandle->CSR & RCC_CSR_IWDGRSTF_Msk);
 }
 
-void init_dog()
+//Initialises the IWDG by writing 0xCCCC to the key register.
+void init_IWDG()
 {
     IwdgHandle->KR = START_IDWG;
 }
 
-//Refreshes the IWDG.
-void reset_dog()
+//Refreshes the IWDG by writing 0xAAAA to the key register.
+void reset_IWDG()
 {
     IwdgHandle->KR = RESET_IWDG;
 }
