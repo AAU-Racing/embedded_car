@@ -65,60 +65,42 @@ static inline void handle_tick(enum wheel_input inp) {
 }
 
 static void rpm1_gpio_callback(uint16_t pin_num) {
-	if (pin_num != RPM1_PIN) return;
+	(void) pin_num;
 	handle_tick(RPM1);
 }
 
 static void rpm2_gpio_callback(uint16_t pin_num) {
-	if (pin_num != RPM2_PIN) return;
+	(void) pin_num;
 	handle_tick(RPM2);
 }
 
 static void rpm3_gpio_callback(uint16_t pin_num) {
-	if (pin_num != RPM3_PIN) return;
+	(void) pin_num;
 	handle_tick(RPM3);
 }
 
 static void rpm4_gpio_callback(uint16_t pin_num) {
-	if (pin_num != RPM4_PIN) return;
+	(void) pin_num;
 	handle_tick(RPM4);
 }
 
 static void init_interrupt(enum wheel_input inp) {
-	uint32_t pin;
-	GPIO_TypeDef *port;
-	gpio_callback callback;
-
 	switch (inp) {
 		case RPM1:
-			RPM1_GPIO_CLK_ENABLE();
-			pin = RPM1_PIN;
-			port = RPM1_GPIO_PORT;
-			callback = rpm1_gpio_callback;
+			gpio_exti_init(RPM1_GPIO_PORT, RPM1_PIN, GPIO_FALLING_EDGE, rpm1_gpio_callback);
 			break;
 		case RPM2:
-			RPM2_GPIO_CLK_ENABLE();
-			pin = RPM2_PIN;
-			port = RPM2_GPIO_PORT;
-			callback = rpm2_gpio_callback;
+			gpio_exti_init(RPM2_GPIO_PORT, RPM2_PIN, GPIO_FALLING_EDGE, rpm2_gpio_callback);
 			break;
 		case RPM3:
-			RPM3_GPIO_CLK_ENABLE();
-			pin = RPM3_PIN;
-			port = RPM3_GPIO_PORT;
-			callback = rpm3_gpio_callback;
+			gpio_exti_init(RPM3_GPIO_PORT, RPM3_PIN, GPIO_FALLING_EDGE, rpm3_gpio_callback);
 			break;
 		case RPM4:
-			RPM4_GPIO_CLK_ENABLE();
-			pin = RPM4_PIN;
-			port = RPM4_GPIO_PORT;
-			callback = rpm4_gpio_callback;
+			gpio_exti_init(RPM4_GPIO_PORT, RPM4_PIN, GPIO_FALLING_EDGE, rpm4_gpio_callback);
 			break;
 
 		default: return;
 	}
-
-	gpio_exti_init(port, pin, GPIO_MODE_IT_FALLING, callback);
 }
 
 void wheel_sensor_init(void) {
