@@ -23,11 +23,11 @@ void setup_IWDG()
 
     //Busy loop: Should not continue if the Reload Value Update (RVU) or the
     //Prescare Value Update (PVU) bit is set.
-    while(!!(IwdgHandle->SR & IWDG_SR_PVU_Msk) && !!(IwdgHandle->SR & IWDG_SR_RVU_Msk);
+    while((IwdgHandle->SR & IWDG_SR_PVU_Msk) && (IwdgHandle->SR & IWDG_SR_RVU_Msk));
 }
 
 //At startup check if through IWDGRSTF if reset was caused by IWDG.
-int pre_init_IWDG()
+int was_reset_by_IWDG()
 {
     return !!(RCCHandle->CSR & RCC_CSR_IWDGRSTF_Msk);
 }
