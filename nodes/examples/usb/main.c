@@ -5,15 +5,19 @@
 #include <stm32f4xx_hal.h>
 
 #include <board_driver/usb/usb.h>
+#include <board_driver/uart.h>
 
 
 int main(void) {
-
+	uart_init();
 	usb_init();
+	HAL_Delay(3000);
+
+	char str[] = "Starting\r\n";
+	usb_transmit(str, sizeof(str)/sizeof(str[0]));
 
 	while (1) {
 		char str[] = "Hello usb\r\n";
-
 		usb_transmit(str, sizeof(str)/sizeof(str[0]));
 
 		HAL_Delay(500);
