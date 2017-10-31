@@ -23,6 +23,7 @@ add_library(shield_drivers
 
 	#com_node/sd.c
 	#com_node/sd_setup.c
+	com_node/sd_bsp.c
 	com_node/water_temperature.c
 	com_node/current_clamps.c
 	com_node/wheel_speed.c

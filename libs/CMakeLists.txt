@@ -28,23 +28,23 @@ add_subdirectory(STM32_USB_Device_Library)
 
 
 ######## FatFs ########
-add_library(FatFs
-	FatFs/diskio.c
-	FatFs/ff_gen_drv.c
-	FatFs/ff.c
+# add_library(FatFs
+# 	FatFs/diskio.c
+# 	FatFs/ff_gen_drv.c
+# 	FatFs/ff.c
 	
-	# drivers
-	FatFs/drivers/sd_diskio.c
-	FatFs/drivers/sdram_diskio.c
-	FatFs/drivers/sram_diskio.c
-	FatFs/drivers/usbh_diskio.c
+# 	# drivers
+# 	FatFs/drivers/sd_diskio.c
+# 	FatFs/drivers/sdram_diskio.c
+# 	FatFs/drivers/sram_diskio.c
+# 	FatFs/drivers/usbh_diskio.c
 
-	# option
-	FatFs/option/cc932.c
-	FatFs/option/cc936.c
-	FatFs/option/cc949.c
-	FatFs/option/cc950.c
-	FatFs/option/ccsbcs.c
-	FatFs/option/syscall.c
-	FatFs/option/unicode.c
-)
+# 	# option
+# 	FatFs/option/cc932.c
+# 	FatFs/option/cc936.c
+# 	FatFs/option/cc949.c
+# 	FatFs/option/cc950.c
+# 	FatFs/option/ccsbcs.c
+# 	FatFs/option/syscall.c
+# 	FatFs/option/unicode.c
+# )
