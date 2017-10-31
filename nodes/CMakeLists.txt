@@ -42,6 +42,7 @@ function(add_executable target_name)
 	)
 endfunction()
 
+add_subdirectory(examples/rtc)
 add_subdirectory(examples/uart)
 add_subdirectory(examples/can)
 add_subdirectory(examples/usb)
