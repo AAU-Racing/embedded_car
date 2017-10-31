@@ -28,6 +28,7 @@ add_library(board_driver
 	i2c.c
 	spi.c
 	rtc.c
+	crc.c
 )
 
 add_dependencies(board_driver
