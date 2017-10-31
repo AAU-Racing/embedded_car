@@ -8,19 +8,30 @@
 #include <board_driver/crc.h>
 
 int main(void) {
-	uint32_t buf[] = {0x1B08C22B, 0xFD3F12B6};
-	size_t n = 2;
+	// Test the hex value 0x12345678
+	uint32_t buf[] = {0x12345678};
+	// The test array lenght is = 1
+	size_t n = 1;
+	// Set the result to a random value
 	uint32_t result = 1234;
-	uint32_t expect = 0x9CE01764;
+	// The result for 0x12345678 = 0xAF6D87D2
+	uint32_t expecthex = 0xAF6D87D2;
 
+	// Init uart and crc
+	uart_init();
 	crc_init();
+
 	printf("crc init complete\n");
 
 	HAL_Delay(100);
 
+	// Override the new calculated crc result to result
 	result = crc_calculate(buf, n);
 	printf("crc calculate complete\n");
 
-	printf("Result = %u\n", result);
-	printf("Result expected = %u\n", );
+	// Print the result and expected
+	printf("Result = %x\n", result);
+	printf("Result expected HEX= %x\n", expecthex);
+
+	while(1);
 }
