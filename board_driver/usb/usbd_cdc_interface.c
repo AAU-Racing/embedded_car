@@ -1,12 +1,14 @@
 #include "usbd_cdc_interface.h"
+#include "../ringbuffer.h"
 
 
-#define APP_RX_DATA_SIZE  2048
-#define APP_TX_DATA_SIZE  2048
+#define RX_DATA_SIZE  1024
 
 
-uint8_t UserRxBuffer[APP_RX_DATA_SIZE]; /* Received Data over USB are stored in this buffer */
-uint8_t UserTxBuffer[APP_TX_DATA_SIZE]; /* Received Data over UART (CDC interface) are stored in this buffer */
+ringbuffer_t usb_rec;
+uint8_t usb_rec_buf[RX_DATA_SIZE];
+
+uint8_t UserRxBuffer[RX_DATA_SIZE]; /* Received Data over USB are stored in this buffer */
 
 /* USB handler declaration */
 extern USBD_HandleTypeDef  USBD_Device;
@@ -25,8 +27,8 @@ USBD_CDC_ItfTypeDef USBD_CDC_fops = {
 
 
 static int8_t CDC_Itf_Init(void) {
-	USBD_CDC_SetTxBuffer(&USBD_Device, UserTxBuffer, 0);
 	USBD_CDC_SetRxBuffer(&USBD_Device, UserRxBuffer);
+	rb_init(&usb_rec, usb_rec_buf, RX_DATA_SIZE);
 
 	return (USBD_OK);
 }
@@ -51,8 +53,21 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length) {
 
 
 static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len) {
-	(void)Buf;
-	(void)Len;
+	for (size_t i = 0; i < *Len; i++) {
+		rb_push(&usb_rec, Buf[i]);
+	}
 	USBD_CDC_ReceivePacket(&USBD_Device);
 	return (USBD_OK);
+}
+
+
+uint8_t cdc_recieve() {
+	uint8_t data;
+	while (rb_pop(&usb_rec, &data));
+	return data;
+}
+
+void cdc_send(void *buf, size_t len) {
+	USBD_CDC_SetTxBuffer(&USBD_Device, (uint8_t*)buf, len);
+	USBD_CDC_TransmitPacket(&USBD_Device);
 }

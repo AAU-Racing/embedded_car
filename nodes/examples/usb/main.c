@@ -3,13 +3,10 @@
 #include <stdio.h>
 
 #include <stm32f4xx_hal.h>
-
 #include <board_driver/usb/usb.h>
-#include <board_driver/uart.h>
 
 
 int main(void) {
-	uart_init();
 	usb_init();
 	HAL_Delay(3000);
 

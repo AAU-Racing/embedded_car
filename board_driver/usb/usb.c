@@ -25,8 +25,11 @@ int usb_init(void) {
 	return 0;
 }
 
-int usb_transmit(void *buf, size_t len) {
-	USBD_CDC_SetTxBuffer(&USBD_Device, (uint8_t*)buf, len);
 
-	return USBD_CDC_TransmitPacket(&USBD_Device) == USBD_OK;
+void usb_transmit(void *buf, size_t len) {
+	cdc_send(buf, len);
+}
+
+uint8_t usb_recieve() {
+	return cdc_recieve();
 }
