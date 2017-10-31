@@ -114,11 +114,15 @@ SD_HandleTypeDef uSdHandle;
 // TODO: This is really a bad hack. The build system should give us access by doing just <gpio.h>
 #include "../../board_driver/gpio.h" 
 
+#define SD_DETECT_PIN 1 // TODO: determin correct pin
+#define IO_MODE_IT_FALLING_EDGE 1 // TODO: get correct value
 
 static void BSP_IO_Init() { return; /* Do nothing */ }
 
 // TODO: reaplce all calls to the below with correct calls to our own gpio library
 static void BSP_IO_ConfigPin(uint32_t pin, uint32_t mode) {
+	(void) pin;
+	(void) mode;
 	// BSP_IO_ConfigPin(SD_DETECT_PIN, IO_MODE_IT_FALLING_EDGE);
 	// gpio_exti_init(GPIO_TypeDef *port, uint32_t pin, uint32_t mode, gpio_callback callback);
 
