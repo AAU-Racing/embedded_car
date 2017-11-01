@@ -7,7 +7,7 @@
 
 
 int main(void) {
-	BSP_UART_init();
+	uart_init();
 	printf("Starting\n\n");
 	printf("RTC status: %d\n", BSP_RTC_Init());
 
