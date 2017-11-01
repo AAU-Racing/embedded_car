@@ -115,7 +115,7 @@ static void set_af(GPIO_TypeDef *port, uint8_t pos, GPIO_AlternateFunction af) {
 	MODIFY_REG(port->AFR[reg_num], 0xF << ((pos & 0x7) * 4U), af << ((pos & 0x7) * 4U)); // Set pin bits (4 bits wide) (see alternate function typedef)
 }
 
-void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Mode mode, GPIO_Speed speed, GPIO_OutputType ot, GPIO_AlternateFunction af) {
+void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_OutputType ot, GPIO_AlternateFunction af) {
 	// Init clock
 	init_gpio_clock(port);
 
@@ -123,7 +123,7 @@ void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Mode mode, GPIO_Speed s
 	uint8_t pos = pin_number(pin);
 
 	// Set parameters
-	set_mode(port, pos, mode);
+	set_mode(port, pos, GPIO_AF);
 	set_speed(port, pos, speed);
 	set_output_type(port, pos, ot);
 	set_af(port, pos, af);
