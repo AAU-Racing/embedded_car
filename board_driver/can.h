@@ -10,25 +10,32 @@ typedef struct {
 	uint32_t transmit;
 	uint32_t receive;
 	uint8_t error_total;
-	uint8_t error_ewg; /* Error warning */
-	uint8_t error_epv; /* Error passive (when transmit error counter, TEC, reaches 127) */
-	uint8_t error_bof; /* Bus off (when TEC reaches 255) */
-	uint8_t error_stuff; /* Bit stuffing error */
-	uint8_t error_form; /* Form error (When fixed format bits are not correct)*/
-	uint8_t error_ack; /* Acknowledgement error */
-	uint8_t error_recess; /* Bit recessive error (if monitoring opposite bit than transmitted after RTR)*/
-	uint8_t error_dominant; /* Bit dominant error (if monitoring opposite bit than transmitted after RTR)*/
-	uint8_t error_crc; /* CRC error */
+	uint8_t error_ewg; // Error warning
+	uint8_t error_epv; // Error passive (when transmit error counter, TEC, reaches 127)
+	uint8_t error_bof; // Bus off (when TEC reaches 255)
+	uint8_t error_stuff; // Bit stuffing error
+	uint8_t error_form; // Form error (When fixed format bits are not correct)
+	uint8_t error_ack; // Acknowledgement error
+	uint8_t error_recess; // Bit recessive error (if monitoring opposite bit than transmitted after RTR)
+	uint8_t error_dominant; // Bit dominant error (if monitoring opposite bit than transmitted after RTR)
+	uint8_t error_crc; // CRC error
 } CAN_Statistics;
 
-typedef enum {
-	CAN_OK 				= 0U,
-	CAN_DRIVER_ERROR 	= 1U,
-	CAN_INVALID_ID 		= 2U,
-	CAN_INVALID_FRAME 	= 3U
-} CAN_StatusTypeDef;
+typedef struct {
+	uint16_t StdId;
+	uint8_t FMI;
+	uint8_t Length;
+	uint8_t Msg[8];
+} CAN_RxFrame;
 
-typedef void (*CAN_RX_Callback) (CanRxMsgTypeDef *msg);
+typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
+
+#define	CAN_OK            0U
+#define CAN_DRIVER_ERROR  1U
+#define CAN_INVALID_ID    2U
+#define	CAN_INVALID_FRAME 3U
+#define CAN_INIT_TIMEOUT  4U
+#define CAN_BUFFER_FULL   5U
 
 // Definitions for CAN configurations
 #define CAN_PA11 	0
@@ -111,10 +118,11 @@ typedef void (*CAN_RX_Callback) (CanRxMsgTypeDef *msg);
 #define CAN_NODE_TRACTION_CONTROL_STARTED	1
 #define CAN_NODE_DASHBOARD_STARTED			2
 
-CAN_StatusTypeDef CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
+uint8_t CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
 // !!!!!!!!!!!!!!!! Printf is not allow inside the callback !!!!!!!!!!!!!!!
-CAN_StatusTypeDef CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
-CAN_StatusTypeDef CAN_Start();
-CAN_StatusTypeDef CAN_Init(uint8_t config);
+uint8_t CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
+uint8_t CAN_Start();
+uint8_t CAN_Init(uint8_t config);
+CAN_Statistics CAN_GetStats();
 
 #endif /* CAN_GUARD */

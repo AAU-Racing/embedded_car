@@ -11,11 +11,11 @@ bool get_gear(gear_t* gear){
 	*gear = gear_No;
 	bool is_new_data = gear_is_new;
 	gear_is_new = false;
-	return is_new_data; 
+	return is_new_data;
 }
 
-void gear_Callback(CanRxMsgTypeDef* Msg){
-	gear_No = Msg->Data[0];
+void gear_Callback(CAN_RxFrame* Msg){
+	gear_No = Msg->Msg[0];
 	gear_is_new = true;
 }
 

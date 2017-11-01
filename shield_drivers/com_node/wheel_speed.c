@@ -46,21 +46,21 @@ bool get_wheel_speed_RR(float* speed){
 	return is_new_data;
 }
 
-void wheel_speed_callback(CanRxMsgTypeDef* Msg){
+void wheel_speed_callback(CAN_RxFrame* Msg){
 	if (Msg->StdId == CAN_WHEEL_SPEED_FL){
-		memcpy(wheel_speed_FL.bytes, Msg->Data, 4);
+		memcpy(wheel_speed_FL.bytes, Msg->Msg, 4);
 		FL_is_new = true;
 	}
 	else if(Msg->StdId == CAN_WHEEL_SPEED_FR){
-		memcpy(wheel_speed_FR.bytes, Msg->Data, 4);
+		memcpy(wheel_speed_FR.bytes, Msg->Msg, 4);
 		FR_is_new = true;
 	}
 	else if(Msg->StdId == CAN_WHEEL_SPEED_RL){
-		memcpy(wheel_speed_RL.bytes, Msg->Data, 4);
+		memcpy(wheel_speed_RL.bytes, Msg->Msg, 4);
 		RL_is_new = true;
 	}
 	else if(Msg->StdId == CAN_WHEEL_SPEED_RR){
-		memcpy(wheel_speed_RR.bytes, Msg->Data, 4);
+		memcpy(wheel_speed_RR.bytes, Msg->Msg, 4);
 		RR_is_new = true;
 	}
 }

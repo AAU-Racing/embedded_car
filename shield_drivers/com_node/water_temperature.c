@@ -25,13 +25,13 @@ bool get_water_temp_out(uint16_t* temp) {
 	return is_new_data;
 }
 
-void water_temperature_callback(CanRxMsgTypeDef* Msg) {
+void water_temperature_callback(CAN_RxFrame* Msg) {
 	if (Msg->StdId == CAN_WATER_TEMPERATURE_IN) {
-		water_temperature_in = (Msg->Data[1] << 8 | Msg->Data[0]);
+		water_temperature_in = (Msg->Msg[1] << 8 | Msg->Msg[0]);
 		water_in_is_new = true;
 	}
 	else if (Msg->StdId == CAN_WATER_TEMPERATURE_OUT) {
-		water_temperature_out = (Msg->Data[1] << 8 | Msg->Data[0]);
+		water_temperature_out = (Msg->Msg[1] << 8 | Msg->Msg[0]);
 		water_out_is_new = true;
 	}
 }

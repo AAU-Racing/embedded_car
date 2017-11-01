@@ -7,11 +7,10 @@
 #include <board_driver/uart.h>
 #include <board_driver/can.h>
 
-extern volatile CAN_Statistics stats;
-static CanRxMsgTypeDef lastMsg;
+static CAN_RxFrame lastMsg;
 static bool received = false;
 
-void AllMsg(CanRxMsgTypeDef *msg);
+void AllMsg(CAN_RxFrame *msg);
 
 int main(void) {
 	uart_init();
@@ -50,13 +49,13 @@ int main(void) {
 			i = 'a';
 
 		if (HAL_GetTick() - lastPrint > 1000) {
-			printf("Received %u\n", (unsigned) stats.receive);
+			printf("Received %u\n", (unsigned) CAN_GetStats().receive);
 			lastPrint = HAL_GetTick();
 		}
 
 		if (received) {
-			lastMsg.Data[lastMsg.DLC] = '\0';
-			printf("Message: %s", lastMsg.Data);
+			lastMsg.Msg[lastMsg.Length] = '\0';
+			printf("Message: %s", lastMsg.Msg);
 			printf("\n");
 
 			received = false;
@@ -66,7 +65,7 @@ int main(void) {
 	}
 }
 
-void AllMsg(CanRxMsgTypeDef *msg) {
+void AllMsg(CAN_RxFrame *msg) {
 	lastMsg = *msg;
 	received = true;
 }

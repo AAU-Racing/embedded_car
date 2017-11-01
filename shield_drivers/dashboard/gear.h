@@ -12,5 +12,4 @@ typedef enum {
 } gear_t;
 
 bool get_gear(gear_t* gear);
-void gear_Callback(CanRxMsgTypeDef* Msg);
 HAL_StatusTypeDef gear_init();

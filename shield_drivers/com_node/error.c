@@ -32,12 +32,14 @@ bool get_error(uint16_t *id, uint32_t *error_id) {
 	return true;
 }
 
-void error_callback(CanRxMsgTypeDef* Msg){
+void error_callback(CAN_RxFrame* Msg){
 	if (size < BUFFER_SIZE) {
 		return;
 	}
 
-	buffer[head] = (error_msg) { Msg->StdId, Msg->Data[3] << 24 | Msg->Data[2] << 16 | Msg->Data[1] << 8 | Msg->Data[0] };
+	buffer[head].id = Msg->StdId;
+	buffer[head].error_id = *((uint32_t*) Msg->Msg);
+
 	head = (head + 1) % BUFFER_SIZE;
 	size++;
 }
