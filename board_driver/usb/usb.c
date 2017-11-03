@@ -26,7 +26,7 @@ int usb_init(void) {
 }
 
 
-void usb_transmit(void *buf, size_t len) {
+void usb_send(void *buf, size_t len) {
 	cdc_send(buf, len);
 }
 
