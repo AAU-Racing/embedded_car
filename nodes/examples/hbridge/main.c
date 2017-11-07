@@ -19,6 +19,7 @@ int main(void) {
 	HAL_Delay(5);
 
 	printf("all enable and direction pins toggled on\n");
+	hbridge1forward();
 
 	HAL_Delay(10);
 }

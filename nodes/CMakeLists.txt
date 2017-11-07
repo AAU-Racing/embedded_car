@@ -50,6 +50,7 @@ add_subdirectory(examples/hbridge)
 add_subdirectory(examples/gpio)
 add_subdirectory(examples/obdii)
 add_subdirectory(examples/led)
+add_subdirectory(examples/rng)
 add_subdirectory(examples/rpm)
 add_subdirectory(examples/xbee)
 
