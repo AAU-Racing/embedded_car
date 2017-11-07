@@ -59,34 +59,24 @@ void SPI_init(void)
 }
 
 
-void SPI_transmit(uint8_t *input, uint32_t Size)
+void SPI_transmit(uint8_t *input, uint32_t count)
 {
-	__IO uint16_t count = Size;
 	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SPE_Msk, SPI_ENABLE);
 
-	if(count == 0x01)
-	{
-		// Wait until TXE flag is set to send data
-		while(!(SPIHandle->SR & SPI_SR_TXE));
-		// Write a data item to send into the SPI_DR register (this clears the TXE bit).
-		WRITE_REG_MASK(SPIHandle->DR, SPI_DR_DR_Msk, *input);
-		input += sizeof(uint8_t);
-		count--;
-	}
 	while(count > 0U)
 	{
 		// Wait until TXE flag is set to send data
 		while(!(SPIHandle->SR & SPI_SR_TXE));
 
 		// Write a data item to send into the SPI_DR register (this clears the TXE bit).
-		WRITE_REG_MASK(SPIHandle->DR, SPI_DR_DR_Msk, *input);
+		SPIHandle->DR = *input;
 		input += sizeof(uint8_t);
 		count--;
 	}
 
 	// After writing the last data item into the SPI_DR register, wait until TXE=1, then wait until
 	// BSY=0, this indicates that the transmission of the last data is complete.
-	while(!(SPIHandle->SR & SPI_SR_TXE) && (SPIHandle->SR & SPI_SR_BSY));
+	//while(!(SPIHandle->SR & SPI_SR_TXE) && (SPIHandle->SR & SPI_SR_BSY));
 }
 
 
@@ -94,10 +84,9 @@ void SPI_transmit(uint8_t *input, uint32_t Size)
 
 
 
-/*HAL_StatusTypeDef SPI_transmit(void *tx, uint32_t size) {
-	return HAL_SPI_Transmit(&spi_handle, tx, size, TX_TIMEOUT_MS);*/
 
 
+//OLD HAL CODE
 /*#include <stm32f4xx_hal.h>
 
 #include "spi.h"

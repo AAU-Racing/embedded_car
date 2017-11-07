@@ -19,7 +19,7 @@
 
 void configure_SPI_SCK(void);
 void SPI_init(void);
-void SPI_transmit(uint8_t *input, uint32_t Size);
+void SPI_transmit(uint8_t *input, uint32_t count);
 //HAL_StatusTypeDef SPI_transmit(void *tx, uint32_t size);
 
 #endif /* SPI_H */
