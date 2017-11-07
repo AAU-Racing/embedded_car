@@ -42,6 +42,7 @@ function(add_executable target_name)
 	)
 endfunction()
 
+add_subdirectory(examples/rtc)
 add_subdirectory(examples/uart)
 add_subdirectory(examples/can)
 add_subdirectory(examples/usb)
@@ -52,7 +53,8 @@ add_subdirectory(examples/obdii)
 add_subdirectory(examples/led)
 add_subdirectory(examples/rng)
 add_subdirectory(examples/rpm)
-add_subdirectory(examples/xbee)
+add_subdirectory(examples/xbee
+add_subdirectory(examples/crc)
 
 add_subdirectory(dashboard)
 add_subdirectory(traction_control)
