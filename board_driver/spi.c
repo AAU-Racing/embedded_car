@@ -18,7 +18,6 @@
 #define TIMODE_DISABLED 0x00
 #define MODE_MASTER 0x01
 #define MODE_AF_PP 0x02
-//#define GPIO_NOPULL 0x00
 #define SPI_ENABLE 0x01
 
 SPI_TypeDef *SPIHandle = SPI1;
