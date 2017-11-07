@@ -1,5 +1,3 @@
-#include <stm32f4xx_hal.h>
-
 #include "pwm.h"
 
 #define PERIOD_VALUE (1000 - 1)

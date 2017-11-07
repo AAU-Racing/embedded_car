@@ -18,17 +18,14 @@
 #define TIMODE_DISABLED 0x00
 #define MODE_MASTER 0x01
 #define MODE_AF_PP 0x02
-#define GPIO_NOPULL 0x00
+//#define GPIO_NOPULL 0x00
 #define SPI_ENABLE 0x01
-
-static SPI_HandleTypeDef spi_handle;
 
 SPI_TypeDef *SPIHandle = SPI1;
 
-
-SPIx_SCK_GPIO_CLK_ENABLE();
+/*SPIx_SCK_GPIO_CLK_ENABLE();
 SPIx_MOSI_GPIO_CLK_ENABLE();
-SPIx_CLK_ENABLE();
+SPIx_CLK_ENABLE();*/
 
 void configure_SPI_SCK(void)
 {
@@ -47,8 +44,6 @@ void configure_SPI_SCK(void)
 
 void SPI_init(void)
 {
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SPE_Msk, SPI_ENABLE);
-
 		configure_SPI_SCK();
 
 		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_BR_Msk, BAUDRATEPRESCALER_8);
@@ -60,39 +55,45 @@ void SPI_init(void)
 		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_DFF_Msk, DATASIZE_8BIT);
 		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_LSBFIRST_Msk, FIRSTBIT_MSB);
 		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SSM_Msk, NSS_SOFT);
-		WRITE_REG_MASK(SPIHandle->CR2, SPI_CR1_FRF_Msk, TIMODE_DISABLED);
+		WRITE_REG_MASK(SPIHandle->CR2, SPI_CR2_FRF_Msk, TIMODE_DISABLED);
 		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_MSTR_Msk, MODE_MASTER);
 }
 
 
-SPI_transmit()
+void SPI_transmit(uint8_t *input, uint32_t Size)
 {
+	__IO uint16_t count = Size;
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SPE_Msk, SPI_ENABLE);
+
 	if(count == 0x01)
 	{
-		/**((__IO uint8_t*)&hspi->Instance->DR) = (*pData);
-		pData += sizeof(uint8_t);
-		hspi->TxXferCount--;*/
+		// Wait until TXE flag is set to send data
+		while(!(SPIHandle->SR & SPI_SR_TXE));
+		// Write a data item to send into the SPI_DR register (this clears the TXE bit).
+		WRITE_REG_MASK(SPIHandle->DR, SPI_DR_DR_Msk, *input);
+		input += sizeof(uint8_t);
+		count--;
 	}
 	while(count > 0U)
 	{
-		/* Wait until TXE flag is set to send data *
-		if(__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE))
-		{
-			*((__IO uint8_t*)&hspi->Instance->DR) = (*pData);
-			pData += sizeof(uint8_t);
-			hspi->TxXferCount--;
-		}
-		else
-		{
-			/* Timeout management *
-			if((Timeout == 0U) || ((Timeout != HAL_MAX_DELAY) && ((HAL_GetTick()-tickstart) >=  Timeout)))
-			{
-				errorcode = HAL_TIMEOUT;
-				goto error;
-			}
-		}*/
+		// Wait until TXE flag is set to send data
+		while(!(SPIHandle->SR & SPI_SR_TXE));
+
+		// Write a data item to send into the SPI_DR register (this clears the TXE bit).
+		WRITE_REG_MASK(SPIHandle->DR, SPI_DR_DR_Msk, *input);
+		input += sizeof(uint8_t);
+		count--;
 	}
+
+	// After writing the last data item into the SPI_DR register, wait until TXE=1, then wait until
+	// BSY=0, this indicates that the transmission of the last data is complete.
+	while(!(SPIHandle->SR & SPI_SR_TXE) && (SPIHandle->SR & SPI_SR_BSY));
 }
+
+
+
+
+
 
 /*HAL_StatusTypeDef SPI_transmit(void *tx, uint32_t size) {
 	return HAL_SPI_Transmit(&spi_handle, tx, size, TX_TIMEOUT_MS);*/
