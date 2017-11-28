@@ -4,6 +4,8 @@
 #include <time.h>
 #include <string.h>
 
+#include <stm32f4xx.h>
+
 #include <board_driver/uart.h>
 #include <board_driver/rtc.h>
 
@@ -12,6 +14,8 @@ RTC_HandleTypeDef RTCHandle;
 RTC_TimeTypeDef RTCtime;
 RTC_DateTypeDef RTCdate;
 RTC_TypeDef *RTCBR = RTC;
+
+RTC_TypeDef *RTChandle = RTC;
 
 //This function initialises the hardware used by the RTC. It is automatically called by HAL_RTC_Init()
 void HAL_RTC_MspInit(RTC_HandleTypeDef *RTCHandle)
@@ -108,14 +112,15 @@ uint32_t RTC_Get_Time_Unix()
 {
 	struct tm ti;
 
-	HAL_RTC_GetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
-	HAL_RTC_GetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
-	ti.tm_sec 	= RTCtime.Seconds;
-	ti.tm_min 	= RTCtime.Minutes;
-	ti.tm_hour = RTCtime.Hours;
-	ti.tm_mday	= RTCdate.Date;
-	ti.tm_mon	= RTCdate.Month;
-	ti.tm_year	= RTCdate.Year;
+	ti.tm_hour = ((RTChandle->TR & RTC_TR_HT_Msk) * 10) + (RTChandle->TR & RTC_TR_HU_Msk);
+	ti.tm_min = ((RTChandle-> TR& RTC_TR_MNT_Msk) * 10) + (RTChandle->TR & RTC_TR_MNU_Msk);
+	ti.tm_sec = ((RTChandle-> TR& RTC_TR_ST_Msk) * 10) + (RTChandle->TR & RTC_TR_SU_Msk);
+
+
+	ti.tm_mday = ((RTChandle-> DR& RTC_DR_DT_Msk) * 10) + (RTChandle->DR & RTC_DR_DU_Msk);
+	ti.tm_mon = ((RTChandle-> DR& RTC_DR_MT_Msk) * 10) + (RTChandle->DR & RTC_DR_MU_Msk);
+	ti.tm_year = ((RTChandle-> DR& RTC_DR_YT_Msk) * 10) + (RTChandle->DR & RTC_DR_YU_Msk);
+
 
 	return mktime(&ti);
 }
