@@ -29,6 +29,7 @@ add_library(board_driver
 	spi.c
 	rtc.c
 	crc.c
+	dac.c
 )
 
 add_dependencies(board_driver
