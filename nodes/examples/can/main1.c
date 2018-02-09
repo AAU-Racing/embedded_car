@@ -7,11 +7,10 @@
 #include <board_driver/uart.h>
 #include <board_driver/can.h>
 
-extern volatile CAN_Statistics stats;
-static CanRxMsgTypeDef lastMsg;
+static CAN_RxFrame lastMsg;
 static bool received = false;
 
-void AllMsg(CanRxMsgTypeDef *msg);
+void AllMsg(CAN_RxFrame *msg);
 
 int main(void) {
 	uart_init();
@@ -31,42 +30,35 @@ int main(void) {
 		printf("CAN start error\n");
 	}
 	else {
-		printf("CAN send started\n");
+		printf("CAN started\n");
 	}
 
 	uint8_t i = '0';
 	uint32_t lastPrint = 0;
 
 	while(true) {
-		if (CAN_Send(0x7fe, (uint8_t[]) { i }, 1) == CAN_OK) {
-			printf("Transmitting\n");
-		}
-		else {
-			printf("Send error\n");
-		}
+		CAN_Send(0x7fe, (uint8_t[]) { i }, 1);
 
 		i++;
-		if (i == '9' + 1)
+		if (i == '9' + 1) {
 			i = '0';
+        }
 
 		if (HAL_GetTick() - lastPrint > 1000) {
-			printf("Received %u\n", (unsigned) stats.receive);
+			printf("Received %u\n", (unsigned) CAN_GetStats().receive);
 			lastPrint = HAL_GetTick();
+
+    		if (received) {
+    			lastMsg.Msg[lastMsg.Length] = '\0';
+    			printf("Message: %s\n", lastMsg.Msg);
+
+    			received = false;
+    		}
 		}
-
-		if (received) {
-			lastMsg.Data[lastMsg.DLC] = '\0';
-			printf("Message: %s", lastMsg.Data);
-			printf("\n");
-
-			received = false;
-		}
-
-		HAL_Delay(100);
 	}
 }
 
-void AllMsg(CanRxMsgTypeDef *msg) {
+void AllMsg(CAN_RxFrame *msg) {
 	lastMsg = *msg;
 	received = true;
 }

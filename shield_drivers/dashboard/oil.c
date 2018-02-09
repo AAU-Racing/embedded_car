@@ -16,8 +16,8 @@ bool oilPressure_OK(bool* ok){
 	return it_is_new;
 }
 
-void oil_pressure_Callback(CanRxMsgTypeDef* Msg){
-	oil_pressure_is_ok = Msg->Data[0];
+void oil_pressure_Callback(CAN_RxFrame* Msg){
+	oil_pressure_is_ok = Msg->Msg[0];
 	data_is_new = true;
 }
 

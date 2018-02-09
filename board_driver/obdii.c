@@ -24,14 +24,14 @@ OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
 /////////////////////////////////////
 // Convert to OBDII frame
 ////////////////////////////////////
-static OBDII_Mode1_Frame can_to_obdii_mode1(const CanRxMsgTypeDef* can_frame) {
+static OBDII_Mode1_Frame can_to_obdii_mode1(const CAN_RxFrame* can_frame) {
 	OBDII_Mode1_Frame frame = (OBDII_Mode1_Frame) {
-		.Pid    = (OBDII_Mode1_Pid) can_frame->Data[2],
-		.Length = can_frame->Data[0] - 2,
+		.Pid    = (OBDII_Mode1_Pid) can_frame->Msg[2],
+		.Length = can_frame->Msg[0] - 2,
 		.New 	= true,
 	};
 	for (uint8_t i = 0; i < frame.Length; i++) {
-		frame.Msg[i] = can_frame->Data[3 + i];
+		frame.Msg[i] = can_frame->Msg[3 + i];
 	}
 	return frame;
 }
@@ -64,8 +64,8 @@ static DTC_Message ByteToDTC(const uint8_t *message) {
 ////////////////////////////////////
 // Receive callback
 ////////////////////////////////////
-static void obdii_response_handler(CanRxMsgTypeDef *msg) {
-	if (msg->Data[1] == 0x41) {
+static void obdii_response_handler(CAN_RxFrame *msg) {
+	if (msg->Msg[1] == 0x41) {
 		OBDII_Mode1_Frame frame = can_to_obdii_mode1(msg);
 		mode1_buffer[frame.Pid] = frame;
 	}

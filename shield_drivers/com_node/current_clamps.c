@@ -25,13 +25,13 @@ bool get_inverter_current(uint16_t* current) {
 	return is_new_data;
 }
 
-void current_callback(CanRxMsgTypeDef* Msg) {
+void current_callback(CAN_RxFrame* Msg) {
 	if (Msg->StdId == CAN_BATTERY_CURRENT) {
-		battery_current = (Msg->Data[1] << 8 | Msg->Data[0]);
+		battery_current = (Msg->Msg[1] << 8 | Msg->Msg[0]);
 		battery_current_is_new = true;
 	}
 	else if (Msg->StdId == CAN_INVERTER_CURRENT) {
-		inverter_current = (Msg->Data[1] << 8 | Msg->Data[0]);
+		inverter_current = (Msg->Msg[1] << 8 | Msg->Msg[0]);
 		inverter_current_is_new = true;
 	}
 }

@@ -106,13 +106,13 @@ static bool gearDown() {
 	return shifted;
 }
 
-static void GearCallback(CanRxMsgTypeDef *msg) {
-	if (msg->Data[0] == CAN_GEAR_BUTTON_UP) {
+static void GearCallback(CAN_RxFrame *msg) {
+	if (msg->Msg[0] == CAN_GEAR_BUTTON_UP) {
 		if (wantedGearNumber < 6) {
 			wantedGearNumber++;
 		}
 	}
-	else if (msg->Data[0] == CAN_GEAR_BUTTON_DOWN) {
+	else if (msg->Msg[0] == CAN_GEAR_BUTTON_DOWN) {
 		if (wantedGearNumber > 0) {
 			wantedGearNumber--;
 		}

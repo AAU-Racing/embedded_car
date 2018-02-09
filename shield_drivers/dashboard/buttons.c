@@ -27,32 +27,17 @@ static uint8_t button_number(uint16_t pin) {
 	}
 }
 
-static void button_gpio_clk_enable(dashboard_button b) {
-	switch(b) {
-		case DASHBOARD_BUTTON1: BUTTON1_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTON2: BUTTON2_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTON3: BUTTON3_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTON4: BUTTON4_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTON5: BUTTON5_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTON6: BUTTON6_GPIO_CLK_ENABLE(); break;
-		case DASHBOARD_BUTTONn:
-		default:
-			break;
-	}
-}
-
 void buttons_handle(uint16_t number) {
 	triggeredBtn[button_number(number)] = true;
 }
 
 void dashboard_buttons_init(void) {
 	for (dashboard_button b = 0; b < DASHBOARD_BUTTONn; b++) {
-		button_gpio_clk_enable(b);
-		gpio_exti_init(BUTTON_PORT[b], BUTTON_PIN[b], GPIO_MODE_IT_FALLING, buttons_handle);
+		gpio_exti_init(BUTTON_PORT[b], BUTTON_PIN[b], GPIO_FALLING_EDGE, buttons_handle);
 	}
 }
 
-bool dashboard_button_get_state(dashboard_button b, GPIO_PinState* state) {
+bool dashboard_button_get_state(dashboard_button b, bool *state) {
 	return gpio_get_state(BUTTON_PORT[b], BUTTON_PIN[b], state);
 }
 
