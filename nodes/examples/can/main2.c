@@ -30,11 +30,10 @@ int main(void) {
 		printf("CAN start error\n");
 	}
 	else {
-		printf("CAN send started\n");
+		printf("CAN started\n");
 	}
 
 	uint8_t i = 'a';
-	uint32_t lastPrint = 0;
 
 	while(true) {
 		if (CAN_Send(0x7ff, (uint8_t[]) { i }, 1) == CAN_OK) {
@@ -45,23 +44,20 @@ int main(void) {
 		}
 
 		i++;
-		if (i == 'z' + 1)
+		if (i == 'z' + 1) {
 			i = 'a';
+        }
 
-		if (HAL_GetTick() - lastPrint > 1000) {
-			printf("Received %u\n", (unsigned) CAN_GetStats().receive);
-			lastPrint = HAL_GetTick();
-		}
+		printf("Received %u\n", (unsigned) CAN_GetStats().receive);
 
-		if (received) {
+        if (received) {
 			lastMsg.Msg[lastMsg.Length] = '\0';
-			printf("Message: %s", lastMsg.Msg);
-			printf("\n");
+			printf("Message: %s\n", lastMsg.Msg);
 
 			received = false;
 		}
 
-		HAL_Delay(100);
+		HAL_Delay(1000);
 	}
 }
 
