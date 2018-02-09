@@ -9,10 +9,10 @@
 typedef struct {
     uint32_t transmit;
     uint32_t receive;
-    uint8_t error_total;
-    uint8_t error_ewg; // Error warning
-    uint8_t error_epv; // Error passive (when transmit error counter, TEC, reaches 127)
-    uint8_t error_bof; // Bus off (when TEC reaches 255)
+    uint32_t error_total;
+    uint32_t error_ewg; // Error warning
+    uint32_t error_epv; // Error passive (when transmit error counter, TEC, reaches 127)
+    uint32_t error_bof; // Bus off (when TEC reaches 255)
     uint8_t error_stuff; // Bit stuffing error
     uint8_t error_form; // Form error (When fixed format bits are not correct)
     uint8_t error_ack; // Acknowledgement error
