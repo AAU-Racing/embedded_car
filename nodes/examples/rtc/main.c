@@ -14,7 +14,7 @@ int main(void) {
 	while (1) {
 		Date_Time_t now;
 		RTC_Get_Date_Time(&now);
-		printf("time: %02d:%02d:%02d %d, %d\n", now.hours, now.minutes, now.seconds, now.month, now.year);
+		printf("time: %02d:%02d:%02d %d/%d/%d\n", now.hours, now.minutes, now.seconds, now.date, now.month, (now.year + 1900));
 		HAL_Delay(1000);
 	}
 }
