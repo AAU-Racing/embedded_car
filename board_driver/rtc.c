@@ -63,29 +63,29 @@ uint32_t RTC_UNIX_INIT()
     ti.tm_year -= 1900;
 
     if(!strcmp(month, "Jan"))
-        ti.tm_mon = 1;
+        ti.tm_mon = 0;
     else if(!strcmp(month, "Feb"))
-        ti.tm_mon = 2;
+        ti.tm_mon = 1;
     else if(!strcmp(month, "Mar"))
-        ti.tm_mon = 3;
+        ti.tm_mon = 2;
     else if(!strcmp(month, "Apr"))
-        ti.tm_mon = 4;
+        ti.tm_mon = 3;
     else if(!strcmp(month, "May"))
-        ti.tm_mon = 5;
+        ti.tm_mon = 4;
     else if(!strcmp(month, "Jun"))
-        ti.tm_mon = 6;
+        ti.tm_mon = 5;
     else if(!strcmp(month, "Jul"))
-        ti.tm_mon = 7;
+        ti.tm_mon = 6;
     else if(!strcmp(month, "Aug"))
-        ti.tm_mon = 8;
+        ti.tm_mon = 7;
     else if(!strcmp(month, "Sep"))
-        ti.tm_mon = 9;
+        ti.tm_mon = 8;
     else if(!strcmp(month, "Oct"))
-        ti.tm_mon = 10;
+        ti.tm_mon = 9;
     else if(!strcmp(month, "Nov"))
-        ti.tm_mon = 11;
+        ti.tm_mon = 10;
     else if(!strcmp(month, "Dec"))
-        ti.tm_mon = 12;
+        ti.tm_mon = 11;
 
     sscanf(__TIME__, "%d:%d:%d", &ti.tm_hour, &ti.tm_min, &ti.tm_sec);
 
