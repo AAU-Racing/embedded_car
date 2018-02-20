@@ -32,7 +32,7 @@ The registers receive the values of 128 and 256. TIME_BASE = CLOCK FREQ./PRESCAL
 TIME_BASE = 32768 / 128 * 256
 */
 #define PRESCALER1 ((uint32_t) 127)		//Min_Data = 0x00 and Max_Data = 0x7F (127)
-#define PRESCALER2 ((uint32_t) 255)		//Min_Data = 0x00 and Max_Data = 0x7FFF (32767)
+#define PRESCALER2 ((uint32_t) 256)		//Min_Data = 0x00 and Max_Data = 0x7FFF (32767)
 
 void HAL_RTC_MspInit(RTC_HandleTypeDef *RTCHandle);
 int BSP_RTC_Init();

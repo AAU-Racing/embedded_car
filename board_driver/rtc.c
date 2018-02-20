@@ -92,36 +92,46 @@ uint32_t RTC_UNIX_INIT()
     return mktime(&ti);
 }
 
+struct tm RTC_Get_tm(void){
+    struct tm ti;
+
+    ti.tm_hour = (((RTChandle->TR & RTC_TR_HT_Msk) >> 20) * 10) + ((RTChandle->TR & RTC_TR_HU_Msk) >> 16);
+    ti.tm_min =  (((RTChandle-> TR & RTC_TR_MNT_Msk) >> 12) * 10) + ((RTChandle->TR & RTC_TR_MNU_Msk) >> 8);
+    ti.tm_sec = (((RTChandle-> TR & RTC_TR_ST_Msk) >> 4) * 10) + (RTChandle->TR & RTC_TR_SU_Msk);
+
+
+    ti.tm_mday = (((RTChandle-> DR& RTC_DR_DT_Msk) >> 4) * 10) + (RTChandle->DR & RTC_DR_DU_Msk);
+    ti.tm_mon =  (((RTChandle-> DR& RTC_DR_MT_Msk) >> 12) * 10) + ((RTChandle->DR & RTC_DR_MU_Msk) >> 8);
+    ti.tm_year = (((RTChandle-> DR& RTC_DR_YT_Msk) >> 20) * 10) + ((RTChandle->DR & RTC_DR_YU_Msk) >> 16);
+
+    return ti;
+}
+
+//Getting subseconds as 256th of a second
+uint16_t RTC_Get_SubSeconds(void){
+    return (RTChandle->SSR & RTC_SSR_SS_Msk);
+}
+
 //This function gets the current date and time
-//IMPORTANT: Both HAL_RTC_GetTime and HAL_RTC_GetDate have to be called in order to get the corect values
 void RTC_Get_Date_Time(Date_Time_t* now)
 {
-	HAL_RTC_GetTime(&RTCHandle, &RTCtime, FORMAT_BIN);
-	HAL_RTC_GetDate(&RTCHandle, &RTCdate, FORMAT_BIN);
-	now->subseconds = RTCtime.SubSeconds;
-	now->seconds 	= RTCtime.Seconds;
-	now->minutes 	= RTCtime.Minutes;
-	now->hours 		= RTCtime.Hours;
-	now->date 		= RTCdate.Date;
-	now->month		= RTCdate.Month;
-	now->year 		= RTCdate.Year;
+    uint16_t subseconds = RTC_Get_SubSeconds();
+    now->subseconds = subseconds;
+
+    struct tm ti = RTC_Get_tm();
+    now->seconds    = ti.tm_sec;
+    now->minutes    = ti.tm_min;
+    now->hours      = ti.tm_hour;
+    now->date       = ti.tm_mday;
+    now->month      = ti.tm_mon;
+    now->year       = ti.tm_year;
+
 }
 
 //Converts RTC Time to Unix Timestamp 
 uint32_t RTC_Get_Time_Unix()
 {
-	struct tm ti;
-
-	ti.tm_hour = ((RTChandle->TR & RTC_TR_HT_Msk) * 10) + (RTChandle->TR & RTC_TR_HU_Msk);
-	ti.tm_min = ((RTChandle-> TR& RTC_TR_MNT_Msk) * 10) + (RTChandle->TR & RTC_TR_MNU_Msk);
-	ti.tm_sec = ((RTChandle-> TR& RTC_TR_ST_Msk) * 10) + (RTChandle->TR & RTC_TR_SU_Msk);
-
-
-	ti.tm_mday = ((RTChandle-> DR& RTC_DR_DT_Msk) * 10) + (RTChandle->DR & RTC_DR_DU_Msk);
-	ti.tm_mon = ((RTChandle-> DR& RTC_DR_MT_Msk) * 10) + (RTChandle->DR & RTC_DR_MU_Msk);
-	ti.tm_year = ((RTChandle-> DR& RTC_DR_YT_Msk) * 10) + (RTChandle->DR & RTC_DR_YU_Msk);
-
-
+	struct tm ti = RTC_Get_tm();
 	return mktime(&ti);
 }
 
