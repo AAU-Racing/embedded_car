@@ -71,6 +71,10 @@ int i2c_init(void) {
 	i2c_freqrange();
 	i2c_rise_time();
 	i2c_speed();
+	i2c_cr1_con();
+	i2c_oar1_con();
+	i2c_oar2_con();
+
 
 	if(HAL_I2C_Init(&i2cHandle) != HAL_OK) {
 		return -1;
@@ -92,13 +96,18 @@ void i2c_speed(){ // pclk1 = (168/((40<<1U)))
 }
 
 void i2c_cr1_con(){
-	handle->I2C_CR1_NOSTRETCH = 0x00U; // Set bit 7 to 0
-	handle->I2C_CR1_ENGC = 0x00U; // Set bit 6 to 0
+	CLEAR_BIT(handle->CR1, I2C_CR1_NOSTRETCH); // Set bit 7 to 0
+	CLEAR_BIT(handle->CR1, I2C_CR1_ENGC); // Set bit 6 to 0
 }
 
 void i2c_oar1_con(){
-	handle->I2C_ADDRESSINGMODE_7BIT
+    CLEAR_BIT(handle->OAR1, I2C_OAR1_ADDMODE); // Set bit 15 to 0
 }
+
+void i2c_oar2_con(){
+	CLEAR_BIT(handle->OAR2, I2I2C_OAR2_ENDUAL); // Set bit 0 to 0
+}
+
 
 
 
