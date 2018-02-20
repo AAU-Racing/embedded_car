@@ -16,55 +16,57 @@ typedef struct {
 static I2C_HandleTypeDef i2cHandle;
 static I2C_TypeDef *handle;
 
-static void set_SDA_as_input_pin(void) {
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull      = GPIO_PULLUP;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-	GPIO_InitStruct.Pin       = DASHBOARD_I2C_SDA_PIN;
-	// GPIO_InitStruct.Alternate = 0; // Disablw, how?
-
-	gpio_af_init(DASHBOARD_I2C_SDA_GPIO_PORT, &GPIO_InitStruct);
+static void init_sda_pin() {
+	gpio_af_init(I2C_SDA_PORT, I2C_SDA_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, I2C_SDA_AF);
 }
 
-static void set_SCL_as_output_pin(void) {
-	GPIO_InitTypeDef  GPIO_InitStruct;
-	GPIO_InitStruct.Pin       = DASHBOARD_I2C_SCL_PIN;
-	GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull      = GPIO_PULLUP;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-
-	gpio_af_init(DASHBOARD_I2C_SCL_GPIO_PORT, &GPIO_InitStruct);
+static void init_scl_pin() {
+	gpio_af_init(I2C_SCL_PORT, I2C_SCL_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, I2C_SCL_AF);
 }
 
-static bool SDA_is_low(void) {
-	return HAL_GPIO_ReadPin(DASHBOARD_I2C_SDA_GPIO_PORT, DASHBOARD_I2C_SDA_PIN) == GPIO_PIN_RESET;
+static void init_sda_as_gpio_input() {
+
 }
 
-static void set_SCL_high(void) {
+static void deinit_sda_as_gpio_input() {
+
 }
 
-static void toggle_SCL(void) {
+static void init_scl_as_gpio_output() {
+
+}
+
+static bool sda_is_low() {
+	return false;
+}
+
+static void set_scl_high() {
+}
+
+static void toogle_scl() {
 }
 
 static int bus_recovering(void) {
-	set_SDA_as_input_pin();
-	if (SDA_is_low()) {
-		set_SCL_as_output_pin();
-		set_SCL_high();
+	init_sda_as_gpio_input();
+	if (sda_is_low()) {
+		init_scl_as_gpio_output();
+		set_scl_high();
 
 		int retry_limit = 100;
-		while (SDA_is_low()) {
-			toggle_SCL();
+		while (sda_is_low()) {
+			toogle_scl();
 			if (!retry_limit--) return -1; // Should not take more than 8 cycles or there is another problem
 		}
+        deinit_sda_as_gpio_input();
 	}
+    deinit_sda_as_gpio_input();
 	return 0;
 }
 
 int i2c_init(void) {
-	bus_recovering();
+	//bus_recovering();
+    init_sda_pin();
+    init_scl_pin();
 
 	handle = DASHBOARD_I2C;
 
