@@ -68,7 +68,7 @@ int i2c_init(void) {
     init_sda_pin();
     init_scl_pin();
 
-	handle = DASHBOARD_I2C;
+	handle = I2C;
 
 	i2c_freqrange();
 	i2c_rise_time();
