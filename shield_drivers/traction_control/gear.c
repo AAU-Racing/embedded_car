@@ -1,109 +1,76 @@
-#include <stdbool.h>
-
+#include <stm32f4xx_hal.h>
 #include <board_driver/can.h>
 
 #include "gear.h"
 #include "gear_feedback.h"
+#include "ignition_cut.h"
 
-#define FORWARD true
-#define REVERSE false
-#define TIMEOUT 1000
-#define DEFAULT_POS 2048
+#define TIMEOUT 500 // ms
+#define DEFAULT_POSITION 2048
 #define NETURAL_POSITION 1024
 #define UP_POSITION 3072
 #define	DOWN_POSITION 512
+#define EPSILON 10
 
 static uint8_t gearNumber = 0;
-static uint8_t wantedGearNumber = 0;
+static volatile uint8_t wantedGearNumber = 0;
+static volatile uint32_t gearDownStart = 0;
+static bool failedGearChange = false;
+static uint16_t gearFeedback = 0;
 
 static int withinRange(uint16_t number, uint16_t limit) {
-	return number < limit + 10 && number > limit - 10;
+	return limit - EPSILON < number && number < limit + EPSILON;
 }
 
-static bool turn(bool returnDirection, uint16_t limit, uint16_t timeout) {
-	// Move the gear back into default position
-	if (returnDirection) { // is return direction forward?
-		gear_forward();
+static void gearUp() {
+
+
+    if (gearNumber == 0) {
+        gear_forward();
+        if (withinRange(gearFeedback, DOWN_POSITION)) {
+            gearNumber = 1;
+        }
 	}
-	else {
-		gear_reverse();
+	else if (gearNumber != 6) {
+        gear_reverse();
+        if (withinRange(gearFeedback, UP_POSITION)) {
+            gearNumber++;
+        }
 	}
-
-	bool defaultPos = false;
-	uint32_t start = HAL_GetTick();
-
-	// Wait until gear motor is at right limit
-	do {
-		// Read gear motor position
-		uint16_t gearFeedback = read_gear_feedback();
-
-		// Withing range
-		if (withinRange(gearFeedback, limit)) {
-			defaultPos = true;
-		}
-
-		// The driver might not have released the throttle or pushed the clutch
-		if (timeout > 0 && HAL_GetTick() - start > timeout) {
-			break;
-		}
-	} while(defaultPos);
-
-	return defaultPos;
 }
 
-static bool turnWithReturn(bool returnDirection, uint16_t limit) {
-	// Turn to wanted position
-	bool shifted = turn(returnDirection, limit, TIMEOUT);
+static void gearDown() {
+    if (HAL_GetTick() > gearDownStart + TIMEOUT) {
+        wantedGearNumber = gearNumber;
+        failedGearChange = true;
+        gearToDefaultPos();
+        return;
+    }
 
-	// Return the gear back into default position
-	turn(!returnDirection, DEFAULT_POS, 0);
-
-	gear_stop();
-
-	return shifted;
+    if (gearNumber == 1) {
+        gear_reverse();
+        if (withinRange(gearFeedback, NETURAL_POSITION)) {
+            gearNumber = 0;
+        }
+	}
+	else if (gearNumber != 0) {
+        gear_forward();
+        if (withinRange(gearFeedback, DOWN_POSITION)) {
+            gearNumber--;
+        }
+	}
 }
 
-// Callback functions for gear buttons via CAN
-static bool gearUp() {
-	if (gearNumber == 6) {
-		return false;
-	}
-
-	bool shifted = false;
-
-	if (gearNumber == 0) {
-		shifted = turnWithReturn(FORWARD, DOWN_POSITION);
-	}
-	else {
-		shifted = turnWithReturn(REVERSE, UP_POSITION);
-	}
-
-	if (shifted) {
-		gearNumber++;
-	}
-
-	return shifted;
-}
-
-static bool gearDown() {
-	if (gearNumber == 0) {
-		return false;
-	}
-
-	bool shifted = false;
-
-	if (gearNumber == 1) {
-		shifted = turnWithReturn(REVERSE, NETURAL_POSITION);
-	}
-	else {
-		shifted = turnWithReturn(FORWARD, DOWN_POSITION);
-	}
-
-	if (shifted) {
-		gearNumber--;
-	}
-
-	return shifted;
+static void gearToDefaultPos() {
+    if (withinRange(gearFeedback, DEFAULT_POSITION)) {
+        gear_stop();
+    }
+    else if (gearFeedback < DEFAULT_POSITION) {
+        gear_reverse();
+    }
+    else {
+        gear_forward();
+    }
 }
 
 static void GearCallback(CAN_RxFrame *msg) {
@@ -115,31 +82,37 @@ static void GearCallback(CAN_RxFrame *msg) {
 	else if (msg->Msg[0] == CAN_GEAR_BUTTON_DOWN) {
 		if (wantedGearNumber > 0) {
 			wantedGearNumber--;
+            gearDownStart = HAL_GetTick();
 		}
 	}
 }
 
 // Public functions
-HAL_StatusTypeDef init_gear() {
+uint8_t init_gear() {
 	init_gear_feedback();
 	return CAN_Filter(CAN_GEAR_BUTTONS, 0x7FF, GearCallback);
 }
 
-bool change_gear() {
-	if (wantedGearNumber == gearNumber) {
-		return false;
-	}
-	else if (wantedGearNumber > gearNumber) {
-		return gearUp();
+void check_gear_change() {
+    gearFeedback = read_gear_feedback();
+
+	if (wantedGearNumber > gearNumber) {
+		gearUp();
 	}
 	else if (wantedGearNumber < gearNumber) {
-		return gearDown();
+		gearDown();
 	}
-	else {
-		return false;
-	}
+    else {
+        gearToDefaultPos();
+    }
 }
 
 uint8_t gear_number() {
 	return gearNumber;
+}
+
+bool gear_change_failed() {
+    bool value = failedGearChange;
+    failedGearChange = false;
+    return value;
 }

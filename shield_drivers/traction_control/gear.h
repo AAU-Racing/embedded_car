@@ -1,7 +1,6 @@
 #ifndef GEAR_H
 #define GEAR_H
 
-#include <stm32f4xx_hal.h>
 #include <stdbool.h>
 #include "hbridge.h"
 
@@ -9,8 +8,9 @@
 #define gear_reverse() 	hbridge1reverse()
 #define gear_stop()		hbridge1stop()
 
-HAL_StatusTypeDef init_gear();
+uint8_t init_gear(); // Requires init of gear feedback and hbridge beforehand
 uint8_t gear_number();
-bool change_gear();
+void check_gear_change();
+bool gear_change_failed();
 
 #endif
