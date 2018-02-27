@@ -23,18 +23,20 @@ static int withinRange(uint16_t number, uint16_t limit) {
 }
 
 static void gearUp() {
-
+    enable_ignition_cut();
 
     if (gearNumber == 0) {
         gear_forward();
         if (withinRange(gearFeedback, DOWN_POSITION)) {
             gearNumber = 1;
+            disable_ignition_cut();
         }
 	}
 	else if (gearNumber != 6) {
         gear_reverse();
         if (withinRange(gearFeedback, UP_POSITION)) {
             gearNumber++;
+            disable_ignition_cut();
         }
 	}
 }
@@ -47,21 +49,27 @@ static void gearDown() {
         return;
     }
 
+    enable_ignition_cut();
+
     if (gearNumber == 1) {
         gear_reverse();
         if (withinRange(gearFeedback, NETURAL_POSITION)) {
             gearNumber = 0;
+            disable_ignition_cut();
         }
 	}
 	else if (gearNumber != 0) {
         gear_forward();
         if (withinRange(gearFeedback, DOWN_POSITION)) {
             gearNumber--;
+            disable_ignition_cut();
         }
 	}
 }
 
 static void gearToDefaultPos() {
+    disable_ignition_cut();
+
     if (withinRange(gearFeedback, DEFAULT_POSITION)) {
         gear_stop();
     }
