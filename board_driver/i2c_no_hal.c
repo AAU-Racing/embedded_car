@@ -70,13 +70,13 @@ int i2c_init(void) {
 
 	handle = I2C;
 
+    i2c_start_clock();
 	i2c_freqrange();
 	i2c_rise_time();
 	i2c_speed();
 	i2c_cr1_con();
 	i2c_oar1_con();
 	i2c_oar2_con();
-	i2c_start_clock();
 
 
 	if(HAL_I2C_Init(&i2cHandle) != HAL_OK) {
