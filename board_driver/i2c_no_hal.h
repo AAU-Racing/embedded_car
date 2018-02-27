@@ -1,5 +1,4 @@
 #define I2C                             I2C2
-#define I2C_CLK_ENABLE()                __HAL_RCC_I2C2_CLK_ENABLE()
 
 /* Definition for I2C Pins */
 #define I2C_SCL_PIN                    PIN_10

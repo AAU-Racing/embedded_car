@@ -129,13 +129,3 @@ int i2c_master_transmit(uint16_t addr, void *buf, size_t n) { // No DMA
 	SET_BIT(handle->CR1, I2C_CR1_START);
 
 }
-
-void I2C_MspInit(I2C_HandleTypeDef *hi2c) {
-
-    DASHBOARD_I2C_SCL_GPIO_PORT();
-    DASHBOARD_I2C_SDA_GPIO_CLK_ENABLE();
-
-    DASHBOARD_I2C_CLK_ENABLE();
-    DASHBOARD_I2C_DMA_CLK_ENABLE();
-
-}
