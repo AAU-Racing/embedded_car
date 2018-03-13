@@ -1,4 +1,4 @@
-#include <stm32f407xx.h>
+#include <stm32f4xx.h>
 
 #include "spi.h"
 #include "gpio.h"
@@ -20,42 +20,91 @@
 #define MODE_AF_PP 0x02
 #define SPI_ENABLE 0x01
 
-SPI_TypeDef *SPIHandle = SPI1;
+#define SPI_INSTANCE ((SPI_TypeDef* const []) { \
+	SPI1, \
+	SPI2, \
+})
 
-/*SPIx_SCK_GPIO_CLK_ENABLE();
-SPIx_MOSI_GPIO_CLK_ENABLE();
-SPIx_CLK_ENABLE();*/
+#define SPI_SCK_PIN ((const uint32_t const []) { \
+	GPIO_PIN_5, \
+	GPIO_PIN_13,	 \
+})
 
-void configure_SPI_SCK(void)
+#define SPI_SCK_PORT ((GPIO_TypeDef* const []) { \
+	GPIOA, \
+	GPIOB, \
+})
+
+#define SPI_MOSI_PIN ((const uint32_t const []) { \
+	GPIO_PIN_7, \
+	GPIO_PIN_15,	 \
+})
+
+#define SPI_MOSI_PORT ((GPIO_TypeDef* const []) { \
+	GPIOA, \
+	GPIOB, \
+})
+
+#define SPI_MISO_PIN ((const uint32_t const []) { \
+	0, \
+	GPIO_PIN_14,	 \
+})
+
+#define SPI_MISO_PORT ((GPIO_TypeDef* const []) { \
+	NULL, \
+	GPIOB, \
+})
+
+SPI_TypeDef *SPIHandle;
+
+static void configure_spi_pins(int config)
 {
-	gpio_af_init(SPIx_SCK_GPIO_PORT,
-		SPIx_SCK_PIN,
+	gpio_af_init(SPI_SCK_PORT[config],
+        SPI_SCK_PIN[config],
 		GPIO_HIGH_SPEED,
 		GPIO_NO_PULL,
-		SPIx_SCK_AF);
+		GPIO_AF5_SPI1);
 
-	gpio_af_init(SPIx_SCK_GPIO_PORT,
-		SPIx_MOSI_PIN,
-		GPIO_HIGH_SPEED,
-		GPIO_NO_PULL,
-		SPIx_MOSI_AF);
+    if (SPI_MOSI_PORT[config] != NULL) {
+    	gpio_af_init(SPI_MOSI_PORT[config],
+    		SPI_MOSI_PIN[config],
+    		GPIO_HIGH_SPEED,
+    		GPIO_NO_PULL,
+    		GPIO_AF5_SPI1);
+    }
+
+    if (SPI_MISO_PORT[config] != NULL) {
+        gpio_af_init(SPI_MISO_PORT[config],
+            SPI_MISO_PIN[config],
+            GPIO_HIGH_SPEED,
+            GPIO_NO_PULL,
+            GPIO_AF5_SPI1);
+    }
 }
 
-void SPI_init(void)
-{
-		configure_SPI_SCK();
+static void enable_spi_clk() {
+    SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1EN);
+    SET_BIT(RCC->APB1ENR, RCC_APB1ENR_SPI2EN);
+}
 
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_BR_Msk, BAUDRATEPRESCALER_8);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_BIDIMODE_Msk , DIRECTION_2LINES);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CPHA_Msk, PHASE_2EDGE);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CPOL_Msk , POLARITY_HIGH);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CRCEN_Msk, CRCCALCULATION_DISABLED);
-		WRITE_REG_MASK(SPIHandle->CRCPR, SPI_CRCPR_CRCPOLY_Msk, POLYNOMIAL_RESET);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_DFF_Msk, DATASIZE_8BIT);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_LSBFIRST_Msk, FIRSTBIT_MSB);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SSM_Msk, NSS_SOFT);
-		WRITE_REG_MASK(SPIHandle->CR2, SPI_CR2_FRF_Msk, TIMODE_DISABLED);
-		WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_MSTR_Msk, MODE_MASTER);
+void SPI_init(int config)
+{
+    SPIHandle = SPI_INSTANCE[config];
+	configure_spi_pins(config);
+
+    enable_spi_clk();
+
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_BR_Msk, BAUDRATEPRESCALER_8);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_BIDIMODE_Msk , DIRECTION_2LINES);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CPHA_Msk, PHASE_2EDGE);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CPOL_Msk , POLARITY_HIGH);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_CRCEN_Msk, CRCCALCULATION_DISABLED);
+	WRITE_REG_MASK(SPIHandle->CRCPR, SPI_CRCPR_CRCPOLY_Msk, POLYNOMIAL_RESET);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_DFF_Msk, DATASIZE_8BIT);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_LSBFIRST_Msk, FIRSTBIT_MSB);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_SSM_Msk, NSS_SOFT);
+	WRITE_REG_MASK(SPIHandle->CR2, SPI_CR2_FRF_Msk, TIMODE_DISABLED);
+	WRITE_REG_MASK(SPIHandle->CR1, SPI_CR1_MSTR_Msk, MODE_MASTER);
 }
 
 

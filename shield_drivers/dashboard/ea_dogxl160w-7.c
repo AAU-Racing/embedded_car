@@ -67,7 +67,7 @@ __attribute__ ((unused)) static void cmd_set_contrast(uint8_t contrast) {
 	uint8_t payload[2] = {cmd, contrast};
 
 	LCD_CD_OFF();
-	SPI_transmit(&payload, 2);
+	SPI_transmit(payload, 2);
 }
 
 static void cmd_system_reset() {
@@ -203,7 +203,7 @@ void init_lcd(void) {
 	//set_led(0, 0, 0, 0xF);
 	init_GPIO_pins();
 	//set_led(1, 0, 0, 0xF);
-	SPI_init();
+	SPI_init(0);
 	//set_led(2, 0, 0, 0xF);
 
 	cmd_system_reset();

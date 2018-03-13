@@ -16,9 +16,7 @@
 #define SPIx_MOSI_GPIO_PORT           		 GPIOA
 #define SPIx_MOSI_PIN						           PIN_7
 
-
-void configure_SPI_SCK(void);
-void SPI_init(void);
+void SPI_init(int config);
 void SPI_transmit(uint8_t *input, uint32_t count);
 //HAL_StatusTypeDef SPI_transmit(void *tx, uint32_t size);
 
