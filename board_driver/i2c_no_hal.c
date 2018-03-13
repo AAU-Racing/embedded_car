@@ -116,9 +116,6 @@ void i2c_start_clock(){
 	SET_BIT(RCC->APB1ENR, RCC_APB1ENR_I2C2EN);
 }
 
-
-
-
 int i2c_is_ready(uint16_t addr) {
 }
 
@@ -127,5 +124,16 @@ int i2c_master_transmit(uint16_t addr, void *buf, size_t n) { // No DMA
 	CLEAR_BIT(handle->CR1, I2C_CR1_POS);
 
 	SET_BIT(handle->CR1, I2C_CR1_START);
+	return 1;
+}
+
+void i2c_msp_init(){
+	DASHBOARD_I2C_SCL_GPIO_CLK_ENABLE();
+	DASHBOARD_I2C_SDA_GPIO_CLK_ENABLE();
+
+	DASHBOARD_I2C_CLK_ENABLE();
+
+	DASHBOARD_I2C_DMA_CLK_ENABLE();
+
 
 }
