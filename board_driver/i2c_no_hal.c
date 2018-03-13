@@ -119,21 +119,53 @@ void i2c_start_clock(){
 int i2c_is_ready(uint16_t addr) {
 }
 
-int i2c_master_transmit(uint16_t addr, void *buf, size_t n) { // No DMA
-
+int i2c_master_transmit(uint16_t addr, uint8_t *buf, size_t n) { // No DMA
 	CLEAR_BIT(handle->CR1, I2C_CR1_POS);
+	I2C_MasterRequestWrite();
 
-	SET_BIT(handle->CR1, I2C_CR1_START);
 	return 1;
 }
 
-void i2c_msp_init(){
-	DASHBOARD_I2C_SCL_GPIO_CLK_ENABLE();
-	DASHBOARD_I2C_SDA_GPIO_CLK_ENABLE();
+void I2C_MasterRequestWrite(uint16_t addr, uint8_t *buf, size_t n){
+	start_condition();
+	set_slave_addr();
 
-	DASHBOARD_I2C_CLK_ENABLE();
+	for (int i = 0; i < n; i++) {
+		wait_for_dr_empty();
+		transmit_byte(*(buf + i));
+	}
 
-	DASHBOARD_I2C_DMA_CLK_ENABLE();
+	wait_for_byte_transfer_finished();
+	stop_condition();
+}
 
+void start_condition(){
+	SET_BIT(handle->CR1, I2C_CR1_START);
 
+	while(!READ_BIT(handle->SR1, I2C_SR1_SB)) {	}
+}
+
+void set_slave_addr() {
+	// Set slave address
+	handle->DR = ((uint8_t)((addr) & (~I2C_OAR1_ADD0)));
+
+	// Clear ADDR flag by reading
+	handle->SR1;
+	handle->SR2;
+}
+
+void wait_for_dr_empty() {
+
+}
+
+void transmit_byte(uint8_t byte) {
+
+}
+
+void wait_for_byte_transfer_finished(){
+
+}
+
+void stop_condition(){
+	hi2c->Instance->CR1 |= I2C_CR1_STOP;
 }
