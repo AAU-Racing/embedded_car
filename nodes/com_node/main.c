@@ -16,7 +16,7 @@
 #include <shield_drivers/com_node/wheel_speed.h>
 #include <shield_drivers/com_node/error.h>
 
-// #include "sd.h"
+#include "sd.h"
 #include "telemetry.h"
 
 static uint32_t last_obd_burst = 0;

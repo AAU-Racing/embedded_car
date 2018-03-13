@@ -2,7 +2,7 @@ set(target_name com_node)
 
 set(SRC_FILES
 	main.c
-	# sd.c
+	sd.c
 	telemetry.c
 )
 
