@@ -11,4 +11,5 @@ target_link_libraries(${target_name}
 	board_driver
 	shield_drivers
 	m
+    FatFs
 )
