@@ -2,7 +2,7 @@ set(target_name com_node)
 
 set(SRC_FILES
 	main.c
-	sd.c
+	# sd.c
 	telemetry.c
 )
 
@@ -11,5 +11,4 @@ target_link_libraries(${target_name}
 	board_driver
 	shield_drivers
 	m
-    FatFs
 )
