@@ -47,9 +47,9 @@ void handle_telemetry() {
 
 
 	// Resistance = 10 k * ADC_VALUE / (MAX_ADC_VALUE - ADC_VALUE)
-	// Temperature = -22.376 * log(0.000143894 * R) which is an exponential fit according to the datasheet of BOSCH 0 280 130 026.
-	// float water_in_fl = -22.376 * log(0.000143894 * (10000 * water_in / (4095.0 - water_in)));
-	// float water_out_fl = -22.376 * log(0.000143894 * (10000 * water_out / (4095.0 - water_out)));
+	// Temperature = -27.271952718 * ln(R) + 240.1851825535 which is an exponential fit according to the datasheet of BOSCH 0 280 130 026.
+	// float water_in_fl = -27.271952718 * ln(10000 * water_in / (4095.0 - water_in)) + 240.1851825535;
+	// float water_out_fl = -27.271952718 * ln(10000 * water_out / (4095.0 - water_out)) + 240.1851825535;
 	// float delta_fl = water_in_fl - water_out_fl;
 	OBDII_Mode1_Frame frame = OBDII_Mode1_Response(ControlModuleVoltage);
 	float battery_voltage_fl = (frame.Msg[0] * 256 + frame.Msg[1]) / 1000; // By OBDII standard for control module voltage
