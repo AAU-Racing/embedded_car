@@ -15,14 +15,16 @@ HAL_StatusTypeDef handle_oil_pressure() {
 
 HAL_StatusTypeDef handle_gear() {
 	HAL_StatusTypeDef changed_result = HAL_OK;
-	if (change_gear()) {
+	if (gear_has_changed()) {
 		uint8_t gearNumber = gear_number();
 		changed_result = CAN_Send(CAN_GEAR_NUMBER, &gearNumber, 1);
-	}
+	} else if (gear_change_failed()) {
+		changed_result = CAN_Send(CAN_GEAR_CHANGE_FAILED, (uint8_t[]) { 1 }, 1);
+    }
 
 	uint16_t gear_feedback = read_gear_feedback();
 
-	HAL_StatusTypeDef gear_feedback_result = CAN_Send(CAN_GEAR_FEEDBACK, (uint8_t[]) { gear_feedback & 0xFF, gear_feedback >> 4 }, 2);
+	HAL_StatusTypeDef gear_feedback_result = CAN_Send(CAN_GEAR_FEEDBACK, (uint8_t[]) { gear_feedback & 0xFF, (gear_feedback >> 4) & 0xFF }, 2);
 
 	if (gear_feedback_result != HAL_OK || changed_result != HAL_OK) {
 		return HAL_ERROR;

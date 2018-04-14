@@ -33,11 +33,12 @@ int main(void) {
 void setup() {
 	// Init peripherals
 	uart_init();
-	if (CAN_Init(CAN_PB5) != CAN_OK) {
+    if (CAN_Init(CAN_PD0) != CAN_OK) {
+	//if (CAN_Init(CAN_PB5) != CAN_OK) {
 		printf("CAN init failed\n");
 	}
 
-	if (init_adc(4) != HAL_OK) { // 2 for water, 2 for current_clamps, and 1 for gear feedback
+	if (init_adc(5) != HAL_OK) { // 2 for water, 2 for current_clamps, and 1 for gear feedback
 		printf("ADC init failed\n");
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_INIT_ERROR }, 1);
 	}
@@ -51,20 +52,20 @@ void setup() {
 		adc_ready = false;
 	}
 
-	if (init_current_clamps() != HAL_OK) {
+	if (init_current_clamps() != 0) {
 		printf("Current clamps init failed\n");
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_CURRENT_CLAMPS_ERROR }, 1);
 		adc_ready = false;
 	}
 
-	// if (init_gear() != HAL_OK) {
-	// 	printf("Gear init failed\n");
-	// 	CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_GEAR_ERROR }, 1);
-	// 	adc_ready = false
-	// }
+	if (init_gear() != HAL_OK) {
+		printf("Gear init failed\n");
+		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_GEAR_ERROR }, 1);
+		adc_ready = false;
+	}
 
 	wheel_sensor_init();
-	// init_hbridge();
+	init_hbridge();
 
 	// Check oil pressure at the start
 	init_oil_pressure();
@@ -81,7 +82,6 @@ void setup() {
 	HAL_Delay(10);
 
 	CAN_Send(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_TRACTION_CONTROL_STARTED }, 1);
-
 }
 
 void loop() {
@@ -96,7 +96,7 @@ void loop() {
 	handle_oil_pressure();
 	handle_water_temp(adc_ready);
 	handle_current_clamps(adc_ready);
-	//handle_gear();
+	handle_gear();
 	handle_wheel_sensor();
 
 	HAL_Delay(50);

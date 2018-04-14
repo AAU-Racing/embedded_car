@@ -1,6 +1,8 @@
 #include <stm32f4xx_hal.h>
 #include <board_driver/can.h>
 
+#include <stdio.h>
+
 #include "gear.h"
 #include "gear_feedback.h"
 #include "ignition_cut.h"
@@ -12,68 +14,24 @@
 #define	DOWN_POSITION 512
 #define EPSILON 10
 
-static uint8_t gearNumber = 0;
-static volatile uint8_t wantedGearNumber = 0;
-static volatile uint32_t gearDownStart = 0;
-static bool failedGearChange = false;
-static uint16_t gearFeedback = 0;
+static uint8_t gear_num = 0;
+static volatile uint8_t requested_gear_num = 0;
+static volatile uint32_t gear_down_start = 0;
+static bool failed_gear_change = false;
+static uint16_t gear_feedback = 0;
+static bool has_changed = false;
 
-static int withinRange(uint16_t number, uint16_t limit) {
+static int within_range(uint16_t number, uint16_t limit) {
 	return limit - EPSILON < number && number < limit + EPSILON;
 }
 
-static void gearUp() {
-    enable_ignition_cut();
-
-    if (gearNumber == 0) {
-        gear_forward();
-        if (withinRange(gearFeedback, DOWN_POSITION)) {
-            gearNumber = 1;
-            disable_ignition_cut();
-        }
-	}
-	else if (gearNumber != 6) {
-        gear_reverse();
-        if (withinRange(gearFeedback, UP_POSITION)) {
-            gearNumber++;
-            disable_ignition_cut();
-        }
-	}
-}
-
-static void gearDown() {
-    if (HAL_GetTick() > gearDownStart + TIMEOUT) {
-        wantedGearNumber = gearNumber;
-        failedGearChange = true;
-        gearToDefaultPos();
-        return;
-    }
-
-    enable_ignition_cut();
-
-    if (gearNumber == 1) {
-        gear_reverse();
-        if (withinRange(gearFeedback, NETURAL_POSITION)) {
-            gearNumber = 0;
-            disable_ignition_cut();
-        }
-	}
-	else if (gearNumber != 0) {
-        gear_forward();
-        if (withinRange(gearFeedback, DOWN_POSITION)) {
-            gearNumber--;
-            disable_ignition_cut();
-        }
-	}
-}
-
-static void gearToDefaultPos() {
+static void gear_to_default_position() {
     disable_ignition_cut();
 
-    if (withinRange(gearFeedback, DEFAULT_POSITION)) {
+    if (within_range(gear_feedback, DEFAULT_POSITION)) {
         gear_stop();
     }
-    else if (gearFeedback < DEFAULT_POSITION) {
+    else if (gear_feedback < DEFAULT_POSITION) {
         gear_reverse();
     }
     else {
@@ -81,16 +39,67 @@ static void gearToDefaultPos() {
     }
 }
 
-static void GearCallback(CAN_RxFrame *msg) {
+static void gear_up() {
+    printf("gear_up\n");
+    enable_ignition_cut();
+
+    if (gear_num == 0) {
+        gear_forward();
+        if (within_range(gear_feedback, DOWN_POSITION)) {
+            has_changed = true;
+            gear_num = 1;
+            disable_ignition_cut();
+        }
+	}
+	else if (gear_num != 6) {
+        gear_reverse();
+        if (within_range(gear_feedback, UP_POSITION)) {
+            has_changed = true;
+            gear_num++;
+            disable_ignition_cut();
+        }
+	}
+}
+
+static void gear_down() {
+    printf("gear_up\n");
+    if (HAL_GetTick() > gear_down_start + TIMEOUT) {
+        requested_gear_num = gear_num;
+        failed_gear_change = true;
+        gear_to_default_position();
+        return;
+    }
+
+    enable_ignition_cut();
+
+    if (gear_num == 1) {
+        gear_reverse();
+        if (within_range(gear_feedback, NETURAL_POSITION)) {
+            has_changed = true;
+            gear_num = 0;
+            disable_ignition_cut();
+        }
+	}
+	else if (gear_num != 0) {
+        gear_forward();
+        if (within_range(gear_feedback, DOWN_POSITION)) {
+            has_changed = true;
+            gear_num--;
+            disable_ignition_cut();
+        }
+	}
+}
+
+static void gear_callback(CAN_RxFrame *msg) {
 	if (msg->Msg[0] == CAN_GEAR_BUTTON_UP) {
-		if (wantedGearNumber < 6) {
-			wantedGearNumber++;
+		if (requested_gear_num < 6) {
+			requested_gear_num++;
 		}
 	}
 	else if (msg->Msg[0] == CAN_GEAR_BUTTON_DOWN) {
-		if (wantedGearNumber > 0) {
-			wantedGearNumber--;
-            gearDownStart = HAL_GetTick();
+		if (requested_gear_num > 0) {
+			requested_gear_num--;
+            gear_down_start = HAL_GetTick();
 		}
 	}
 }
@@ -98,29 +107,35 @@ static void GearCallback(CAN_RxFrame *msg) {
 // Public functions
 uint8_t init_gear() {
 	init_gear_feedback();
-	return CAN_Filter(CAN_GEAR_BUTTONS, 0x7FF, GearCallback);
+	return CAN_Filter(CAN_GEAR_BUTTONS, 0x7FF, gear_callback);
 }
 
 void check_gear_change() {
-    gearFeedback = read_gear_feedback();
+    gear_feedback = read_gear_feedback();
 
-	if (wantedGearNumber > gearNumber) {
-		gearUp();
+	if (requested_gear_num > gear_num) {
+		gear_up();
 	}
-	else if (wantedGearNumber < gearNumber) {
-		gearDown();
+	else if (requested_gear_num < gear_num) {
+		gear_down();
 	}
     else {
-        gearToDefaultPos();
+        gear_to_default_position();
     }
 }
 
 uint8_t gear_number() {
-	return gearNumber;
+	return gear_num;
+}
+
+bool gear_has_changed() {
+    bool value = has_changed;
+    has_changed = false;
+    return value;
 }
 
 bool gear_change_failed() {
-    bool value = failedGearChange;
-    failedGearChange = false;
+    bool value = failed_gear_change;
+    failed_gear_change = false;
     return value;
 }

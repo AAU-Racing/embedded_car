@@ -1,7 +1,7 @@
 #ifndef IGNITION_CUT_H
 #define IGNITION_CUT_H
 
-#include "gpio.h"
+#include <board_driver/gpio.h>
 
 #define IGNITION_CUT_PIN	PIN_8
 #define IGNITION_CUT_PORT	GPIOE

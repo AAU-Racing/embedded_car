@@ -12,5 +12,6 @@ uint8_t init_gear(); // Requires init of gear feedback and hbridge beforehand
 uint8_t gear_number();
 void check_gear_change();
 bool gear_change_failed();
+bool gear_has_changed();
 
 #endif
