@@ -40,7 +40,6 @@ static void gear_to_default_position() {
 }
 
 static void gear_up() {
-    printf("gear_up\n");
     enable_ignition_cut();
 
     if (gear_num == 0) {
@@ -62,7 +61,6 @@ static void gear_up() {
 }
 
 static void gear_down() {
-    printf("gear_up\n");
     if (HAL_GetTick() > gear_down_start + TIMEOUT) {
         requested_gear_num = gear_num;
         failed_gear_change = true;
