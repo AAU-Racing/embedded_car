@@ -95,14 +95,14 @@ void setup() {
 
 void loop() {
 #ifdef DEBUG
-	static uint32_t lastTransmit = 0;
+	static uint32_t last_transmit = 0;
 
-	if (HAL_GetTick() - lastTransmit > 100) {
+	if (HAL_GetTick() - last_transmit > 100) {
 		printf("Sending via CAN\n");
-		lastTransmit = HAL_GetTick();
+		last_transmit = HAL_GetTick();
 	}
 #endif
-	//handle_oil_pressure();
+	handle_oil_pressure();
 	handle_water_temp(adc_ready);
 	handle_current_clamps(adc_ready);
 	handle_gear();
