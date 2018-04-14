@@ -16,6 +16,8 @@ HAL_StatusTypeDef handle_oil_pressure() {
 }
 
 HAL_StatusTypeDef handle_gear() {
+    check_gear_change();
+
 	HAL_StatusTypeDef changed_result = HAL_OK;
 	if (gear_has_changed()) {
 		uint8_t gearNumber = gear_number();
@@ -26,7 +28,7 @@ HAL_StatusTypeDef handle_gear() {
 
 	uint16_t gear_feedback = read_gear_feedback();
 
-	HAL_StatusTypeDef gear_feedback_result = CAN_Send(CAN_GEAR_FEEDBACK, (uint8_t[]) { gear_feedback & 0xFF, (gear_feedback >> 4) & 0xFF }, 2);
+	HAL_StatusTypeDef gear_feedback_result = CAN_Send(CAN_GEAR_FEEDBACK, &gear_feedback, 2);
 
 	if (gear_feedback_result != HAL_OK || changed_result != HAL_OK) {
 		return HAL_ERROR;
@@ -41,7 +43,7 @@ HAL_StatusTypeDef handle_water_temp(bool adc_ready) {
 		uint16_t water_in = read_water_in();
 		uint16_t water_out = read_water_out();
 
-        printf("Water temperature: (%4d, %4d)", water_in, water_out);
+        printf("Water temperature: (%4d, %4d)\n", water_in, water_out);
 
 		HAL_StatusTypeDef in_res = CAN_Send(CAN_WATER_TEMPERATURE_IN, (uint8_t[]) { water_in & 0xFF, (water_in >> 8) & 0xFF }, 2);
 		HAL_StatusTypeDef out_res = CAN_Send(CAN_WATER_TEMPERATURE_OUT, (uint8_t[]) { water_out & 0xFF, (water_out >> 8) & 0xFF }, 2);
