@@ -5,10 +5,10 @@
 
 #include <stm32f4xx_hal.h>
 
-HAL_StatusTypeDef handle_oil_pressure();
-HAL_StatusTypeDef handle_gear();
-HAL_StatusTypeDef handle_water_temp(bool adc_ready);
-HAL_StatusTypeDef handle_current_clamps(bool adc_ready);
-HAL_StatusTypeDef handle_wheel_sensor();
+uint8_t handle_oil_pressure();
+uint8_t handle_gear();
+uint8_t handle_water_temp(bool adc_ready);
+uint8_t handle_current_clamps(bool adc_ready);
+uint8_t handle_wheel_sensor();
 
 #endif
