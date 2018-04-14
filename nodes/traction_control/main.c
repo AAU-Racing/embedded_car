@@ -33,13 +33,14 @@ int main(void) {
 void setup() {
 	// Init peripherals
 	uart_init();
-    if (CAN_Init(CAN_PD0) != CAN_OK) {
-	//if (CAN_Init(CAN_PB5) != CAN_OK) {
+
+	if (CAN_Init(CAN_PB5) != CAN_OK) {
 		printf("CAN init failed\n");
 	}
 
 	if (init_adc(5) != HAL_OK) { // 2 for water, 2 for current_clamps, and 1 for gear feedback
 		printf("ADC init failed\n");
+        CAN_Start();
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_INIT_ERROR }, 1);
 	}
 	else {
@@ -48,18 +49,21 @@ void setup() {
 
 	if (init_water_temp() != HAL_OK) {
 		printf("Water temp init failed\n");
+        CAN_Start();
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_WATER_TEMP_ERROR }, 1);
 		adc_ready = false;
 	}
 
 	if (init_current_clamps() != 0) {
 		printf("Current clamps init failed\n");
+        CAN_Start();
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_CURRENT_CLAMPS_ERROR }, 1);
 		adc_ready = false;
 	}
 
 	if (init_gear() != HAL_OK) {
 		printf("Gear init failed\n");
+        CAN_Start();
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_GEAR_ERROR }, 1);
 		adc_ready = false;
 	}
@@ -75,9 +79,14 @@ void setup() {
 
 	// Start peripherals
 	if (start_adc() != HAL_OK) {
+        printf("Start ADC failed\n");
+        CAN_Start();
 		CAN_Send(CAN_ADC_ERROR, (uint8_t[]) { CAN_ADC_START_ERROR }, 1);
 		adc_ready = false;
 	}
+
+    CAN_Start();
+
 	printf("Peripherals started\n");
 	HAL_Delay(10);
 
@@ -98,6 +107,4 @@ void loop() {
 	handle_current_clamps(adc_ready);
 	handle_gear();
 	handle_wheel_sensor();
-
-	HAL_Delay(50);
 }
