@@ -52,6 +52,8 @@
     GPIOD, \
 })
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 typedef struct {
     uint16_t StdId;
     uint8_t Length;
@@ -111,6 +113,7 @@ static bool is_mailbox_empty(uint32_t mailbox);
 static bool is_buffer_full();
 static void enqueue_message(uint16_t id, volatile uint8_t msg[], uint8_t length);
 static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatile uint8_t msg[], uint8_t length);
+static uint32_t get_message_mask(uint8_t length);
 static void send_message(uint8_t transmitmailbox);
 
 // CAN_TxCallback
@@ -427,8 +430,12 @@ static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatil
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TIR, CAN_TI0R_STID_Msk, id << CAN_TI0R_STID_Pos); // EXID = 0, IDE = 0, RTR = 0, TXRQ = 0, STID = id
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TDTR, CAN_TDT0R_DLC_Msk, length); // Set DLC
 
-    // This will fill both TDLR and TDHR because offset for TDLR and TDHR is 8 and 12 relative to mailbox base address.
-    naive_memcpy((uint8_t*) &handle->sTxMailBox[transmitmailbox].TDLR, msg, length);
+    handle->sTxMailBox[transmitmailbox].TDLR = (*((uint32_t*) msg)) & get_message_mask(length);
+    handle->sTxMailBox[transmitmailbox].TDHR = (*((uint32_t*) msg + 4)) & get_message_mask(length > 4 ? length - 4 : 0);
+}
+
+static uint32_t get_message_mask(uint8_t length) {
+    return (length > 3 ? 0xFF << 24 : 0) | (length > 2 ? 0xFF << 16 : 0) | (length > 1 ? 0xFF << 8 : 0) | (length > 0 ? 0xFF : 0);
 }
 
 static void send_message(uint8_t transmitmailbox) {
