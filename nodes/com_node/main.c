@@ -27,20 +27,20 @@ void setup(void){
 
 	//BSP_RTC_Init();
 
-	//init_sd();
-	init_telemtry();
+	// init_sd();
+	//init_telemtry();
 
 	//Setting up CAN and it's filters
 	if (CAN_Init(CAN_PB12) != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN init error");
 	}
 
-	oil_init();
+	//oil_init();
 	water_temp_init();
-	wheel_speed_init();
-	current_clamps_init();
-	error_init();
-	OBDII_Init();
+	//wheel_speed_init();
+	//current_clamps_init();
+	//error_init();
+	//OBDII_Init();
 
 	if (CAN_Start() != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN start error");
@@ -57,14 +57,27 @@ void setup(void){
 
 void loop(void){
 	// Burst only every 50 ms
-	if (HAL_GetTick() - last_obd_burst > 50) {
+	/*if (HAL_GetTick() - last_obd_burst > 50) {
 		OBDII_Burst();
 		last_obd_burst = HAL_GetTick();
-	}
+	}*/
 
 	// Handle logging and telemetry which are the main responsability of the com node
-	//handle_logging();
-	handle_telemetry();
+	// handle_logging();
+	// handle_telemetry();
+
+    uint16_t water_in;
+	uint16_t water_out;
+
+    printf("Water in: %d\n", water_in);
+
+	if (get_water_temp_in(&water_in)){
+		printf("Water in: %d\n", water_in);
+	}
+
+	if (get_water_temp_out(&water_out)){
+		printf("Water in: %d\n", water_out);
+	}
 	HAL_Delay(1);
 }
 

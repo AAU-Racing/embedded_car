@@ -13,12 +13,10 @@ int main(void) {
     HAL_Delay(1000);
     setup_IWDG();
     init_IWDG();
-    char start[] = "Starting\r\n";
-    usb_transmit(start, sizeof(start)/sizeof(start[0]));
+    printf("Starting\r\n");
 
     while (1) {
-		char str[] = "Hello usb\r\n";
-		usb_transmit(str, sizeof(str)/sizeof(str[0]));
-    HAL_Delay(500);
+		printf("Hello usb\r\n");
+        HAL_Delay(500);
 	}
 }

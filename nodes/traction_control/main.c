@@ -68,7 +68,7 @@ void setup() {
 	init_hbridge();
 
 	// Check oil pressure at the start
-	init_oil_pressure();
+	//init_oil_pressure();
 
 	printf("Init complete\n");
 	HAL_Delay(10);
@@ -93,7 +93,7 @@ void loop() {
 		lastTransmit = HAL_GetTick();
 	}
 #endif
-	handle_oil_pressure();
+	//handle_oil_pressure();
 	handle_water_temp(adc_ready);
 	handle_current_clamps(adc_ready);
 	handle_gear();

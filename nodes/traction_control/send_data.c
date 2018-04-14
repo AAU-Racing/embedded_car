@@ -7,6 +7,8 @@
 #include <shield_drivers/traction_control/oil_pressure.h>
 #include <shield_drivers/traction_control/hbridge.h>
 
+#include <stdio.h>
+
 #include "send_data.h"
 
 HAL_StatusTypeDef handle_oil_pressure() {
@@ -38,6 +40,8 @@ HAL_StatusTypeDef handle_water_temp(bool adc_ready) {
 	{
 		uint16_t water_in = read_water_in();
 		uint16_t water_out = read_water_out();
+
+        printf("Water temperature: (%4d, %4d)", water_in, water_out);
 
 		HAL_StatusTypeDef in_res = CAN_Send(CAN_WATER_TEMPERATURE_IN, (uint8_t[]) { water_in & 0xFF, (water_in >> 8) & 0xFF }, 2);
 		HAL_StatusTypeDef out_res = CAN_Send(CAN_WATER_TEMPERATURE_OUT, (uint8_t[]) { water_out & 0xFF, (water_out >> 8) & 0xFF }, 2);

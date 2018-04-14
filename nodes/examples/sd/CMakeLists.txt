@@ -1,4 +1,4 @@
-set(target_name example_water_temp)
+set(target_name example_sd)
 
 set(SRC_FILES
 	main.c
@@ -7,6 +7,5 @@ set(SRC_FILES
 add_executable(${target_name} ${SRC_FILES})
 target_link_libraries(${target_name}
 	board_driver
-    shield_drivers
-    m
+	shield_drivers
 )

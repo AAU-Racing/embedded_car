@@ -423,6 +423,7 @@ static void enqueue_message(uint16_t id, volatile uint8_t msg[], uint8_t length)
 }
 
 static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatile uint8_t msg[], uint8_t length) {
+    handle->sTxMailBox[transmitmailbox].TIR = 0;
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TIR, CAN_TI0R_STID_Msk, id << CAN_TI0R_STID_Pos); // EXID = 0, IDE = 0, RTR = 0, TXRQ = 0, STID = id
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TDTR, CAN_TDT0R_DLC_Msk, length); // Set DLC
 

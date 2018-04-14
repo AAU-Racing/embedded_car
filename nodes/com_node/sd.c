@@ -433,12 +433,12 @@ void init_sd() {
 void handle_logging() {
 	// Only try to log if the SD-card is initialized
 	if (sd_initialized) {
-		handle_oil_pressure();
-		handle_error();
+		//handle_oil_pressure();
+		//handle_error();
 		handle_water_temperature();
-		handle_current_clamps();
-		handle_wheel_speed();
-		handle_obdii();
+		//handle_current_clamps();
+		//handle_wheel_speed();
+		//handle_obdii();
 
 		if(last_data_write_time + 1000 < HAL_GetTick()) { //If its been over a second since last data write to SD
 			append_buffer_to_sd(data_file_name);

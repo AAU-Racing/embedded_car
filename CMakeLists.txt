@@ -31,6 +31,10 @@ include_directories(
 	# STM32 USB
 	libs/STM32_USB_Device_Library/Class/CDC/Inc
 	libs/STM32_USB_Device_Library/Core/Inc
+
+    # FatFs
+    libs/FatFs
+    libs/FatFs/drivers
 )
 
 # Make it possible to Flash using openOCD
