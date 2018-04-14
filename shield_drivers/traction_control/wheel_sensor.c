@@ -108,8 +108,8 @@ void wheel_sensor_init(void) {
 
 	init_interrupt(WHEEL_INP_FR);
 	init_interrupt(WHEEL_INP_FL);
-	init_interrupt(WHEEL_INP_BR);
-	init_interrupt(WHEEL_INP_BL);
+	init_interrupt(WHEEL_INP_RR);
+	init_interrupt(WHEEL_INP_RL);
 }
 
 serializable_float wheel_sensor_fr(void) {
@@ -120,10 +120,10 @@ serializable_float wheel_sensor_fl(void) {
 	return (serializable_float) freq[WHEEL_INP_FL];
 }
 
-serializable_float wheel_sensor_br(void) {
-	return (serializable_float) freq[WHEEL_INP_BR];
+serializable_float wheel_sensor_rr(void) {
+	return (serializable_float) freq[WHEEL_INP_RR];
 }
 
-serializable_float wheel_sensor_bl(void) {
-	return (serializable_float) freq[WHEEL_INP_BL];
+serializable_float wheel_sensor_rl(void) {
+	return (serializable_float) freq[WHEEL_INP_RL];
 }

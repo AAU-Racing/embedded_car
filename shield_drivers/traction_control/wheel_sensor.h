@@ -6,8 +6,8 @@
 enum wheel_input {
 	WHEEL_INP_FR, // FRONT RIGHT
 	WHEEL_INP_FL, // FRONT LEFT
-	WHEEL_INP_BR, // BACK RIGHT
-	WHEEL_INP_BL, // BACK LEFT
+	WHEEL_INP_RR, // REAR RIGHT
+	WHEEL_INP_RL, // REAR LEFT
 
 	WHEEL_INP_N, // Number of connected wheels
 };
@@ -26,11 +26,11 @@ typedef union {
 #define RPM2_GPIO_PORT GPIOD
 #define RPM2_PIN PIN_3
 
-#define RPM3 WHEEL_INP_BR
+#define RPM3 WHEEL_INP_RR
 #define RPM3_GPIO_PORT GPIOD
 #define RPM3_PIN PIN_2
 
-#define RPM4 WHEEL_INP_BL
+#define RPM4 WHEEL_INP_RL
 #define RPM4_GPIO_PORT GPIOD
 #define RPM4_PIN PIN_7
 
@@ -38,7 +38,7 @@ void wheel_sensor_init(void);
 
 serializable_float wheel_sensor_fr(void);
 serializable_float wheel_sensor_fl(void);
-serializable_float wheel_sensor_br(void);
-serializable_float wheel_sensor_bl(void);
+serializable_float wheel_sensor_rr(void);
+serializable_float wheel_sensor_rl(void);
 
 #endif /* WHEEL_SENSOR_H */
