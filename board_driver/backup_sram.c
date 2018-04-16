@@ -7,7 +7,7 @@
 #include "backup_sram.h"
 
 
-PWR_TypeDef *pwr = (void*)PWR_BASE;
+PWR_TypeDef *pwr = PWR;
 
 
 void disable_backup_sram() {
