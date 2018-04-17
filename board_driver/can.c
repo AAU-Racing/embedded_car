@@ -487,7 +487,8 @@ static CAN_RxFrame get_latest_msg() {
     frame.StdId = (handle->sFIFOMailBox[0].RIR && CAN_RI0R_STID_Msk) >> CAN_RI0R_STID_Pos;
     frame.Length = handle->sFIFOMailBox[0].RDTR & CAN_RDT0R_DLC_Msk;
 
-    naive_memcpy(frame.Msg, (uint8_t*) &handle->sFIFOMailBox[0].RDLR, frame.Length);
+    (*((uint32_t*) frame.Msg)) = handle->sTxMailBox[transmitmailbox].RDLR & get_message_mask(frame.Length);
+    (*((uint32_t*) frame.Msg + 4)) = handle->sTxMailBox[transmitmailbox].RDHR & get_message_mask(frame.Length > 4 ? frame.Length - 4 : 0);
 
     return frame;
 }
