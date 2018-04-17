@@ -1,7 +1,4 @@
 #include <stm32f4xx.h>
-#include <stm32f4xx_hal.h>
-#include <stdio.h>
-#include <board_driver/usb/usb.h>
 
 #define ENABLE_WRITE_ACCESS 0x5555
 #define SET_PRESCALER32 0x03
