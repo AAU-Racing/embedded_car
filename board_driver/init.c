@@ -1,44 +1,4 @@
-#include <stm32f4xx.h>
-#include <stm32f4xx_hal.h>
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "init.h"
-
-static void enable_instruction_cache() {
-    SET_BIT(FLASH->ACR, FLASH_ACR_ICEN);
-}
-
-static void enable_data_cache() {
-    SET_BIT(FLASH->ACR, FLASH_ACR_DCEN);
-}
-
-static void enable_prefetch_buffer() {
-    SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN);
-}
-
-void init_board() {
-    enable_instruction_cache();
-    enable_data_cache();
-    enable_prefetch_buffer();
-
-    // Set Interrupt Group Priority
-    NVIC_SetPriorityGrouping(3);
-
-    HAL_InitTick(TICK_INT_PRIORITY);
-}
-
-static void start_pwr_clock() {
-    SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-    // Delay after PWR clock enabling
-    READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-}
-
-static void pwr_voltage_scaling_config() {
-    SET_BIT(PWR->CR, PWR_CR_VOS); // Set voltage regulator to scale 1
-}
-
+/*
 static void wait_until_hse_ready() {
     uint8_t state = 0;
 
@@ -86,6 +46,53 @@ static void enable_pll() {
     wait_until_pll_state(1);
 }
 
+void set_system_clock_168mhz(void) {
+    enable_hse();
+    disable_pll(); // To enable configuration of the pll
+    configure_pll();
+    enable_pll();
+}*/
+
+#include <stm32f4xx_hal.h>
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "init.h"
+
+static void enable_instruction_cache() {
+    SET_BIT(FLASH->ACR, FLASH_ACR_ICEN);
+}
+
+static void enable_data_cache() {
+    SET_BIT(FLASH->ACR, FLASH_ACR_DCEN);
+}
+
+static void enable_prefetch_buffer() {
+    SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN);
+}
+
+void init_board() {
+    enable_instruction_cache();
+    enable_data_cache();
+    enable_prefetch_buffer();
+
+    // Set Interrupt Group Priority
+    NVIC_SetPriorityGrouping(3);
+
+    HAL_InitTick(TICK_INT_PRIORITY);
+}
+
+static void start_pwr_clock() {
+    SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+    // Delay after PWR clock enabling
+    READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+}
+
+static void pwr_voltage_scaling_config() {
+    SET_BIT(PWR->CR, PWR_CR_VOS); // Set voltage regulator to scale 1
+}
+
 static void set_flash_latency() {
     // We set FLASH_LATENCY_5 as we are in vcc range 2.7-3.6 at 168mhz
     // See datasheet table 10 at page 80 (stm32f4xx reference manual)
@@ -110,14 +117,29 @@ static void configure_apb2clk() {
 }
 
 void set_system_clock_168mhz(void) {
-	start_pwr_clock();
 
-	pwr_voltage_scaling_config();
+    start_pwr_clock();
 
-    enable_hse();
-    disable_pll(); // To enable configuration of the pll
-    configure_pll();
-    enable_pll();
+    pwr_voltage_scaling_config();
+
+	const uint32_t HSE_mhz = HSE_VALUE/10e5;
+	const bool HSE_is_odd  = (HSE_mhz & 1) == 1;
+
+	RCC_OscInitTypeDef RCC_OscInit = {
+		.OscillatorType = RCC_OSCILLATORTYPE_HSE,
+		.HSEState       = RCC_HSE_ON,
+		.PLL = {
+			.PLLState   = RCC_PLL_ON,
+			.PLLSource  = RCC_PLLSOURCE_HSE,
+			.PLLM       = HSE_is_odd ? HSE_mhz : (HSE_mhz / 2), // should match HSE freq in mhz so HSE/PLLM == 1
+			.PLLN       = HSE_is_odd ? (168*2) : 168, // 336 / 2 == 168 == max core clk
+			.PLLP       = RCC_PLLP_DIV2, // ((HSE/pllm) * plln) / pllp == 168 (max core clk)
+			.PLLQ       = 7, // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
+		},
+	};
+	if (HAL_RCC_OscConfig(&RCC_OscInit) != HAL_OK) {
+		while (1);
+	}
 
     set_flash_latency();
 
@@ -132,6 +154,7 @@ void set_system_clock_168mhz(void) {
     // Update tick system to reflect clock changes
     HAL_InitTick(TICK_INT_PRIORITY);
 }
+
 
 void boot(uint32_t address) {
 	uint32_t appStack = (uint32_t) *(uint32_t*)address;
