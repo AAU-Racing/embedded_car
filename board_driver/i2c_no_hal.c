@@ -121,7 +121,7 @@ int i2c_is_ready(uint16_t addr) {
 
 int i2c_master_transmit(uint16_t addr, uint8_t *buf, size_t n) { // No DMA
 	CLEAR_BIT(handle->CR1, I2C_CR1_POS);
-	I2C_MasterRequestWrite();
+	I2C_MasterRequestWrite(addr, *buf, n);
 
 	return 1;
 }
@@ -135,7 +135,8 @@ void I2C_MasterRequestWrite(uint16_t addr, uint8_t *buf, size_t n){
 		transmit_byte(*(buf + i));
 	}
 
-	wait_for_byte_transfer_finished();
+	//I2C_FLAG_BTF: Byte transfer finished flag
+	wait_for_byte_transfer_finished(addr, I2C_FLAG_BTF);
 	stop_condition();
 }
 
@@ -155,15 +156,16 @@ void set_slave_addr() {
 }
 
 void wait_for_dr_empty() {
-
+	//I2C_FLAG_TXE: Data register empty flag
+	while(I2C_FLAG_TXE == FALSE){}
 }
 
-void transmit_byte(uint8_t byte) {
-
+void transmit_byte(uint8_t byte, I2C_FLAG_BTF) { // Write data to DR
+	handle->DR = byte; // hi2c->Instance->DR = (*hi2c->pBuffPtr++);
 }
 
-void wait_for_byte_transfer_finished(){
-
+void wait_for_byte_transfer_finished(uint16_t addr, ){
+	while(__HAL_I2C_GET_FLAG(addr, I2C_FLAG_BTF) == RESET){}
 }
 
 void stop_condition(){
