@@ -8,8 +8,5 @@
 #define I2C_SDA_GPIO_PORT              GPIOB
 #define I2C_SDA_AF                     GPIO_AF4
 
-
-
-#define I2C_FLAG_MASK 0x0000FFFFU;
-#define __HAL_I2C_GET_FLAG(addr, flag) ((((uint8_t)((flag) >> 16U)) == 0x01U)?((((addr)->Instance->SR1) & ((flag) & I2C_FLAG_MASK)) == ((flag) & I2C_FLAG_MASK)): \
-												 ((((addr)->Instance->SR2) & ((flag) & I2C_FLAG_MASK)) == ((flag) & I2C_FLAG_MASK)))
+int i2c_init(void);
+int i2c_master_transmit(uint16_t addr, uint8_t *buf, size_t n);
