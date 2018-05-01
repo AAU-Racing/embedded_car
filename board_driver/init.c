@@ -1,64 +1,10 @@
-/*
-static void wait_until_hse_ready() {
-    uint8_t state = 0;
-
-    do {
-        state = READ_BIT(RCC->CR, RCC_CR_HSERDY);
-    } while (state != 1);
-}
-
-static void enable_hse() {
-    SET_BIT(RCC->CR, RCC_CR_HSEON);
-
-    wait_until_hse_ready();
-}
-
-static void wait_until_pll_state(uint8_t wanted_state) {
-    uint8_t state = !wanted_state;
-
-    do {
-        state = READ_BIT(RCC->CR, RCC_CR_PLLRDY);
-    } while (state != wanted_state);
-}
-
-static void disable_pll() {
-    CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
-
-    wait_until_pll_state(0);
-}
-
-static void configure_pll() {
-	const uint32_t HSE_mhz = HSE_VALUE / 10e6;
-
-    // Sysclk is ((HSE / PLLM) * PLLN) / PLLP -- ((x / x) * 336) / 2 = 168
-    // USBclk is ((HSE / PLLM) * PLLN) / PLLQ -- ((x / x) * 336) / 7 = 48
-
-    SET_BIT(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC); // Set HSE as input source for PLL
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM_Msk, HSE_mhz << RCC_PLLCFGR_PLLM_Pos); // should match HSE freq in mhz so HSE / PLLM == 1
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN_Msk, 336 << RCC_PLLCFGR_PLLN_Pos); // 336 / 2 == 168 == max core clk
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 168 (max core clk)
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ_Msk, 7 << RCC_PLLCFGR_PLLQ_Pos); // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
-}
-
-static void enable_pll() {
-    SET_BIT(RCC->CR, RCC_CR_PLLON);
-
-    wait_until_pll_state(1);
-}
-
-void set_system_clock_168mhz(void) {
-    enable_hse();
-    disable_pll(); // To enable configuration of the pll
-    configure_pll();
-    enable_pll();
-}*/
-
 #include <stm32f4xx_hal.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "init.h"
+
 
 static void enable_instruction_cache() {
     SET_BIT(FLASH->ACR, FLASH_ACR_ICEN);
@@ -86,11 +32,47 @@ void init_board() {
 static void start_pwr_clock() {
     SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
     // Delay after PWR clock enabling
-    READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+    (void) READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
 }
 
 static void pwr_voltage_scaling_config() {
     SET_BIT(PWR->CR, PWR_CR_VOS); // Set voltage regulator to scale 1
+}
+
+static void wait_until_hse_ready() {
+    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == RESET);
+}
+
+static void enable_hse() {
+    SET_BIT(RCC->CR, RCC_CR_HSEON);
+
+    wait_until_hse_ready();
+}
+
+static void disable_pll() {
+    CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
+
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == SET);
+}
+
+static void configure_pll() {
+	const uint32_t HSE_mhz = HSE_VALUE / 10e5;
+    const bool HSE_is_odd  = (HSE_mhz & 1) == 1;
+
+    // Sysclk is ((HSE / PLLM) * PLLN) / PLLP -- ((x / x) * 336) / 2 = 168
+    // USBclk is ((HSE / PLLM) * PLLN) / PLLQ -- ((x / x) * 336) / 7 = 48
+
+    SET_BIT(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC); // Set HSE as input source for PLL
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM_Msk, (HSE_is_odd ? HSE_mhz : (HSE_mhz / 2)) << RCC_PLLCFGR_PLLM_Pos); // should match HSE freq in mhz so HSE / PLLM == 1
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN_Msk, (HSE_is_odd ? (168*2) : 168) << RCC_PLLCFGR_PLLN_Pos); // 336 / 2 == 168 == max core clk
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 168 (max core clk)
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ_Msk, 7 << RCC_PLLCFGR_PLLQ_Pos); // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
+}
+
+static void enable_pll() {
+    SET_BIT(RCC->CR, RCC_CR_PLLON);
+
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RESET);
 }
 
 static void set_flash_latency() {
@@ -122,24 +104,10 @@ void set_system_clock_168mhz(void) {
 
     pwr_voltage_scaling_config();
 
-	const uint32_t HSE_mhz = HSE_VALUE/10e5;
-	const bool HSE_is_odd  = (HSE_mhz & 1) == 1;
-
-	RCC_OscInitTypeDef RCC_OscInit = {
-		.OscillatorType = RCC_OSCILLATORTYPE_HSE,
-		.HSEState       = RCC_HSE_ON,
-		.PLL = {
-			.PLLState   = RCC_PLL_ON,
-			.PLLSource  = RCC_PLLSOURCE_HSE,
-			.PLLM       = HSE_is_odd ? HSE_mhz : (HSE_mhz / 2), // should match HSE freq in mhz so HSE/PLLM == 1
-			.PLLN       = HSE_is_odd ? (168*2) : 168, // 336 / 2 == 168 == max core clk
-			.PLLP       = RCC_PLLP_DIV2, // ((HSE/pllm) * plln) / pllp == 168 (max core clk)
-			.PLLQ       = 7, // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
-		},
-	};
-	if (HAL_RCC_OscConfig(&RCC_OscInit) != HAL_OK) {
-		while (1);
-	}
+    enable_hse();
+    disable_pll(); // To enable configuration of the pll
+    configure_pll();
+    enable_pll();
 
     set_flash_latency();
 
