@@ -40,7 +40,7 @@ static void pwr_voltage_scaling_config() {
 }
 
 static void wait_until_hse_ready() {
-    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == RESET);
+    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == RESET) {}
 }
 
 static void enable_hse() {
@@ -52,7 +52,7 @@ static void enable_hse() {
 static void disable_pll() {
     CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
 
-    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == SET);
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RCC_CR_PLLRDY) {}
 }
 
 static void configure_pll() {
@@ -72,7 +72,7 @@ static void configure_pll() {
 static void enable_pll() {
     SET_BIT(RCC->CR, RCC_CR_PLLON);
 
-    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RESET);
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RESET) {}
 }
 
 static void set_flash_latency() {
