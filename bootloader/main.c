@@ -2,38 +2,74 @@
 #include <stdbool.h>
 
 #include <board_driver/uart.h>
+#include <board_driver/usb/usb.h>
+#include <board_driver/can.h>
 #include <board_driver/flash.h>
 #include <board_driver/init.h>
+#include <board_driver/bootloader_protocol.h>
+#include <board_driver/rtc.h>
 
+#define STARTADDRESS 0x08010000
 
 int main(void) {
 	uart_init();
 
-	while (1) {
-		uint8_t c = uart_read_byte();
-		if (c == 'k') {
-			uart_send_buf((uint8_t[]){'y'}, 1);
+	//TODO Find a way to receive packets with generic interface.
+
+	uint8_t offset = 0;
+	uint32_t len = 0, rtc = 0;
+
+	while(1) {
+		Packet startPacket = ReceivePacket();
+
+		if(CRCIsValid(startPacket) && IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
+			len = GetImageLength(startPacket);
+			rtc = GetRTCValue(startPacket);
+
 			break;
 		}
 	}
 
-	uint32_t start_address = 0x08010000;
-	size_t len = 8132;
 	uint8_t data[len];
 
-	for (size_t i = 0; i < len; i++) {
-		uint8_t c = uart_read_byte();
-		data[i] = c;
-		uart_send_buf((uint8_t[]){c}, 1);
+	RTC_Update_Date_Time(rtc);
+
+	while(1) {
+		Packet packet = ReceivePacket();
+
+		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
+			GetPayload(packet, data, &offset);
+		}
+
+		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
+			GetPayload(packet, data, &offset);
+		}
+
+		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
+			GetPayload(packet, data, &offset);
+
+			break;
+		}
+
+		if(!CRCIsValid(packet)) {
+			CreatePacket(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
+			TransmitPacket(packet);
+		}
 	}
 
-	if (write_flash(start_address, data, len)) {
-		uart_send_buf((uint8_t[]){"Error\n"}, 6);
+	Packet packet;
+
+	if (write_flash(STARTADDRESS, data, len)) {
+		CreatePacket(&packet, SET_STATUS, (uint8_t[]){"Error\n"});
+		TransmitPacket(packet);
 		while(1);
 	} else {
-		uart_send_buf((uint8_t[]){"flash done\n"}, 11);
+		CreatePacket(&packet, SET_STATUS, (uint8_t[]){"flash done\n"});
+		TransmitPacket(packet);
 	}
-
-	uart_send_buf((uint8_t[]){"Booting application...\n\n"}, 24);
-	boot(start_address);
+	
+	CreatePacket(&packet, SET_STATUS, (uint8_t[]){"Booting application...\n\n"});
+	TransmitPacket(packet);
+	
+	boot(STARTADDRESS);
 }

@@ -18,7 +18,7 @@ static FATFS fs;
 static uint8_t count = 0;
 static uint32_t last_write_time = 0;
 
-void append_buffer_to_sd(void){
+/*void append_buffer_to_sd(void){
 	uint16_t data_length = BufEnd - dataBuf;
 	appendData(file_name, dataBuf, data_length);
 	memset(dataBuf, '\0', SD_STANDARD_BLOCK_SIZE);
@@ -78,5 +78,9 @@ int main(void){
 		loop();
 	}
 
+	return 0;
+}*/
+
+int main(void) {
 	return 0;
 }
