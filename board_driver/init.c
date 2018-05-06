@@ -65,7 +65,7 @@ static void configure_pll() {
     SET_BIT(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC); // Set HSE as input source for PLL
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM_Msk, (HSE_is_odd ? HSE_mhz : (HSE_mhz / 2)) << RCC_PLLCFGR_PLLM_Pos); // should match HSE freq in mhz so HSE / PLLM == 1
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN_Msk, (HSE_is_odd ? (168*2) : 168) << RCC_PLLCFGR_PLLN_Pos); // 336 / 2 == 168 == max core clk
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 168 (max core clk)
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP_Pos); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 168 (max core clk)
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ_Msk, 7 << RCC_PLLCFGR_PLLQ_Pos); // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
 }
 
