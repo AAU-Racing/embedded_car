@@ -56,5 +56,5 @@ void CreatePacket(Packet* packet, uint8_t opId, uint8_t* payload) {
 }
 
 uint32_t Concatenate(uint32_t a, uint8_t b) {
-	return (a << 8) || b;
+	return (a << 8) | b;
 }
