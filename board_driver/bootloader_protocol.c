@@ -9,7 +9,7 @@ void GetPayload(Packet packet, uint8_t* arr, uint8_t* offset) {
 	memcpy(arr + sizeof(uint8_t)*(*offset), packet.payload, PAYLOADLENGTH);
 }
 
-bool CRCIsValid(Packet packet) {
+bool crc_is_valid(Packet packet) {
 	return crc_calculate((uint32_t*)packet.payload, PAYLOADLENGTH) == packet.crc;
 }
 
@@ -18,7 +18,7 @@ uint32_t GetImageLength(Packet packet) {
 
 	for (i = 0; i < 4; i++)
 	{
-		imageLength = Concatenate(imageLength, packet.payload[i]);
+		imageLength = concatenate(imageLength, packet.payload[i]);
 	}
 
 	return imageLength;
@@ -29,7 +29,7 @@ uint32_t GetRTCValue(Packet packet) {
 
 	for (i = 4; i < 8; i++)
 	{
-		rtcValue = Concatenate(rtcValue, packet.payload[i]);
+		rtcValue = concatenate(rtcValue, packet.payload[i]);
 	}
 
 	return rtcValue;
@@ -55,6 +55,6 @@ void CreatePacket(Packet* packet, uint8_t opId, uint8_t* payload) {
 	}
 }
 
-uint32_t Concatenate(uint32_t a, uint8_t b) {
+uint32_t concatenate(uint32_t a, uint8_t b) {
 	return (a << 8) | b;
 }

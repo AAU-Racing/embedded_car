@@ -22,7 +22,7 @@ int main(void) {
 	while(1) {
 		Packet startPacket = ReceivePacket();
 
-		if(CRCIsValid(startPacket) && IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
+		if(crc_is_valid(startPacket) && IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
 			len = GetImageLength(startPacket);
 			rtc = GetRTCValue(startPacket);
 
@@ -37,21 +37,21 @@ int main(void) {
 	while(1) {
 		Packet packet = ReceivePacket();
 
-		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
+		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
 			GetPayload(packet, data, &offset);
 		}
 
-		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
+		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
 			GetPayload(packet, data, &offset);
 		}
 
-		if(CRCIsValid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
+		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
 			GetPayload(packet, data, &offset);
 
 			break;
 		}
 
-		if(!CRCIsValid(packet)) {
+		if(!crc_is_valid(packet)) {
 			CreatePacket(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
 			TransmitPacket(packet);
 		}

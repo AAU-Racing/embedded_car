@@ -11,7 +11,7 @@
 
 #define UPDATE			  0
 #define STATUS			  1
-#define ERROR			  2
+#define ERROR_CODE		  2
 
 #define DASHBOARD		  0
 #define COMMNODE		  1
@@ -37,7 +37,7 @@
 
 #define IS_UPDATE(ID) ((ID >> 6) & UPDATE)
 #define IS_STATUS(ID) ((ID >> 6) & STATUS)
-#define IS_ERROR(ID)  ((ID >> 6) & ERROR)
+#define IS_ERROR(ID)  ((ID >> 6) & ERROR_CODE)
 
 #define IS_DASHBOARD(ID) ((ID >> 4) & DASHBOARD)
 #define IS_COMMNODE(ID) ((ID >> 4) & COMMNODE)
@@ -61,9 +61,9 @@ Packet ReceivePacket(void);
 void TransmitPacket(Packet packet);
 void CreatePacket(Packet* packet, uint8_t opId, uint8_t* payload);
 void GetPayload(Packet packet, uint8_t* arr, uint8_t* offset);
-bool CRCIsValid(Packet packet);
+bool crc_is_valid(Packet packet);
 void Encrypt_payload(Packet *packet);
 void Decrypt_payload(Packet *packet);
-uint32_t Concatenate(uint32_t a, uint8_t b);
+uint32_t concatenate(uint32_t a, uint8_t b);
 
 #endif
