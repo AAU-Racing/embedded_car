@@ -20,11 +20,12 @@ int main(void) {
 	uint32_t len = 0, rtc = 0;
 
 	while(1) {
-		Packet startPacket = ReceivePacket();
+		Packet startPacket;
+		receive_packet(&startPacket);
 
 		if(crc_is_valid(startPacket) && IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
-			len = GetImageLength(startPacket);
-			rtc = GetRTCValue(startPacket);
+			len = get_image_length(startPacket);
+			rtc = get_rtc_value(startPacket);
 
 			break;
 		}
@@ -35,41 +36,42 @@ int main(void) {
 	RTC_Update_Date_Time(rtc);
 
 	while(1) {
-		Packet packet = ReceivePacket();
+		Packet packet;
+		receive_packet(&packet);
 
 		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
-			GetPayload(packet, data, &offset);
+			get_payload(packet, data, &offset);
 		}
 
 		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
-			GetPayload(packet, data, &offset);
+			get_payload(packet, data, &offset);
 		}
 
 		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
-			GetPayload(packet, data, &offset);
+			get_payload(packet, data, &offset);
 
 			break;
 		}
 
 		if(!crc_is_valid(packet)) {
-			CreatePacket(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
-			TransmitPacket(packet);
+			create_packet(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
+			transmit_packet(packet);
 		}
 	}
 
 	Packet packet;
 
 	if (write_flash(STARTADDRESS, data, len)) {
-		CreatePacket(&packet, SET_STATUS, (uint8_t[]){"Error\n"});
-		TransmitPacket(packet);
+		create_packet(&packet, SET_STATUS, (uint8_t[]){"Error\n"});
+		transmit_packet(packet);
 		while(1);
 	} else {
-		CreatePacket(&packet, SET_STATUS, (uint8_t[]){"flash done\n"});
-		TransmitPacket(packet);
+		create_packet(&packet, SET_STATUS, (uint8_t[]){"flash done\n"});
+		transmit_packet(packet);
 	}
 	
-	CreatePacket(&packet, SET_STATUS, (uint8_t[]){"Booting application...\n\n"});
-	TransmitPacket(packet);
+	create_packet(&packet, SET_STATUS, (uint8_t[]){"Booting application...\n\n"});
+	transmit_packet(packet);
 	
 	boot(STARTADDRESS);
 }

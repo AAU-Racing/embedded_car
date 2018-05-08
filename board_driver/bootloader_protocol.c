@@ -1,9 +1,10 @@
 #include "board_driver/bootloader_protocol.h"
 #include "board_driver/crc.h"
+#include "device_driver/uart_driver.h"
 #include <stdbool.h>
 #include <string.h>
 
-void GetPayload(Packet packet, uint8_t* arr, uint8_t* offset) {
+void get_payload(Packet packet, uint8_t* arr, uint8_t* offset) {
 	*offset += PAYLOADLENGTH;
 
 	memcpy(arr + sizeof(uint8_t)*(*offset), packet.payload, PAYLOADLENGTH);
@@ -13,7 +14,7 @@ bool crc_is_valid(Packet packet) {
 	return crc_calculate((uint32_t*)packet.payload, PAYLOADLENGTH) == packet.crc;
 }
 
-uint32_t GetImageLength(Packet packet) {
+uint32_t get_image_length(Packet packet) {
 	uint32_t i, imageLength = 0;
 
 	for (i = 0; i < 4; i++)
@@ -24,7 +25,7 @@ uint32_t GetImageLength(Packet packet) {
 	return imageLength;
 }
 
-uint32_t GetRTCValue(Packet packet) {
+uint32_t get_rtc_value(Packet packet) {
 	uint32_t i, rtcValue = 0;
 
 	for (i = 4; i < 8; i++)
@@ -35,17 +36,15 @@ uint32_t GetRTCValue(Packet packet) {
 	return rtcValue;
 }
 
-Packet ReceivePacket(void) {
-	Packet packet;
+void receive_packet(Packet* packet) {
 
-	return packet;
 }
 
-void TransmitPacket(Packet packet) {
+void transmit_packet(Packet packet) {
 	
 }
 
-void CreatePacket(Packet* packet, uint8_t opId, uint8_t* payload) {
+void create_packet(Packet* packet, uint8_t opId, uint8_t* payload) {
 	packet->startId = 0xA1;
 	packet->opId = opId;
 	

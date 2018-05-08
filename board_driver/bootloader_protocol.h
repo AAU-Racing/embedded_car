@@ -55,15 +55,15 @@ typedef struct {
 	uint32_t crc;
 } Packet;
 
-uint32_t GetImageLength(Packet packet);
-uint32_t GetRTCValue(Packet packet);
-Packet ReceivePacket(void);
-void TransmitPacket(Packet packet);
-void CreatePacket(Packet* packet, uint8_t opId, uint8_t* payload);
-void GetPayload(Packet packet, uint8_t* arr, uint8_t* offset);
+uint32_t get_image_length(Packet packet);
+uint32_t get_rtc_value(Packet packet);
+void receive_packet(Packet* packet);
+void transmit_packet(Packet packet);
+void create_packet(Packet* packet, uint8_t opId, uint8_t* payload);
+void get_payload(Packet packet, uint8_t* arr, uint8_t* offset);
 bool crc_is_valid(Packet packet);
-void Encrypt_payload(Packet *packet);
-void Decrypt_payload(Packet *packet);
+void encrypt_payload(Packet *packet);
+void decrypt_payload(Packet *packet);
 uint32_t concatenate(uint32_t a, uint8_t b);
 
 #endif
