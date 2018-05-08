@@ -37,7 +37,7 @@ uint32_t get_rtc_value(Packet packet) {
 }
 
 void receive_packet(Packet* packet) {
-
+	receiveFunction(packet);
 }
 
 void transmit_packet(Packet packet) {

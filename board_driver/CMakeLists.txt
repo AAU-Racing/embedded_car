@@ -41,6 +41,7 @@ target_link_libraries(board_driver
 	CMSIS
 	STM32f4xx_HAL_Driver
 	STM32_USB_Device_Library
+	device_driver
 )
 
 target_compile_options(board_driver PRIVATE -Wno-unused-parameter) # TODO remove this and fix the warnings

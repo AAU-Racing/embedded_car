@@ -23,7 +23,7 @@ int main(void) {
 		Packet startPacket;
 		receive_packet(&startPacket);
 
-		if(crc_is_valid(startPacket) && IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
+		if(IS_UPDATE(startPacket.startId) && IS_PREPARE_UPDATE(startPacket.opId)) {
 			len = get_image_length(startPacket);
 			rtc = get_rtc_value(startPacket);
 
@@ -39,15 +39,15 @@ int main(void) {
 		Packet packet;
 		receive_packet(&packet);
 
-		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
+		if(IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
 			get_payload(packet, data, &offset);
 		}
 
-		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
+		if(IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
 			get_payload(packet, data, &offset);
 		}
 
-		if(crc_is_valid(packet) && IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
+		if(IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
 			get_payload(packet, data, &offset);
 
 			break;
