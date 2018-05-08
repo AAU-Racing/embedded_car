@@ -58,6 +58,7 @@ add_subdirectory(board_driver)
 add_subdirectory(shield_drivers)
 add_subdirectory(libs)
 add_subdirectory(bootloader)
+add_subdirectory(device_driver)
 
 # The directory 'nodes' must be added last since it overides
 # the 'add_executable' and 'add_library' functions.
