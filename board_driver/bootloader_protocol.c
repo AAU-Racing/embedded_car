@@ -36,8 +36,19 @@ uint32_t get_rtc_value(Packet packet) {
 	return rtcValue;
 }
 
-void receive_packet(Packet* packet) {
-	while(receiveFunction(packet));
+bool receive_packet(Packet* packet) {
+	while(!receiveFunction(packet));
+
+	if(crc_is_valid(*packet)) {
+		return true;
+	}
+	else {
+		Packet packet;
+		create_packet(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
+		transmit_packet(packet);
+
+		return false;
+	}
 }
 
 void transmit_packet(Packet packet) {

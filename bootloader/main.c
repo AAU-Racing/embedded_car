@@ -37,25 +37,21 @@ int main(void) {
 
 	while(1) {
 		Packet packet;
-		receive_packet(&packet);
+		if(receive_packet(&packet)) {
 
-		if(IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
-			get_payload(packet, data, &offset);
-		}
+			if(IS_UPDATE(packet.startId) && IS_TRANSFER_BEGIN(packet.opId)) {
+				get_payload(packet, data, &offset);
+			}
 
-		if(IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
-			get_payload(packet, data, &offset);
-		}
+			if(IS_UPDATE(packet.startId) && IS_TRANSFER_CONTINUE(packet.opId)) {
+				get_payload(packet, data, &offset);
+			}
 
-		if(IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
-			get_payload(packet, data, &offset);
+			if(IS_UPDATE(packet.startId) && IS_TRANSFER_END(packet.opId)) {
+				get_payload(packet, data, &offset);
 
-			break;
-		}
-
-		if(!crc_is_valid(packet)) {
-			create_packet(&packet, SET_UPDATE | SET_RETRANSMIT, NULL);
-			transmit_packet(packet);
+				break;
+			}
 		}
 	}
 

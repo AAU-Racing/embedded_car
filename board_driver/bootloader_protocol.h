@@ -57,7 +57,7 @@ typedef struct {
 
 uint32_t get_image_length(Packet packet);
 uint32_t get_rtc_value(Packet packet);
-void receive_packet(Packet* packet);
+bool receive_packet(Packet* packet);
 void transmit_packet(Packet packet);
 void create_packet(Packet* packet, uint8_t opId, uint8_t* payload);
 void get_payload(Packet packet, uint8_t* arr, uint8_t* offset);
