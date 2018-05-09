@@ -1,6 +1,9 @@
 #include <stm32f4xx_hal.h>
 #include <stdio.h>
 
+#include "bootloader_protocol.h"
+#include "device_driver/uart_driver.h"
+
 #include "uart.h"
 #include "ringbuffer.h"
 
@@ -69,6 +72,10 @@ void USARTx_IRQHandler(void) {
 	uint32_t isrflags = READ_REG(UartHandle.Instance->SR);
 
 	if (isrflags & USART_SR_RXNE) {
+		if(receiveFunction == NULL) {
+			receiveFunction = &uart_driver_receive_packet;
+		}
+
 		uint8_t data_in = (uint8_t)(UartHandle.Instance->DR & (uint8_t)0x00FF);
 		rb_push(&uartx_rec, data_in);
 	}

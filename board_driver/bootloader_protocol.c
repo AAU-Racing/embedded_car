@@ -37,11 +37,11 @@ uint32_t get_rtc_value(Packet packet) {
 }
 
 void receive_packet(Packet* packet) {
-	receiveFunction(packet);
+	while(receiveFunction(packet));
 }
 
 void transmit_packet(Packet packet) {
-	
+	transmitFunction(packet);
 }
 
 void create_packet(Packet* packet, uint8_t opId, uint8_t* payload) {

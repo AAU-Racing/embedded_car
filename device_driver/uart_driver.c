@@ -3,6 +3,7 @@
 #include "board_driver/uart.h"
 
 int (*receiveFunction)(Packet* packet) = &uart_driver_receive_packet;
+int (*transmitFunction)(Packet packet) = &uart_driver_transmit_packet;
 
 int uart_driver_receive_packet(Packet* packet) {
 	if(uart_read_byte() == 0xA1) {
@@ -30,9 +31,8 @@ int uart_driver_receive_packet(Packet* packet) {
 			return 1;
 		}
 	}
-	else {
-		return 1;
-	}
+
+	return 1;
 }
 
 int uart_driver_transmit_packet(Packet packet) {
