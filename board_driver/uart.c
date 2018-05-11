@@ -72,8 +72,9 @@ void USARTx_IRQHandler(void) {
 	uint32_t isrflags = READ_REG(UartHandle.Instance->SR);
 
 	if (isrflags & USART_SR_RXNE) {
-		if(receiveFunction == NULL) {
+		if(receiveFunction == NULL && transmitFunction == NULL) {
 			receiveFunction = &uart_driver_receive_packet;
+			transmitFunction = &uart_driver_transmit_packet;
 		}
 
 		uint8_t data_in = (uint8_t)(UartHandle.Instance->DR & (uint8_t)0x00FF);
