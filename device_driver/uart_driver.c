@@ -2,9 +2,6 @@
 #include "board_driver/bootloader_protocol.h"
 #include "board_driver/uart.h"
 
-int (*receiveFunction)(Packet* packet);
-int (*transmitFunction)(Packet packet);
-
 int uart_driver_receive_packet(Packet* packet) {
 	if(uart_read_byte() != 0xA1) {
 		return 0;

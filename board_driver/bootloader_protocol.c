@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-void get_payload(Packet packet, uint8_t* arr, uint8_t* offset) {
+int (*receiveFunction)(Packet* packet);
+int (*transmitFunction)(Packet packet);
+
+void get_payload(Packet packet, uint8_t* arr, uint32_t* offset) {
 	*offset += PAYLOADLENGTH;
 
 	memcpy(arr + sizeof(uint8_t)*(*offset), packet.payload, PAYLOADLENGTH);

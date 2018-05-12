@@ -60,7 +60,7 @@ uint32_t get_rtc_value(Packet packet);
 bool receive_packet(Packet* packet);
 void transmit_packet(Packet packet);
 void create_packet(Packet* packet, uint8_t opId, uint8_t* payload);
-void get_payload(Packet packet, uint8_t* arr, uint8_t* offset);
+void get_payload(Packet packet, uint8_t* data, uint32_t* offset);
 bool crc_is_valid(Packet packet);
 void encrypt_payload(Packet *packet);
 void decrypt_payload(Packet *packet);

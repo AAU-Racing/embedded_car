@@ -30,6 +30,6 @@ void usb_send(void *buf, size_t len) {
 	cdc_send(buf, len);
 }
 
-uint8_t usb_recieve() {
+uint8_t usb_recieve(void) {
 	return cdc_recieve();
 }
