@@ -28,7 +28,7 @@ int uart_driver_receive_packet(Packet* packet) {
 	return 1;
 }
 
-int uart_driver_transmit_packet(Packet packet) {
+void uart_driver_transmit_packet(Packet packet) {
 	uart_send_byte(packet.startId);
 
 	uart_send_byte(packet.opId);
@@ -36,6 +36,4 @@ int uart_driver_transmit_packet(Packet packet) {
 	uart_send_buf(packet.payload, PAYLOADLENGTH);
 
 	uart_send_buf((uint8_t*)packet.crc, CRCLENGTH);
-
-	return 1;
 }

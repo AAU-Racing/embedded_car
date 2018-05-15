@@ -67,6 +67,6 @@ void decrypt_payload(Packet *packet);
 uint32_t concatenate(uint32_t a, uint8_t b);
 
 int (*receiveFunction)(Packet* packet);
-int (*transmitFunction)(Packet packet);
+void (*transmitFunction)(Packet packet);
 
 #endif

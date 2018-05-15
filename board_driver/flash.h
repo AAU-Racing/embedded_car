@@ -13,3 +13,4 @@
 #define FLASH_VOLTAGE_RANGE VOLTAGE_RANGE_3
 
 int write_flash(uint32_t start_address, uint8_t *data, size_t len);
+void HandleSectorErase(size_t len);

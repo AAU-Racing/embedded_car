@@ -4,6 +4,6 @@
 #define UART_DRIVER_H
 
 int uart_driver_receive_packet(Packet* packet);
-int uart_driver_transmit_packet(Packet packet);
+void uart_driver_transmit_packet(Packet packet);
 
 #endif

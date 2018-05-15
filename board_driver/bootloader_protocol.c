@@ -5,7 +5,7 @@
 #include <string.h>
 
 int (*receiveFunction)(Packet* packet);
-int (*transmitFunction)(Packet packet);
+void (*transmitFunction)(Packet packet);
 
 void get_payload(Packet packet, uint8_t* arr, uint32_t* offset) {
 	*offset += PAYLOADLENGTH;

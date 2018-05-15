@@ -28,7 +28,7 @@ int usb_driver_receive_packet(Packet* packet) {
 	return 1;
 }
 
-int usb_driver_transmit_packet(Packet packet) {
+void usb_driver_transmit_packet(Packet packet) {
 	usb_send(packet.startId);
 
 	usb_send(packet.opId);
@@ -36,6 +36,4 @@ int usb_driver_transmit_packet(Packet packet) {
 	usb_send(packet.payload, PAYLOADLENGTH);
 
 	usb_send((uint8_t*)packet.crc, CRCLENGTH);
-
-	return 1;
 }
