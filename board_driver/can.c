@@ -268,8 +268,8 @@ static void setup_can() {
 static void setup_timing() {
     // 500 kbps with 87.5% sample point
 
-    // AHBCLK = SYSCLOCK / 1 = 168 / 1 MHz = 168 MHz
-    // APB1CLK = AHBCLK / 1 = 168 / 1 MHz = 168 MHz
+    // AHBCLK = SYSCLOCK / 1 = 160 / 1 MHz = 160 MHz
+    // APB1CLK = AHBCLK / 4 = 160 / 4 MHz = 40 MHz
 
     // Length of 1 tq = prescaler * (1 / APB1CLK)
     // NBT = 1 / bitrate
