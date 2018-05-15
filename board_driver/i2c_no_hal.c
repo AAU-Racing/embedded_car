@@ -81,8 +81,6 @@ static void i2c_rise_time(){
 
 static void i2c_speed(){
 	handle->CCR = 400; // Aprox 100kHz
-	printf("%08x\n", handle->CCR);
-	HAL_Delay(100);
 }
 
 static void i2c_cr1_con(){
@@ -112,29 +110,11 @@ int i2c_init(void) {
 	i2c_disable();
 	i2c_freqrange();
 	i2c_rise_time();
-	printf("8\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 	i2c_speed();
-	printf("9\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 	i2c_cr1_con();
-	printf("10\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 	i2c_oar1_con();
-	printf("11\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 	i2c_oar2_con();
-	printf("12\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 	i2c_enable();
-	printf("13\n");
-	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
-	HAL_Delay(100);
 
 	return 0;
 }
@@ -144,9 +124,22 @@ int i2c_is_ready(uint16_t addr) {
 }
 
 static void start_condition(){
+	printf("start\n");
+	printf("CR1 %08x\n", handle->CR1);
+	HAL_Delay(100);
 	SET_BIT(handle->CR1, I2C_CR1_START);
-
-	while(!READ_BIT(handle->SR1, I2C_SR1_SB)) {	}
+	printf("start 2\n");
+	printf("CR1 %08x\n", handle->CR1);
+	printf("SR1 %08x\n", handle->SR1);
+	printf("SR2 %08x\n", handle->SR2);
+	HAL_Delay(100);
+	while(!READ_BIT(handle->SR1, I2C_SR1_SB)){
+		printf("SR1 %08x\n", handle->SR1);
+		printf("SR2 %08x\n", handle->SR2);
+		HAL_Delay(100);
+	}
+	printf("start 3\n");
+	HAL_Delay(100);
 }
 
 static void set_slave_addr(uint8_t addr) {
@@ -178,17 +171,24 @@ static void stop_condition(){
 }
 
 static void I2C_MasterRequestWrite(uint16_t addr, uint8_t *buf, size_t n){
+	printf("1\n");
+	HAL_Delay(100);
+	printf("2\n");
 	start_condition();
+	printf("3\n");
 	set_slave_addr(addr);
+	printf("4\n");
 
 	for (uint8_t i = 0; i < n; i++) {
 		wait_for_dr_empty();
 		transmit_byte(*(buf + i));
 	}
-
+	printf("5\n");
 	//I2C_FLAG_BTF: Byte transfer finished flag
 	wait_for_byte_transfer_finished(addr);
+	printf("6\n");
 	stop_condition();
+	printf("7\n");
 }
 
 int i2c_master_transmit(uint16_t addr, uint8_t *buf, size_t n) { // No DMA
