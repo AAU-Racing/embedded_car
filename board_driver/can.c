@@ -1,4 +1,4 @@
-#include <stm32f4xx_hal.h>
+#include <stm32f4xx.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -51,6 +51,8 @@
     GPIOB, \
     GPIOD, \
 })
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 typedef struct {
     uint16_t StdId;
@@ -111,6 +113,7 @@ static bool is_mailbox_empty(uint32_t mailbox);
 static bool is_buffer_full();
 static void enqueue_message(uint16_t id, volatile uint8_t msg[], uint8_t length);
 static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatile uint8_t msg[], uint8_t length);
+static uint32_t get_message_mask(uint8_t length);
 static void send_message(uint8_t transmitmailbox);
 
 // CAN_TxCallback
@@ -265,8 +268,8 @@ static void setup_can() {
 static void setup_timing() {
     // 500 kbps with 87.5% sample point
 
-    // AHBCLK = SYSCLOCK / 1 = 168 / 1 MHz = 168 MHz
-    // APB1CLK = AHBCLK / 1 = 168 / 1 MHz = 168 MHz
+    // AHBCLK = SYSCLOCK / 1 = 160 / 1 MHz = 160 MHz
+    // APB1CLK = AHBCLK / 4 = 160 / 4 MHz = 40 MHz
 
     // Length of 1 tq = prescaler * (1 / APB1CLK)
     // NBT = 1 / bitrate
@@ -275,7 +278,7 @@ static void setup_timing() {
     MODIFY_REG(handle->BTR, CAN_BTR_SJW_Msk, 0 << CAN_BTR_SJW_Pos); // Set synchronization jump width to 1 TQ (BTR[25:24] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS1_Msk, 12 << CAN_BTR_TS1_Pos); // Set time segment 1 to 13 TQ (BTR[19:16] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS2_Msk, 1 << CAN_BTR_TS2_Pos); // Set time segment 2 to 2 TQ (BTR[22:20] + 1)
-    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 20 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 21 (BTR[9:0] + 1)
+    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 4 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 4 (BTR[9:0] + 1)
 }
 
 static void configure_gpio_pin(GPIO_TypeDef *port, GPIO_Pin pin) {
@@ -423,11 +426,16 @@ static void enqueue_message(uint16_t id, volatile uint8_t msg[], uint8_t length)
 }
 
 static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatile uint8_t msg[], uint8_t length) {
+    handle->sTxMailBox[transmitmailbox].TIR = 0;
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TIR, CAN_TI0R_STID_Msk, id << CAN_TI0R_STID_Pos); // EXID = 0, IDE = 0, RTR = 0, TXRQ = 0, STID = id
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TDTR, CAN_TDT0R_DLC_Msk, length); // Set DLC
 
-    // This will fill both TDLR and TDHR because offset for TDLR and TDHR is 8 and 12 relative to mailbox base address.
-    naive_memcpy((uint8_t*) &handle->sTxMailBox[transmitmailbox].TDLR, msg, length);
+    handle->sTxMailBox[transmitmailbox].TDLR = (*((uint32_t*) msg)) & get_message_mask(length);
+    handle->sTxMailBox[transmitmailbox].TDHR = (*((uint32_t*) msg + 4)) & get_message_mask(length > 4 ? length - 4 : 0);
+}
+
+static uint32_t get_message_mask(uint8_t length) {
+    return (length > 3 ? 0xFF << 24 : 0) | (length > 2 ? 0xFF << 16 : 0) | (length > 1 ? 0xFF << 8 : 0) | (length > 0 ? 0xFF : 0);
 }
 
 static void send_message(uint8_t transmitmailbox) {
@@ -479,7 +487,8 @@ static CAN_RxFrame get_latest_msg() {
     frame.StdId = (handle->sFIFOMailBox[0].RIR && CAN_RI0R_STID_Msk) >> CAN_RI0R_STID_Pos;
     frame.Length = handle->sFIFOMailBox[0].RDTR & CAN_RDT0R_DLC_Msk;
 
-    naive_memcpy(frame.Msg, (uint8_t*) &handle->sFIFOMailBox[0].RDLR, frame.Length);
+    (*((uint32_t*) frame.Msg)) = handle->sFIFOMailBox[0].RDLR & get_message_mask(frame.Length);
+    (*((uint32_t*) frame.Msg + 4)) = handle->sFIFOMailBox[0].RDHR & get_message_mask(frame.Length > 4 ? frame.Length - 4 : 0);
 
     return frame;
 }
