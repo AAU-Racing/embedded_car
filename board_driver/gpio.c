@@ -111,14 +111,17 @@ static void set_output_type(GPIO_TypeDef *port, uint8_t pos, GPIO_OutputType ot)
 }
 
 static void set_af(GPIO_TypeDef *port, uint8_t pos, GPIO_AlternateFunction af) {
-	uint8_t reg_num = pos >> 3; 														// Get register number (low or high). Pin 0-7 = low, pin 8-15 = high
-	MODIFY_REG(port->AFR[reg_num], 0xF << ((pos & 0x7) * 4U), af << ((pos & 0x7) * 4U)); // Set pin bits (4 bits wide) (see alternate function typedef)
+	uint8_t reg_num = pos >> 3;
+	uint8_t trunc_pos = pos & 0x7;
+	uint8_t af_msk = 0xF << (trunc_pos * 4U);
+	uint8_t af_val = af << (trunc_pos * 4U);
+													// Get register number (low or high). Pin 0-7 = low, pin 8-15 = high
+	MODIFY_REG(port->AFR[reg_num], af_msk, af_val); // Set pin bits (4 bits wide) (see alternate function typedef)
 }
 
 void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_OutputType ot, GPIO_AlternateFunction af) {
 	// Init clock
 	init_gpio_clock(port);
-
 	// Get pin number
 	uint8_t pos = pin_number(pin);
 

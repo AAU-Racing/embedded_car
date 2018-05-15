@@ -76,11 +76,13 @@ static void i2c_freqrange(){
 }
 
 static void i2c_rise_time(){
-	handle->TRISE = (((((40) * 300U) / 1000U) + 1U)); // 40 is from freqrange
+	handle->TRISE = 41; // 40 is from freqrange
 }
 
-static void i2c_speed(){ // pclk1 = (168/((40<<1U)))
-	handle->CCR = 2.1;
+static void i2c_speed(){
+	handle->CCR = 400; // Aprox 100kHz
+	printf("%08x\n", handle->CCR);
+	HAL_Delay(100);
 }
 
 static void i2c_cr1_con(){
@@ -105,17 +107,34 @@ int i2c_init(void) {
     init_sda_pin();
     init_scl_pin();
 
-	handle = I2C;
-
+	handle = I2C2;
     i2c_start_clock();
 	i2c_disable();
 	i2c_freqrange();
 	i2c_rise_time();
+	printf("8\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 	i2c_speed();
+	printf("9\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 	i2c_cr1_con();
+	printf("10\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 	i2c_oar1_con();
+	printf("11\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 	i2c_oar2_con();
+	printf("12\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 	i2c_enable();
+	printf("13\n");
+	printf("(%08x, %08x, %08x)\n", I2C2->CR1, I2C2->OAR1, I2C2->OAR2);
+	HAL_Delay(100);
 
 	return 0;
 }
