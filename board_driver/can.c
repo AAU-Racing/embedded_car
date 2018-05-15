@@ -278,7 +278,7 @@ static void setup_timing() {
     MODIFY_REG(handle->BTR, CAN_BTR_SJW_Msk, 0 << CAN_BTR_SJW_Pos); // Set synchronization jump width to 1 TQ (BTR[25:24] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS1_Msk, 12 << CAN_BTR_TS1_Pos); // Set time segment 1 to 13 TQ (BTR[19:16] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS2_Msk, 1 << CAN_BTR_TS2_Pos); // Set time segment 2 to 2 TQ (BTR[22:20] + 1)
-    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 20 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 21 (BTR[9:0] + 1)
+    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 4 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 4 (BTR[9:0] + 1)
 }
 
 static void configure_gpio_pin(GPIO_TypeDef *port, GPIO_Pin pin) {
