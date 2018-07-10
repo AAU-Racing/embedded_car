@@ -46,7 +46,7 @@ int main(void) {
 		i++;
 		if (i == 'z' + 1) {
 			i = 'a';
-        }
+    	}
 
 		printf("Received %u\n", (unsigned) CAN_GetStats().receive);
 

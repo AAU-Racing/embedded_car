@@ -42,10 +42,11 @@ int main(void) {
 		i++;
 		if (i == '9' + 1) {
 			i = '0';
-        }
+    	}
 
 		if (HAL_GetTick() - lastPrint > 1000) {
 			printf("Received %u\n", (unsigned) CAN_GetStats().receive);
+
 			lastPrint = HAL_GetTick();
 
     		if (received) {
