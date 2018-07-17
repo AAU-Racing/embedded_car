@@ -17,7 +17,7 @@ int main(void) {
 	printf("i2c init complete\n");
 
 	for (uint32_t i = 0; ; i++) {
-		i2c_master_transmit(0x1234, &i, 4);
+		i2c_master_transmit(0x1234, (uint8_t*) &i, 4);
 		printf("Transmit complete\n");
 
 		HAL_Delay(100);
