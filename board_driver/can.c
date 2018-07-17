@@ -61,7 +61,7 @@ typedef struct {
 } CAN_TransmitFrame;
 
 // General variables for CAN
-static CAN_TypeDef *handle;
+static volatile CAN_TypeDef *handle;
 static bool initialized = false;
 static bool started = false;
 static int filter_num = 0;
@@ -113,14 +113,15 @@ static bool is_mailbox_empty(uint32_t mailbox);
 static bool is_buffer_full();
 static void enqueue_message(uint16_t id, volatile uint8_t msg[], uint8_t length);
 static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatile uint8_t msg[], uint8_t length);
-static uint32_t get_message_mask(uint8_t length);
+static uint32_t get_message_mask_low(uint8_t length);
+static uint32_t get_message_mask_high(uint8_t length);
 static void send_message(uint8_t transmitmailbox);
 
 // CAN_TxCallback
 static void clear_request_complete_flags();
 
 // CAN_RxCallback
-static CAN_RxFrame get_latest_msg();
+static void get_latest_msg(CAN_RxFrame *frame);
 static void release_receive_mailbox();
 
 // CAN_ErrorCallback
@@ -278,7 +279,7 @@ static void setup_timing() {
     MODIFY_REG(handle->BTR, CAN_BTR_SJW_Msk, 0 << CAN_BTR_SJW_Pos); // Set synchronization jump width to 1 TQ (BTR[25:24] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS1_Msk, 12 << CAN_BTR_TS1_Pos); // Set time segment 1 to 13 TQ (BTR[19:16] + 1)
     MODIFY_REG(handle->BTR, CAN_BTR_TS2_Msk, 1 << CAN_BTR_TS2_Pos); // Set time segment 2 to 2 TQ (BTR[22:20] + 1)
-    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 4 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 4 (BTR[9:0] + 1)
+    MODIFY_REG(handle->BTR, CAN_BTR_BRP_Msk, 4 << CAN_BTR_BRP_Pos); // Set baud rate prescaler to 5 (BTR[9:0] + 1)
 }
 
 static void configure_gpio_pin(GPIO_TypeDef *port, GPIO_Pin pin) {
@@ -430,12 +431,16 @@ static void put_message_in_mailbox(uint8_t transmitmailbox, uint16_t id, volatil
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TIR, CAN_TI0R_STID_Msk, id << CAN_TI0R_STID_Pos); // EXID = 0, IDE = 0, RTR = 0, TXRQ = 0, STID = id
     MODIFY_REG(handle->sTxMailBox[transmitmailbox].TDTR, CAN_TDT0R_DLC_Msk, length); // Set DLC
 
-    handle->sTxMailBox[transmitmailbox].TDLR = (*((uint32_t*) msg)) & get_message_mask(length);
-    handle->sTxMailBox[transmitmailbox].TDHR = (*((uint32_t*) msg + 4)) & get_message_mask(length > 4 ? length - 4 : 0);
+    handle->sTxMailBox[transmitmailbox].TDLR = (*((uint32_t*) &msg[0])) & get_message_mask_low(length);
+    handle->sTxMailBox[transmitmailbox].TDHR = (*((uint32_t*) &msg[4])) & get_message_mask_high(length);
 }
 
-static uint32_t get_message_mask(uint8_t length) {
+static uint32_t get_message_mask_low(uint8_t length) {
     return (length > 3 ? 0xFF << 24 : 0) | (length > 2 ? 0xFF << 16 : 0) | (length > 1 ? 0xFF << 8 : 0) | (length > 0 ? 0xFF : 0);
+}
+
+static uint32_t get_message_mask_high(uint8_t length) {
+    return (length > 7 ? 0xFF << 24 : 0) | (length > 6 ? 0xFF << 16 : 0) | (length > 5 ? 0xFF << 8 : 0) | (length > 4 ? 0xFF : 0);
 }
 
 static void send_message(uint8_t transmitmailbox) {
@@ -472,25 +477,22 @@ static void clear_request_complete_flags() {
 
 void CAN_RxCallback() {
     stats.receive++;
+    CAN_RxFrame frame;
 
-    CAN_RxFrame frame = get_latest_msg();
+    get_latest_msg(&frame);
     release_receive_mailbox();
 
     // Callback for filter
     rx_callback[frame.FMI](&frame);
 }
 
-static CAN_RxFrame get_latest_msg() {
-    CAN_RxFrame frame;
+static void get_latest_msg(CAN_RxFrame *frame) {
+    frame->FMI = (handle->sFIFOMailBox[0].RDTR & CAN_RDT0R_FMI_Msk) >> CAN_RDT0R_FMI_Pos;
+    frame->StdId = (handle->sFIFOMailBox[0].RIR & CAN_RI0R_STID_Msk) >> CAN_RI0R_STID_Pos;
+    frame->Length = handle->sFIFOMailBox[0].RDTR & CAN_RDT0R_DLC_Msk;
 
-    frame.FMI = (handle->sFIFOMailBox[0].RDTR && CAN_RDT0R_FMI_Msk) >> CAN_RDT0R_FMI_Pos;
-    frame.StdId = (handle->sFIFOMailBox[0].RIR && CAN_RI0R_STID_Msk) >> CAN_RI0R_STID_Pos;
-    frame.Length = handle->sFIFOMailBox[0].RDTR & CAN_RDT0R_DLC_Msk;
-
-    (*((uint32_t*) frame.Msg)) = handle->sFIFOMailBox[0].RDLR & get_message_mask(frame.Length);
-    (*((uint32_t*) frame.Msg + 4)) = handle->sFIFOMailBox[0].RDHR & get_message_mask(frame.Length > 4 ? frame.Length - 4 : 0);
-
-    return frame;
+    (*((uint32_t*) &frame->Msg[0])) = handle->sFIFOMailBox[0].RDLR & get_message_mask_low(frame->Length);
+    (*((uint32_t*) &frame->Msg[4])) = handle->sFIFOMailBox[0].RDHR & get_message_mask_high(frame->Length);
 }
 
 static void release_receive_mailbox() {
