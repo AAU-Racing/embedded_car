@@ -16,9 +16,9 @@ int main(void) {
 	while(1) {
 		for (uint8_t color = 0; color < 3; color++) {
 			for (uint8_t led = 0; led < 25; led++) {
-				uint8_t red = (color == 0) * 0xFF;
-				uint8_t green = (color == 1) * 0xFF;
-				uint8_t blue = (color == 2) * 0xFF;
+				uint8_t red = (color == 0) * 0xF;
+				uint8_t green = (color == 1) * 0xF;
+				uint8_t blue = (color == 2) * 0xF;
 
 				set_led(led, red, green, blue);
 
