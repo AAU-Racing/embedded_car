@@ -283,7 +283,7 @@ static void setup_timing() {
 }
 
 static void configure_gpio_pin(GPIO_TypeDef *port, GPIO_Pin pin) {
-    gpio_af_init(port, pin, GPIO_HIGH_SPEED, GPIO_PULL_UP, GPIO_AF9);
+    gpio_af_init(port, pin, GPIO_HIGH_SPEED, GPIO_PUSHPULL, GPIO_AF9);
 }
 
 static void reset_filters() {
