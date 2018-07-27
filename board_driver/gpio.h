@@ -81,7 +81,7 @@ void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin);
 void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_OutputType ot, GPIO_AlternateFunction af);
 bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin);
 bool gpio_get_state(GPIO_TypeDef *port, GPIO_Pin pin, bool *state);
-bool gpio_toogle_on(GPIO_TypeDef *port, GPIO_Pin pin);
-bool gpio_toogle_off(GPIO_TypeDef *port, GPIO_Pin pin);
+bool gpio_toggle_on(GPIO_TypeDef *port, GPIO_Pin pin);
+bool gpio_toggle_off(GPIO_TypeDef *port, GPIO_Pin pin);
 
 #endif /* GPIO_H */

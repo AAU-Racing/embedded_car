@@ -95,26 +95,36 @@ static bool valid(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_PortPin *array, int n) 
 
 // Init functions
 static void set_mode(GPIO_TypeDef *port, uint8_t pos, GPIO_Mode mode) {
-	MODIFY_REG(port->MODER, 0x3 << (pos * 2U), mode << (pos * 2U));	// Set pin bits (2 bits wide) (see mode typedef)
+	uint32_t mode_msk = 3 << (pos * 2U);
+	uint32_t mode_val = (mode & 3) << (pos * 2U);
+
+	MODIFY_REG(port->MODER, mode_msk, mode_val);	// Set pin bits (2 bits wide) (see mode typedef)
 }
 
 static void set_pull(GPIO_TypeDef *port, uint8_t pos, GPIO_Pull pull) {
-	MODIFY_REG(port->PUPDR, 0x3 << (pos * 2U), pull << (pos * 2U));	// Set pin bits (2 bits wide) (see pull typedef)
+	MODIFY_REG(port->PUPDR, 3 << (pos * 2U), pull << (pos * 2U));	// Set pin bits (2 bits wide) (see pull typedef)
 }
 
 static void set_speed(GPIO_TypeDef *port, uint8_t pos, GPIO_Speed speed) {
-	MODIFY_REG(port->OSPEEDR, 0x3 << (pos * 2U), speed << (pos * 2U));	// Set pin bits (2 bits wide) (see speed typedef)
+	uint32_t speed_msk = 3 << (pos * 2U);
+	uint32_t speed_val = (speed & 3) << (pos * 2U);
+
+	MODIFY_REG(port->OSPEEDR, speed_msk, speed_val);	// Set pin bits (2 bits wide) (see speed typedef)
 }
 
 static void set_output_type(GPIO_TypeDef *port, uint8_t pos, GPIO_OutputType ot) {
-	MODIFY_REG(port->OSPEEDR, 0x1 << pos, ot << pos); // Set pin bits (1 bit wide) (see output type typdef)
+	uint32_t output_msk = 1 << pos;
+	uint32_t output_val = ot << pos;
+
+	MODIFY_REG(port->OTYPER, output_msk, output_val); // Set pin bits (1 bit wide) (see output type typdef)
 }
 
 static void set_af(GPIO_TypeDef *port, uint8_t pos, GPIO_AlternateFunction af) {
 	uint8_t reg_num = pos >> 3;
 	uint8_t trunc_pos = pos & 0x7;
-	uint8_t af_msk = 0xF << (trunc_pos * 4U);
-	uint8_t af_val = af << (trunc_pos * 4U);
+	uint32_t af_msk = 0xF << (trunc_pos * 4U);
+	uint32_t af_val = (af & 0xF) << (trunc_pos * 4U);
+
 													// Get register number (low or high). Pin 0-7 = low, pin 8-15 = high
 	MODIFY_REG(port->AFR[reg_num], af_msk, af_val); // Set pin bits (4 bits wide) (see alternate function typedef)
 }
@@ -126,10 +136,11 @@ void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_Outpu
 	uint8_t pos = pin_number(pin);
 
 	// Set parameters
-	set_mode(port, pos, GPIO_AF);
+	set_af(port, pos, af);
 	set_speed(port, pos, speed);
 	set_output_type(port, pos, ot);
-	set_af(port, pos, af);
+	set_pull(port, pos, GPIO_NO_PULL);
+	set_mode(port, pos, GPIO_AF);
 }
 
 void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin) {
@@ -240,7 +251,7 @@ bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin) {
 bool gpio_toogle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
 	if (valid(port, pin, output_pins, count_output)) {	// Check if pin is configured as output
 		uint8_t pos = pin_number(pin);				 	// Get pin position
-		port->BSRR = 1 << pos;						 	// Shift 1 to set-bit for that pin
+		SET_BIT(port->ODR, pos);						// Set the "SET" bit for that pin
 		return true;								 	// Success
 	}
 
@@ -250,7 +261,7 @@ bool gpio_toogle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
 bool gpio_toogle_off(GPIO_TypeDef *port, GPIO_Pin pin) {
 	if (valid(port, pin, output_pins, count_output)) {	// Check if pin is configured as output
 		uint8_t pos = pin_number(pin);				 	// Get pin position
-		port->BSRR = (1 << pos) + 15;				 	//	Shift 1 to set-bit for that pin and add 15 to get reset-bit for that pin
+		CLEAR_BIT(port->ODR, pos);					 	// Clear the "SET" bit for that pin
 		return true;								 	// Success
 	}
 
