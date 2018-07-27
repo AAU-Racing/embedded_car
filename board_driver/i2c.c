@@ -164,10 +164,6 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
 	hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
 	hdma_tx.Init.Mode                = DMA_NORMAL;
 	hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
-	hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-	hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-	hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
-	hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
 
 	HAL_DMA_Init(&hdma_tx);
 

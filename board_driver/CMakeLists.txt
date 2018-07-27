@@ -25,7 +25,7 @@ add_library(board_driver
 	usb/usb.c
 	gpio.c
 	pwm.c
-	i2c_no_hal.c
+	i2c.c
 	spi.c
 	rtc.c
 	crc.c
