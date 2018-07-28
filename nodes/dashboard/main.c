@@ -48,7 +48,7 @@ void setup(void) {
 
 	led_driver_init(true);
 	init_lcd();
-	dashboard_buttons_init();
+	// dashboard_buttons_init();
 	sw_buttons_init();
 	//gear_init();
 	oil_init();
@@ -60,9 +60,9 @@ void setup(void) {
 }
 
 void loop(void) {
-	if(is_triggered(DASHBOARD_BUTTON1)){
-		brightness_level_up();
-	}
+	// if(is_triggered(DASHBOARD_BUTTON1)){
+	// 	brightness_level_up();
+	// }
 
 	oilPressure_OK(&oil_pressure_is_ok);
 	while(!oil_pressure_is_ok) {
