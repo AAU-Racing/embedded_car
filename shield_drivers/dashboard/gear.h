@@ -11,5 +11,9 @@ typedef enum {
 	GEAR_6,
 } gear_t;
 
+#define GEAR_UP 11
+#define GEAR_DOWN 12
+#define GEAR_NEUTRAL 10
+
 bool get_gear(gear_t* gear);
-HAL_StatusTypeDef gear_init();
+int gear_init();

@@ -7,20 +7,15 @@
 #include <board_driver/can.h>
 
 static bool oil_pressure_is_ok = false;
-static bool data_is_new = false;
 
-bool oilPressure_OK(bool* ok){
-	*ok = oil_pressure_is_ok;
-	bool it_is_new = data_is_new;
-	data_is_new = false;
-	return it_is_new;
+bool oil_pressure_ok(){
+	return oil_pressure_is_ok;
 }
 
-void oil_pressure_Callback(CAN_RxFrame* Msg){
+void oil_pressure_callback(CAN_RxFrame* Msg){
 	oil_pressure_is_ok = Msg->Msg[0];
-	data_is_new = true;
 }
 
 HAL_StatusTypeDef oil_init(void){
-	return CAN_Filter(CAN_OIL_PRESSURE, 0x7FF, oil_pressure_Callback);
+	return CAN_Filter(CAN_OIL_PRESSURE, 0x7FF, oil_pressure_callback);
 }
