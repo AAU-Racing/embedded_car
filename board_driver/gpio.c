@@ -5,18 +5,6 @@
 
 #include "gpio.h"
 
-// Store all pins initialzed as normal
-typedef struct {
-	GPIO_TypeDef *Port;
-	GPIO_Pin Pin;
-} GPIO_PortPin;
-
-// And store them as a stack (which only grows)
-GPIO_PortPin input_pins[25];
-GPIO_PortPin output_pins[25];
-uint8_t count_input = 0;
-uint8_t count_output = 0;
-
 // Store callback functions
 GPIO_Callback callback_funcions[16];
 
@@ -84,15 +72,6 @@ static void init_gpio_clock(GPIO_TypeDef *port) {
 	SET_BIT(RCC->AHB1ENR, bits[port_number(port)]);
 }
 
-static bool valid(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_PortPin *array, int n) {
-	for (int i = 0; i < n; i++) {
-		if (port == array[i].Port && pin == output_pins[i].Pin) {
-			return true;
-		}
-	}
-	return false;
-}
-
 // Init functions
 static void set_mode(GPIO_TypeDef *port, uint8_t pos, GPIO_Mode mode) {
 	uint32_t mode_msk = 3 << (pos * 2U);
@@ -143,7 +122,7 @@ void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_Outpu
 	set_mode(port, pos, GPIO_AF);
 }
 
-void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin) {
+void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Pull pull) {
 	// Init clock
 	init_gpio_clock(port);
 
@@ -152,14 +131,8 @@ void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin) {
 
 	// Set parameters
 	set_mode(port, pos, GPIO_INPUT);
-	set_pull(port, pos, GPIO_PULLDOWN);
+	set_pull(port, pos, pull);
 	set_speed(port, pos, GPIO_MEDIUM_SPEED);
-
-	// Save that the pin was initialzed as input
-	input_pins[count_input++] = (GPIO_PortPin) {
-		.Port = port,
-		.Pin = pin,
-	};
 }
 
 void gpio_exti_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_InterruptMode mode, GPIO_Callback callback) {
@@ -217,12 +190,6 @@ void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin) {
 	set_pull(port, pos, GPIO_PULLUP);
 	set_speed(port, pos, GPIO_HIGH_SPEED);
 	set_output_type(port, pos, GPIO_PUSHPULL);
-
-	// Save that the pin was initialzed as output
-	output_pins[count_output++] = (GPIO_PortPin) {
-		.Port = port,
-		.Pin = pin,
-	};
 }
 
 bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin) {
@@ -249,34 +216,19 @@ bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin) {
 }
 
 bool gpio_toogle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
-	if (valid(port, pin, output_pins, count_output)) {	// Check if pin is configured as output
-		uint8_t pos = pin_number(pin);				 	// Get pin position
-		SET_BIT(port->ODR, pos);						// Set the "SET" bit for that pin
-		return true;								 	// Success
-	}
-
-	return false;									 // Failure
+	uint8_t pos = pin_number(pin);				 	// Get pin position
+	SET_BIT(port->ODR, pos);						// Set the output bit for that pin
 }
 
 bool gpio_toogle_off(GPIO_TypeDef *port, GPIO_Pin pin) {
-	if (valid(port, pin, output_pins, count_output)) {	// Check if pin is configured as output
-		uint8_t pos = pin_number(pin);				 	// Get pin position
-		CLEAR_BIT(port->ODR, pos);					 	// Clear the "SET" bit for that pin
-		return true;								 	// Success
-	}
-
-	return false;									 	// Failure
+	uint8_t pos = pin_number(pin);				 	// Get pin position
+	CLEAR_BIT(port->ODR, pos);						// Clear the output bit for that pin
 }
 
 // Get state of a normal pin
-bool gpio_get_state(GPIO_TypeDef *port, GPIO_Pin pin, bool *state) {
-	if (valid(port, pin, input_pins, count_input)) {	// Check if pin is configured as input
-		uint8_t pos = pin_number(pin);					// Get pin position
-		*state = (port->IDR >> pos) & 1;				// Shift input bit to 1st bit and 'and' with 1 to remove data for other pins
-		return true;									// Success
-	}
-
-	return false;										// Failure
+bool gpio_get_state(GPIO_TypeDef *port, GPIO_Pin pin) {
+	uint8_t pos = pin_number(pin);					// Get pin position
+	return (port->IDR >> pos) & 1;				// Shift input bit to 1st bit and 'and' with 1 to remove data for other pins
 }
 
 // Interrupt callback
