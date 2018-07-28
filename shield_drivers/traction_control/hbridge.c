@@ -24,43 +24,43 @@ void init_hbridge() {
 }
 
 void hbridge1forward() {
-	gpio_toogle_off(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
-	gpio_toogle_on(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
+	gpio_toggle_off(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
+	gpio_toggle_on(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
 
 	start_pwm_channel(&timer, HBRIDGE1_PWM_CHANNEL);
 }
 
 void hbridge1reverse() {
-	gpio_toogle_off(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
-	gpio_toogle_on(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
+	gpio_toggle_off(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
+	gpio_toggle_on(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
 
 	start_pwm_channel(&timer, HBRIDGE1_PWM_CHANNEL);
 }
 
 void hbridge1stop() {
-	gpio_toogle_off(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
-	gpio_toogle_off(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
+	gpio_toggle_off(HBRIDGE1_EN_PORT, HBRIDGE1_EN_PIN);
+	gpio_toggle_off(HBRIDGE1_DIR_PORT, HBRIDGE1_DIR_PIN);
 
 	stop_pwm_channel(&timer, HBRIDGE1_PWM_CHANNEL);
 }
 
 void hbridge2forward() {
-	gpio_toogle_off(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
-	gpio_toogle_on(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
+	gpio_toggle_off(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
+	gpio_toggle_on(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
 
 	start_pwm_channel(&timer, HBRIDGE2_PWM_CHANNEL);
 }
 
 void hbridge2reverse() {
-	gpio_toogle_off(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
-	gpio_toogle_on(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
+	gpio_toggle_off(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
+	gpio_toggle_on(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
 
 	start_pwm_channel(&timer, HBRIDGE2_PWM_CHANNEL);
 }
 
 void hbridge2stop() {
-	gpio_toogle_off(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
-	gpio_toogle_off(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
+	gpio_toggle_off(HBRIDGE2_EN_PORT, HBRIDGE2_EN_PIN);
+	gpio_toggle_off(HBRIDGE2_DIR_PORT, HBRIDGE2_DIR_PIN);
 
 	stop_pwm_channel(&timer, HBRIDGE2_PWM_CHANNEL);
 }
