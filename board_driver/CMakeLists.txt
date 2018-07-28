@@ -15,6 +15,7 @@ add_library(board_driver
 	init.c
 	uart.c
 	adc.c
+	bkpsram.c
 	flash.c
 	can.c
 	rng.c
