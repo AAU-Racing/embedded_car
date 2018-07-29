@@ -45,5 +45,5 @@ void error_callback(CAN_RxFrame* Msg){
 }
 
 HAL_StatusTypeDef error_init(void){
-	return CAN_Filter(CAN_ERROR_HANDLE_ID_START, CAN_ERROR_HANDLE_MASK, error_callback);
+	return can_filter(CAN_ERROR_HANDLE_ID_START, CAN_ERROR_HANDLE_MASK, error_callback);
 }

@@ -122,7 +122,7 @@ static void GearCallback(CAN_RxFrame *msg) {
 // Public functions
 HAL_StatusTypeDef init_gear() {
 	init_gear_feedback();
-	return CAN_Filter(CAN_GEAR_BUTTONS, 0x7FF, GearCallback);
+	return can_filter(CAN_GEAR_BUTTONS, 0x7FF, GearCallback);
 }
 
 bool change_gear() {

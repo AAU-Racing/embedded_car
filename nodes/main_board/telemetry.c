@@ -51,13 +51,13 @@ void handle_telemetry() {
 	// float water_in_fl = -27.271952718 * ln(10000 * water_in / (4095.0 - water_in)) + 240.1851825535;
 	// float water_out_fl = -27.271952718 * ln(10000 * water_out / (4095.0 - water_out)) + 240.1851825535;
 	// float delta_fl = water_in_fl - water_out_fl;
-	OBDII_Mode1_Frame frame = OBDII_Mode1_Response(ControlModuleVoltage);
+	OBDII_Mode1_Frame frame = obdii_mode1_response(ControlModuleVoltage);
 	float battery_voltage_fl = (frame.Msg[0] * 256 + frame.Msg[1]) / 1000; // By OBDII standard for control module voltage
-	frame = OBDII_Mode1_Response(EngineRPM);
+	frame = obdii_mode1_response(EngineRPM);
 	float rpm = (frame.Msg[0] * 256 + frame.Msg[1]) / 4;
-	frame = OBDII_Mode1_Response(EngineRPM);
+	frame = obdii_mode1_response(EngineRPM);
 	float throttle = frame.Msg[0] * 100 / 255;
-	frame = OBDII_Mode1_Response(OxygenSensorFARatio);
+	frame = obdii_mode1_response(OxygenSensorFARatio);
 	float lambda = (frame.Msg[0] * 256 + frame.Msg[1]) * 2 / 65536;
 	bool oil = 0;
 	oilPressure_OK(&oil);

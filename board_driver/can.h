@@ -118,11 +118,11 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_NODE_TRACTION_CONTROL_STARTED	1
 #define CAN_NODE_DASHBOARD_STARTED			2
 
-uint8_t CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
+uint8_t can_transmit(uint16_t id, uint8_t msg[], uint8_t length);
 // !!!!!!!!!!!!!!!! Printf is not allow inside the callback !!!!!!!!!!!!!!!
-uint8_t CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
-uint8_t CAN_Start();
-uint8_t CAN_Init(uint8_t config);
-CAN_Statistics CAN_GetStats();
+uint8_t can_filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
+uint8_t can_start();
+uint8_t can_init(uint8_t config);
+CAN_Statistics can_get_stats();
 
 #endif /* CAN_GUARD */

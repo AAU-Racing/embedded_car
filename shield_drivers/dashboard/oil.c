@@ -17,5 +17,5 @@ void oil_pressure_callback(CAN_RxFrame* Msg){
 }
 
 HAL_StatusTypeDef oil_init(void){
-	return CAN_Filter(CAN_OIL_PRESSURE, 0x7FF, oil_pressure_callback);
+	return can_filter(CAN_OIL_PRESSURE, 0x7FF, oil_pressure_callback);
 }

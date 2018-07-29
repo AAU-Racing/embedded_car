@@ -20,5 +20,5 @@ void gear_callback(CAN_RxFrame* Msg){
 }
 
 int gear_init(void){
-	return CAN_Filter(CAN_GEAR_NUMBER, 0x7ff, gear_callback);
+	return can_filter(CAN_GEAR_NUMBER, 0x7ff, gear_callback);
 }

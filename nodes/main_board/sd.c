@@ -200,9 +200,9 @@ static void handle_wheel_speed(void){
 }
 
 static void handle_obdii_msg(OBDII_Mode1_Pid pid, void (*handle_data)(uint32_t, uint8_t*)) {
-	OBDII_Mode1_Frame frame = OBDII_Mode1_Response(pid);
+	OBDII_Mode1_Frame frame = obdii_mode1_response(pid);
 	if (frame.New){
-		uint32_t id = OBDII_Mode1_UID(frame.Pid);
+		uint32_t id = obdii_mode1_uid(frame.Pid);
 		handle_data(id, frame.Msg);
 	}
 }
@@ -297,7 +297,7 @@ static void handle_obdii(void) {
 	}));
 
 	// Does not make sense to log continously
-	// OBDII_Mode1_Frame frame = OBDII_Mode1_Response(OxygenSensorPresent);
+	// OBDII_Mode1_Frame frame = obdii_mode1_response(OxygenSensorPresent);
 
 	handle_obdii_msg(RuntimeEngineStart, ({
 		void translate_msg(uint32_t id, uint8_t *msg) {
@@ -337,7 +337,7 @@ static void handle_obdii(void) {
 	}));
 
 	// Needs interpretation
-	// OBDII_Mode1_Frame frame = OBDII_Mode1_Response(MonitorStatusDriveCycle);
+	// OBDII_Mode1_Frame frame = obdii_mode1_response(MonitorStatusDriveCycle);
 
 	handle_obdii_msg(ControlModuleVoltage, ({
 		void translate_msg(uint32_t id, uint8_t *msg) {

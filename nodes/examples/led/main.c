@@ -9,9 +9,9 @@
 
 int main(void) {
 	led_driver_init(false);
-	CAN_Init(CAN_PD0);
+	can_init(CAN_PD0);
 	HAL_Delay(10);
-	CAN_Start();
+	can_start();
 
 	while(1) {
 		for (uint8_t color = 0; color < 3; color++) {

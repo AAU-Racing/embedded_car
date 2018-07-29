@@ -37,9 +37,9 @@ void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b);
 void oil_pressure_warning();
 void show_rpm(void);
 void show_gear(void);
-bool check_neutral_request(bool neutral_btn, bool clutch);
-bool check_down_request(bool down_btn, bool clutch);
-bool check_up_request(bool up_btn, bool clutch);
+bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch);
+bool check_down_request(gear_t gear, bool down_btn, bool clutch);
+bool check_up_request(gear_t gear, bool up_btn, bool clutch);
 
 int main(void) {
 	setup();
@@ -50,7 +50,7 @@ int main(void) {
 }
 
 void setup(void) {
-	CAN_Init(CAN_PD0);
+	can_init(CAN_PD0);
 
 	// Init simple peripherals
 	led_driver_init(true);
@@ -59,14 +59,14 @@ void setup(void) {
 	// CAN filters
 	gear_init();
 	oil_init();
-	OBDII_Init();
+	obdii_init();
 
 	// Start CAN
-	CAN_Start();
+	can_start();
 
 	HAL_Delay(10);
 
-	CAN_Send(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_DASHBOARD_STARTED }, 1);
+	can_transmit(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_DASHBOARD_STARTED }, 1);
 }
 
 void loop(void) {
@@ -80,9 +80,11 @@ void loop(void) {
 		brightness_level_up();
 	}
 
-	if (!check_neutral_request(neutral_btn, clutch)) {
-		if (!check_down_request(down_btn, clutch)) {
-			if (!check_up_request(up_btn, clutch)) {
+	gear_t gear = show_gear();
+
+	if (!check_neutral_request(gear, neutral_btn, clutch)) {
+		if (!check_down_request(gear, down_btn, clutch)) {
+			if (!check_up_request(gear, up_btn, clutch)) {
 				triggered = false;
 			}
 		}
@@ -93,7 +95,6 @@ void loop(void) {
 	} else {
 		oil_pressure_warning();
 	}
-	show_gear();
 }
 
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b) {
@@ -132,7 +133,12 @@ void oil_pressure_warning() {
 }
 
 void show_rpm(void){
-	int rpm_level = get_rpm_level();
+	bool new;
+	int rpm_level = get_rpm_level(&new);
+
+	if (!new) {
+		return; // Reduce
+	}
 
 	for(int led = 0; led < 15; led++){
 		if (rpm_level > 30 + led) {
@@ -150,9 +156,13 @@ void show_rpm(void){
 	}
 }
 
-void show_gear(void){
+gear_t show_gear(void){
 	gear_t gear;
-	get_gear(&gear);
+	bool new = get_gear(&gear);
+
+	if (!new) {
+		return;
+	}
 
 	// Can only show gear 1 to 4 and neutral
 	if(gear < GEAR_5){
@@ -172,9 +182,11 @@ void show_gear(void){
 			write_to_led(led, white[0], white[1], white[2]);
 		}
 	}
+
+	return gear;
 }
 
-bool check_neutral_request(bool neutral_btn, bool clutch) {
+bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch) {
 	gear_t gear;
 	get_gear(&gear);
 
@@ -192,7 +204,7 @@ bool check_neutral_request(bool neutral_btn, bool clutch) {
 		}
 
 		if (!triggered) {
-			CAN_Send(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_NEUTRAL }, 1);
+			can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_NEUTRAL }, 1);
 			triggered = true;
 		}
 
@@ -203,11 +215,7 @@ bool check_neutral_request(bool neutral_btn, bool clutch) {
 }
 
 
-bool check_down_request(bool down_btn, bool clutch) {
-	gear_t gear;
-	get_gear(&gear);
-	static bool triggered = false;
-
+bool check_down_request(gear_t gear, bool down_btn, bool clutch) {
 	if (down_btn) {
 		if (!clutch) {
 			write_to_led(20, blue[0], blue[1], blue[2]);
@@ -222,7 +230,7 @@ bool check_down_request(bool down_btn, bool clutch) {
 		}
 
 		if (!triggered) {
-			CAN_Send(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_DOWN }, 1);
+			can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_DOWN }, 1);
 			triggered = true;
 		}
 		return true;
@@ -231,11 +239,7 @@ bool check_down_request(bool down_btn, bool clutch) {
 	return false;
 }
 
-bool check_up_request(bool up_btn, bool clutch) {
-	gear_t gear;
-	get_gear(&gear);
-	static bool triggered = false;
-
+bool check_up_request(gear_t gear, bool up_btn, bool clutch) {
 	if (up_btn) {
 		if (clutch) {
 			return true;
@@ -249,7 +253,7 @@ bool check_up_request(bool up_btn, bool clutch) {
 		}
 
 		if (!triggered) {
-			CAN_Send(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_UP }, 1);
+			can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) { GEAR_UP }, 1);
 			triggered = true;
 		}
 		return true;

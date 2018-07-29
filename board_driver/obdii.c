@@ -19,7 +19,22 @@ typedef enum {
 	Unknown     = -1,
 } MF_CANMode;
 
-OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
+static OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
+
+static OBDII_Mode1_Pid[] pid_list = /*{ MonitorStatus, FuelSystemStatus,
+	CalculatedEngineLoad, EngineCoolantTemperature, ShortTermFuelTrim,
+	LongTermFuelTrim, IntakeManifoldPressure, EngineRPM, VehicleSpeed,
+	TimingAdvance, IntakeAirTemperature, ThrottlePosition,
+	OxygenSensorsPresent, RuntimeEngineStart, DistanceWithMIL,
+	DistanceSinceClear, OxygenSensorFARatio, MonitorStatusDriveCycle,
+	ControlModuleVoltage, FARatioCommanded, RelativeThrottlePosition,
+	AbsoluteThrottlePosition, EngineFuelRate, DriverDemandTorque,
+	EngineReferenceTorque, EnginePercentTorque };*/
+	{ EngineRPM };
+static uint8_t pid_list_length = 1;
+static uint8_t index = 0;
+static bool request_pending = false;
+static uint32_t last_request = 0;
 
 /////////////////////////////////////
 // Convert to OBDII frame
@@ -68,13 +83,14 @@ static void obdii_response_handler(CAN_RxFrame *msg) {
 	if (msg->Msg[1] == 0x41) {
 		OBDII_Mode1_Frame frame = can_to_obdii_mode1(msg);
 		mode1_buffer[frame.Pid] = frame;
+		request_pending = false;
 	}
 }
 
 ///////////////////////////////////
 // Public functions
 ///////////////////////////////////
-HAL_StatusTypeDef OBDII_Init() {
+HAL_StatusTypeDef obdii_init() {
 	for (int i = 0; i < MODE1_MAX_PID; i++) {
 		mode1_buffer[i] = (OBDII_Mode1_Frame) {
 			.Pid = MODE1_MAX_PID + 1,
@@ -83,7 +99,7 @@ HAL_StatusTypeDef OBDII_Init() {
 		};
 	}
 
-	return CAN_Filter(OBDII_RESPONSE_ID, 0x7F8, obdii_response_handler);
+	return can_filter(OBDII_RESPONSE_ID, 0x7F8, obdii_response_handler);
 }
 
 /*bool GetTroubleCodes(DTC_Message message[], size_t* len) {
@@ -94,7 +110,7 @@ HAL_StatusTypeDef OBDII_Init() {
 	static uint8_t frameIndex = 1;
 	if (!running) {
 		// Diagnostics trouble code request
-		CAN_Send(OBDII_REQUEST_ID, (uint8_t[])  {1, DTC, FILL, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+		can_transmit(OBDII_REQUEST_ID, (uint8_t[])  {1, DTC, FILL, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 		running = true;
 	}
 
@@ -122,7 +138,7 @@ HAL_StatusTypeDef OBDII_Init() {
 	}
 	else if (frameType == First) {
 		// Send flow control
-		CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {Flow << 4, 0, 0, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+		can_transmit(OBDII_REQUEST_ID, (uint8_t[]) {Flow << 4, 0, 0, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 
 		// Handle DTC in first frame
 		message[0] = ByteToDTC(received.Msg + 1);
@@ -162,20 +178,20 @@ HAL_StatusTypeDef OBDII_Init() {
 }
 
 void ClearTroubleCodes() {
-	CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {1, ClearDTC, FILL, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+	can_transmit(OBDII_REQUEST_ID, (uint8_t[]) {1, ClearDTC, FILL, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 }*/
 
-HAL_StatusTypeDef OBDII_Mode1_Request(OBDII_Mode1_Pid pid) {
+HAL_StatusTypeDef obdii_mode1_request(OBDII_Mode1_Pid pid) {
 	assert_param(pid != FreezeDTC);
-	return CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowCurrent, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+	return can_transmit(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowCurrent, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 }
 
 /*void OBDII_Mode2_Request(OBDII_Pid pid) {
 	assert_param(pid != MonitorStatus);
-	CAN_Send(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowFreeze, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
+	can_transmit(OBDII_REQUEST_ID, (uint8_t[]) {2, ShowFreeze, pid, FILL, FILL, FILL, FILL, FILL}, MSG_LEN);
 }*/
 
-OBDII_Mode1_Frame OBDII_Mode1_Response(OBDII_Mode1_Pid pid) {
+OBDII_Mode1_Frame obdii_mode1_response(OBDII_Mode1_Pid pid) {
 	OBDII_Mode1_Frame frame = mode1_buffer[pid];
 
 	if (frame.New) {
@@ -185,35 +201,22 @@ OBDII_Mode1_Frame OBDII_Mode1_Response(OBDII_Mode1_Pid pid) {
 	return frame;
 }
 
-uint32_t OBDII_Mode1_UID(OBDII_Mode1_Pid pid) {
+uint32_t obdii_mode1_uid(OBDII_Mode1_Pid pid) {
 	return (CAN_OBD_ID_START << 8) | pid;
 }
 
-void OBDII_Burst(void) {
-	OBDII_Mode1_Request(MonitorStatus);
-	OBDII_Mode1_Request(FuelSystemStatus);
-	OBDII_Mode1_Request(CalculatedEngineLoad);
-	OBDII_Mode1_Request(EngineCoolantTemperature);
-	OBDII_Mode1_Request(ShortTermFuelTrim);
-	OBDII_Mode1_Request(LongTermFuelTrim);
-	OBDII_Mode1_Request(IntakeManifoldPressure);
-	OBDII_Mode1_Request(EngineRPM);
-	OBDII_Mode1_Request(VehicleSpeed);
-	OBDII_Mode1_Request(TimingAdvance);
-	OBDII_Mode1_Request(IntakeAirTemperature);
-	OBDII_Mode1_Request(ThrottlePosition);
-	OBDII_Mode1_Request(OxygenSensorsPresent);
-	OBDII_Mode1_Request(RuntimeEngineStart);
-	OBDII_Mode1_Request(DistanceWithMIL);
-	OBDII_Mode1_Request(DistanceSinceClear);
-	OBDII_Mode1_Request(OxygenSensorFARatio);
-	OBDII_Mode1_Request(MonitorStatusDriveCycle);
-	OBDII_Mode1_Request(ControlModuleVoltage);
-	OBDII_Mode1_Request(FARatioCommanded);
-	OBDII_Mode1_Request(RelativeThrottlePosition);
-	OBDII_Mode1_Request(AbsoluteThrottlePosition);
-	OBDII_Mode1_Request(EngineFuelRate);
-	OBDII_Mode1_Request(DriverDemandTorque);
-	OBDII_Mode1_Request(EngineReferenceTorque);
-	OBDII_Mode1_Request(EnginePercentTorque);
+void obdii_request_next(void) {
+	if (request_pending && HAL_GetTick() - last_request < 200) {
+		return;
+	}
+
+	obdii_mode1_request(pid_list[index]);
+	request_pending = true;
+	last_request = HAL_GetTick();
+
+	index++;
+
+	if (index == pid_list_length) {
+		index = 0;
+	}
 }

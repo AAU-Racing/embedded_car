@@ -29,13 +29,13 @@ void setup(void){
 	printf("UART init complete\n");
 
 	//Setting up CAN and it's filters
-	if (CAN_Init(CAN_PB12) != CAN_OK) {
+	if (can_init(CAN_PB12) != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN init error");
 	}
 
-	OBDII_Init();
+	obdii_init();
 
-	if (CAN_Start() != CAN_OK) {
+	if (can_start() != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN start error");
 	}
 
@@ -43,10 +43,11 @@ void setup(void){
 	HAL_Delay(25);
 
 	// Signal all others that the com node is ready
-	if (CAN_Send(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_COM_NODE_STARTED }, 1) != CAN_OK) {
+	if (can_transmit(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_COM_NODE_STARTED }, 1) != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN send error");
 	}
 }
 
 void loop(void){
+	obdii_request_next();
 }

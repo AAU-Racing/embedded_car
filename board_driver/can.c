@@ -78,7 +78,7 @@ static volatile uint16_t size = 0;
 static volatile CAN_TransmitFrame transmit_buffer[BUFFER_SIZE];
 
 // Local function prototypes
-// CAN_Filter
+// can_filter
 static bool is_valid_filter(uint16_t id, uint16_t mask);
 static void set_callback_for_filter(CAN_RX_Callback callback);
 static void init_filter(uint16_t id, uint16_t mask);
@@ -87,7 +87,7 @@ static void setup_filter(uint16_t id, uint16_t mask);
 static void activate_filter();
 static void leave_filter_init_mode();
 
-// CAN_Init
+// can_init
 static void prepare_config(uint8_t config);
 static void set_can_instance(uint8_t config);
 static void start_clock();
@@ -102,10 +102,10 @@ static void enable_error_interrupts();
 static void enable_tx_interrupt();
 static uint8_t leave_init();
 
-// CAN_Start
+// can_start
 static void enable_rx_interrupt();
 
-// CAN_Send
+// can_transmit
 static bool is_valid_id(uint16_t id);
 static bool is_valid_length(uint8_t length);
 static uint8_t select_empty_mailbox();
@@ -136,7 +136,7 @@ static void naive_memcpy(volatile uint8_t *dst, volatile uint8_t *src, uint8_t s
     }
 }
 
-uint8_t CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback) {
+uint8_t can_filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback) {
     // Validate input
     if (!is_valid_filter(id, mask)) {
         return CAN_INVALID_ID;
@@ -186,11 +186,11 @@ static void leave_filter_init_mode() {
     CLEAR_BIT(handle->FMR, CAN_FMR_FINIT);
 }
 
-CAN_Statistics CAN_GetStats() {
+CAN_Statistics can_get_stats() {
     return stats;
 }
 
-uint8_t CAN_Init(uint8_t config) {
+uint8_t can_init(uint8_t config) {
     prepare_config(config);
 
     if (enter_init() == CAN_INIT_TIMEOUT) {
@@ -339,7 +339,7 @@ static uint8_t leave_init() {
     return CAN_OK;
 }
 
-uint8_t CAN_Start() {
+uint8_t can_start() {
     if (!initialized) {
         return CAN_DRIVER_ERROR;
     }
@@ -355,7 +355,7 @@ static void enable_rx_interrupt() {
     SET_BIT(handle->IER, CAN_IER_FMPIE0);
 }
 
-uint8_t CAN_Send(uint16_t id, uint8_t msg[], uint8_t length) {
+uint8_t can_transmit(uint16_t id, uint8_t msg[], uint8_t length) {
     if (!is_valid_id(id)) {
         return CAN_INVALID_ID;
     }

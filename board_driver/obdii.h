@@ -82,12 +82,12 @@ typedef struct{
 	uint8_t Msg[4];
 } OBDII_Mode2_Frame;*/
 
-HAL_StatusTypeDef OBDII_Init();
+HAL_StatusTypeDef obdii_init();
 //bool GetTroubleCodes(DTC_Message dtc[], size_t* len);
 //void ClearTroubleCodes();
-HAL_StatusTypeDef OBDII_Mode1_Request(OBDII_Mode1_Pid pid);
-OBDII_Mode1_Frame OBDII_Mode1_Response(OBDII_Mode1_Pid pid);
-void OBDII_Burst(void);
-uint32_t OBDII_Mode1_UID(OBDII_Mode1_Pid pid);
+HAL_StatusTypeDef obdii_mode1_request(OBDII_Mode1_Pid pid);
+OBDII_Mode1_Frame obdii_mode1_response(OBDII_Mode1_Pid pid);
+void obdii_request_next();
+uint32_t obdii_mode1_uid(OBDII_Mode1_Pid pid);
 
 #endif

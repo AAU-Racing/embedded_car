@@ -16,17 +16,17 @@ int main(void) {
 	uart_init();
 
 	printf("UART init complete\n");
-	if (CAN_Init(CAN_PD0) != CAN_OK) {
+	if (can_init(CAN_PD0) != CAN_OK) {
 		printf("CAN init error\n");
 	}
 
-	if (CAN_Filter(0, 0, AllMsg) != CAN_OK) {
+	if (can_filter(0, 0, AllMsg) != CAN_OK) {
 		printf("CAN filter error\n");
 	}
 
 	HAL_Delay(100);
 
-	if (CAN_Start() != CAN_OK){
+	if (can_start() != CAN_OK){
 		printf("CAN start error\n");
 	}
 	else {
@@ -37,7 +37,7 @@ int main(void) {
 	uint32_t lastPrint = 0;
 
 	while(true) {
-		CAN_Send(0x7fe, (uint8_t[]) { i }, 1);
+		can_transmit(0x7fe, (uint8_t[]) { i }, 1);
 
 		i++;
 		if (i == '9' + 1) {
@@ -45,7 +45,7 @@ int main(void) {
     	}
 
 		if (HAL_GetTick() - lastPrint > 1000) {
-			printf("Received %u\n", (unsigned) CAN_GetStats().receive);
+			printf("Received %u\n", (unsigned) can_get_stats().receive);
 
 			lastPrint = HAL_GetTick();
 

@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "can.h"
 #include "i2c.h"
 
 #define BUFFER_SIZE 256
@@ -239,18 +238,6 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
 	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_ER_IRQn);
 	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_EV_IRQn);
 }
-
-/*void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *I2cHandle) {
-
-		CAN_Send(12, (uint8_t[]) { 1 }, 1);
-	if (size > 0) {
-		static i2c_msg transmit;
-		transmit = transmit_buffer[tail];
-		tail = (tail + 1) % BUFFER_SIZE;
-		size--;
-		HAL_I2C_Master_Transmit_DMA(I2cHandle, transmit.addr, transmit.buf, transmit.n);
-	}
-}*/
 
 // interrupts
 void DASHBOARD_I2C_EV_IRQHandler(void) {
