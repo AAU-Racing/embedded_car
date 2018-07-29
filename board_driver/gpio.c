@@ -215,12 +215,12 @@ bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin) {
 	return state;
 }
 
-void gpio_toogle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
+void gpio_toggle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
 	uint8_t pos = pin_number(pin);				 	// Get pin position
 	SET_BIT(port->ODR, pos);						// Set the output bit for that pin
 }
 
-void gpio_toogle_off(GPIO_TypeDef *port, GPIO_Pin pin) {
+void gpio_toggle_off(GPIO_TypeDef *port, GPIO_Pin pin) {
 	uint8_t pos = pin_number(pin);				 	// Get pin position
 	CLEAR_BIT(port->ODR, pos);						// Clear the output bit for that pin
 }

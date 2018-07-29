@@ -1,8 +1,7 @@
-set(target_name traction_control)
+set(target_name example_actuator)
 
 set(SRC_FILES
 	main.c
-	send_data.c
 )
 
 add_executable(${target_name} ${SRC_FILES})

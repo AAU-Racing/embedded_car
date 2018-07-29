@@ -22,7 +22,7 @@ int main(void) {
 
 				set_led(led, red, green, blue);
 
-				HAL_Delay(25);
+				HAL_Delay(1);
 			}
 		}
 	}

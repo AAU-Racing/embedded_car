@@ -23,10 +23,10 @@ static int withinRange(uint16_t number, uint16_t limit) {
 static bool turn(bool returnDirection, uint16_t limit, uint16_t timeout) {
 	// Move the gear back into default position
 	if (returnDirection) { // is return direction forward?
-		gear_forward();
+		// gear_forward();
 	}
 	else {
-		gear_reverse();
+		// gear_reverse();
 	}
 
 	bool defaultPos = false;
@@ -56,9 +56,9 @@ static bool turnWithReturn(bool returnDirection, uint16_t limit) {
 	bool shifted = turn(returnDirection, limit, TIMEOUT);
 
 	// Return the gear back into default position
-	turn(!returnDirection, DEFAULT_POS, 0);
+	// turn(!returnDirection, DEFAULT_POS, 0);
 
-	gear_stop();
+	// gear_stop();
 
 	return shifted;
 }

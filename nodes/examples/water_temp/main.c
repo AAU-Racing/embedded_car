@@ -8,7 +8,7 @@
 #include <board_driver/uart.h>
 #include <board_driver/adc.h>
 #include <board_driver/float_print.h>
-#include <shield_drivers/traction_control/water_temp.h>
+#include <shield_drivers/main_board/water_temp.h>
 
 int main(void) {
 	uart_init();
