@@ -15,7 +15,6 @@ static void oil_pressure_callback(uint16_t pin) {
 }
 
 void init_oil_pressure() {
-	on = gpio_get_turn_on_state(OIL_PRESSURE_GPIO_PORT, OIL_PRESSURE_PIN);
-
 	gpio_exti_init(OIL_PRESSURE_GPIO_PORT, OIL_PRESSURE_PIN, GPIO_RISING_FALLING_EDGE, oil_pressure_callback);
+	on = gpio_get_state(OIL_PRESSURE_GPIO_PORT, OIL_PRESSURE_PIN);
 }

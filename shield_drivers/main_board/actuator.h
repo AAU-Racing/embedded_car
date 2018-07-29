@@ -2,6 +2,7 @@
 #define ACTUATOR_H
 
 #include <stm32f4xx_hal.h>
+#include <board_driver/gpio.h>
 
 #define ACTUATOR_PWM_TIMER				TIM4
 #define ACTUATOR_PWM_TIMER_CLK_ENABLE()  __HAL_RCC_TIM4_CLK_ENABLE()

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define BKPSRAM_GEAR 0
+
 void init_bkpsram();
 bool bkpsram_was_enabled_last_run();
 uint32_t read_bkpsram(uint16_t relative_address);

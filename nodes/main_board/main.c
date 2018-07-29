@@ -10,6 +10,8 @@
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 
+#include <shield_drivers/main_board/gear.h>
+
 void setup(void);
 void loop(void);
 
@@ -46,8 +48,15 @@ void setup(void){
 	if (can_transmit(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_COM_NODE_STARTED }, 1) != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN send error");
 	}
+
+	// Wait then start initial gear sequence to detect which gear we are in
+	HAL_Delay(10);
+
+	read_initial_gear();
 }
 
 void loop(void){
 	obdii_request_next();
+
+
 }

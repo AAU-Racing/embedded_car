@@ -102,8 +102,16 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_OBD_ID_END 		0x7ff
 
 // Definitions for discrete valued data
-#define CAN_GEAR_BUTTON_UP 		1
-#define CAN_GEAR_BUTTON_DOWN 	2
+#define CAN_GEAR_BUTTON_UP 		10
+#define CAN_GEAR_BUTTON_DOWN 	11
+#define CAN_GEAR_BUTTON_NEUTRAL 12
+#define CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL 100
+#define CAN_GEAR_BUTTON_OVERRIDE_1       101
+#define CAN_GEAR_BUTTON_OVERRIDE_2       102
+#define CAN_GEAR_BUTTON_OVERRIDE_3       103
+#define CAN_GEAR_BUTTON_OVERRIDE_4       104
+#define CAN_GEAR_BUTTON_OVERRIDE_5       105
+#define CAN_GEAR_BUTTON_OVERRIDE_6       106
 
 #define CAN_OIL_PRESSURE_ON		1
 #define CAN_OIL_PRESSURE_OFF	0

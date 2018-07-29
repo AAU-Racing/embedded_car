@@ -1,145 +1,182 @@
 #include <stdbool.h>
 
 #include <board_driver/can.h>
+#include <board_driver/bkpsram.h>
 
 #include "gear.h"
 #include "gear_feedback.h"
+#include "neutral.h"
+#include "actuator.h"
+#include "ignition_cut.h"
 
-#define FORWARD true
-#define REVERSE false
-#define TIMEOUT 1000
-#define DEFAULT_POS 2048
-#define NETURAL_POSITION 1024
-#define UP_POSITION 3072
-#define	DOWN_POSITION 512
+#define ACTUATOR_DELAY 20
 
-static uint8_t gearNumber = 0;
-static uint8_t wantedGearNumber = 0;
+static uint8_t gear = 255;
+static uint8_t wanted_gear = 0;
 
-static int withinRange(uint16_t number, uint16_t limit) {
-	return number < limit + 10 && number > limit - 10;
+static bool started = false;
+static uint32_t start = 0;
+
+static bool neutral_seen = false;
+
+static void commit_gear() {
+	ignition_cut_off();
+	started = false;
+	start = HAL_GetTick();
+	write_bkpsram(BKPSRAM_GEAR, gear);
 }
 
-static bool turn(bool returnDirection, uint16_t limit, uint16_t timeout) {
-	// Move the gear back into default position
-	if (returnDirection) { // is return direction forward?
-		// gear_forward();
+static void start_change() {
+	started = true;
+	start = HAL_GetTick();
+	ignition_cut_on();
+}
+
+static void check_neutral_switch() {
+	if (neutral_switch_get_state()) {
+		neutral_seen = true;
+	}
+}
+
+static void neutral_to_first() {
+	if (!started) {
+		start_change();
+		actuator_backward_start();
 	}
 	else {
-		// gear_reverse();
-	}
-
-	bool defaultPos = false;
-	uint32_t start = HAL_GetTick();
-
-	// Wait until gear motor is at right limit
-	do {
-		// Read gear motor position
-		uint16_t gearFeedback = read_gear_feedback();
-
-		// Withing range
-		if (withinRange(gearFeedback, limit)) {
-			defaultPos = true;
+		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
+			actuator_backward_stop();
+			gear = 1;
+			commit_gear();
 		}
+	}
+}
 
-		// The driver might not have released the throttle or pushed the clutch
-		if (timeout > 0 && HAL_GetTick() - start > timeout) {
-			break;
+static void first_to_neutral() {
+	if (!started) {
+		start_change();
+		actuator_forward_slow();
+	}
+	else {
+		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
+			actuator_forward_stop();
+			gear = 0;
+			commit_gear();
 		}
-	} while(defaultPos);
-
-	return defaultPos;
-}
-
-static bool turnWithReturn(bool returnDirection, uint16_t limit) {
-	// Turn to wanted position
-	bool shifted = turn(returnDirection, limit, TIMEOUT);
-
-	// Return the gear back into default position
-	// turn(!returnDirection, DEFAULT_POS, 0);
-
-	// gear_stop();
-
-	return shifted;
-}
-
-// Callback functions for gear buttons via CAN
-static bool gearUp() {
-	if (gearNumber == 6) {
-		return false;
 	}
+}
 
-	bool shifted = false;
-
-	if (gearNumber == 0) {
-		shifted = turnWithReturn(FORWARD, DOWN_POSITION);
+static void gear_down() {
+	if (!started) {
+		start_change();
+		actuator_backward_start();
 	}
 	else {
-		shifted = turnWithReturn(REVERSE, UP_POSITION);
-	}
+		check_neutral_switch();
 
-	if (shifted) {
-		gearNumber++;
+		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
+			actuator_backward_stop();
+			gear--;
+			commit_gear();
+		}
 	}
-
-	return shifted;
 }
 
-static bool gearDown() {
-	if (gearNumber == 0) {
-		return false;
-	}
-
-	bool shifted = false;
-
-	if (gearNumber == 1) {
-		shifted = turnWithReturn(REVERSE, NETURAL_POSITION);
+static void gear_up() {
+	if (!started) {
+		start_change();
+		actuator_forward_start();
 	}
 	else {
-		shifted = turnWithReturn(FORWARD, DOWN_POSITION);
-	}
+		check_neutral_switch();
 
-	if (shifted) {
-		gearNumber--;
+		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
+			actuator_forward_stop();
+			gear++;
+			commit_gear();
+		}
 	}
-
-	return shifted;
 }
 
-static void GearCallback(CAN_RxFrame *msg) {
-	if (msg->Msg[0] == CAN_GEAR_BUTTON_UP) {
-		if (wantedGearNumber < 6) {
-			wantedGearNumber++;
+static void gear_button_callback(CAN_RxFrame *msg) {
+	if (msg->Msg[0] == CAN_GEAR_BUTTON_NEUTRAL) {
+		wanted_gear = 0;
+	}
+	else if (msg->Msg[0] == CAN_GEAR_BUTTON_UP) {
+		if (wanted_gear < 6) {
+			wanted_gear++;
 		}
 	}
 	else if (msg->Msg[0] == CAN_GEAR_BUTTON_DOWN) {
-		if (wantedGearNumber > 0) {
-			wantedGearNumber--;
+		if (wanted_gear > 1) {
+			wanted_gear--;
+		}
+	}
+	else if (msg->Msg[0] >= CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL &&
+			 msg->Msg[0] <= CAN_GEAR_BUTTON_OVERRIDE_6) {
+		gear = msg->Msg[0] - CAN_GEAR_BUTTON_NEUTRAL;
+	 }
+}
+
+// Public functions
+int init_gear() {
+	neutral_switch_init();
+	init_actuator();
+	init_ignition_cut();
+	init_bkpsram();
+
+	return can_filter(CAN_GEAR_BUTTONS, 0x7FF, gear_button_callback);
+}
+
+void read_initial_gear() {
+	if (bkpsram_was_enabled_last_run()) {
+		gear = read_bkpsram(BKPSRAM_GEAR);
+	}
+	else {
+		do {
+			gear_up();
+		} while (started);
+
+		// Wait between shifting
+		HAL_Delay(50);
+
+		if (neutral_seen) {
+			do {
+				gear_down();
+			} while (started);
+		}
+		else {
+			while (!neutral_seen) {
+				do {
+					gear_down();
+				} while (started);
+
+				// Wait between shifting
+				HAL_Delay(50);
+			}
 		}
 	}
 }
 
-// Public functions
-HAL_StatusTypeDef init_gear() {
-	init_gear_feedback();
-	return can_filter(CAN_GEAR_BUTTONS, 0x7FF, GearCallback);
-}
+void change_gear() {
+	if (wanted_gear == gear) {
+		return;
+	}
 
-bool change_gear() {
-	if (wantedGearNumber == gearNumber) {
-		return false;
+	if (wanted_gear >= 1 && gear == 0) {
+		neutral_to_first();
 	}
-	else if (wantedGearNumber > gearNumber) {
-		return gearUp();
+	else if (wanted_gear == 0 && gear == 1) {
+		first_to_neutral();
 	}
-	else if (wantedGearNumber < gearNumber) {
-		return gearDown();
+	else if (wanted_gear > gear) {
+		gear_up();
 	}
-	else {
-		return false;
+	else if (wanted_gear < gear) {
+		gear_down();
 	}
 }
 
 uint8_t gear_number() {
-	return gearNumber;
+	return gear;
 }

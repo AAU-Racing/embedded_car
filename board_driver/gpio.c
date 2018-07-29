@@ -192,29 +192,6 @@ void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin) {
 	set_output_type(port, pos, GPIO_PUSHPULL);
 }
 
-bool gpio_get_turn_on_state(GPIO_TypeDef *port, GPIO_Pin pin) {
-	// Init clock
-	init_gpio_clock(port);
-
-	// Get pin number
-	uint8_t pos = pin_number(pin);
-
-	// Set parameters
-	set_mode(port, pos, GPIO_INPUT);
-	set_pull(port, pos, GPIO_PULLDOWN);
-	set_speed(port, pos, GPIO_MEDIUM_SPEED);
-
-	// Read state
-	bool state = (port->IDR >> pos) & 1;
-
-	// Return to default state
-	set_mode(port, pos, 0);
-	set_pull(port, pos, 0);
-	set_speed(port, pos, 0);
-
-	return state;
-}
-
 void gpio_toggle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
 	uint8_t pos = pin_number(pin);				 	// Get pin position
 	SET_BIT(port->ODR, pos);						// Set the output bit for that pin

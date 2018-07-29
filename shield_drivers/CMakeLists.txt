@@ -8,6 +8,7 @@ add_library(shield_drivers
 	main_board/water_temp.c
 	main_board/wheel_sensor.c
 	main_board/gear_feedback.c
+	main_board/ignition_cut.c
 	main_board/gear.c
 	main_board/oil_pressure.c
 	main_board/neutral.c

@@ -1,11 +1,12 @@
 #ifndef GEAR_H
 #define GEAR_H
 
-#include <stm32f4xx_hal.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-HAL_StatusTypeDef init_gear();
+int init_gear();
 uint8_t gear_number();
-bool change_gear();
+void change_gear();
+void read_initial_gear();
 
 #endif

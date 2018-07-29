@@ -46,7 +46,7 @@ bool sw_button_get_state(sw_button b) {
 
 	last_state[b] = read;
 
-	return state[b];
+	return !state[b];
 }
 
 void sw_buttons_init(void) {
