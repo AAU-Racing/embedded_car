@@ -54,7 +54,8 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_GEAR_BUTTONS 				0x1d0
 #define CAN_GEAR_NUMBER					0x1e0
 #define CAN_IGNITION_CUT				0x1f0
-#define CAN_NODE_STARTED				0x1f2
+#define CAN_DASHBOARD_STARTED			0x1f1
+#define CAN_MAIN_BOARD_STARTED			0x1f2
 #define CAN_MISSION_CRITICAL_ID_END 	0x1ff
 #define CAN_MISSION_CRITICAL_MASK		0x7c0
 

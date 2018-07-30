@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#define OBDII_REQUEST_ID 0x7DF
+#define OBDII_REQUEST_ID  0x7DF
 #define OBDII_RESPONSE_ID 0x7E8
 
 typedef enum{

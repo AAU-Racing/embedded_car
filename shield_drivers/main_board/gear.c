@@ -18,6 +18,7 @@ static bool started = false;
 static uint32_t start = 0;
 
 static bool neutral_seen = false;
+static bool overridden = false;
 
 static void commit_gear() {
 	ignition_cut_off();
@@ -115,6 +116,7 @@ static void gear_button_callback(CAN_RxFrame *msg) {
 	else if (msg->Msg[0] >= CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL &&
 			 msg->Msg[0] <= CAN_GEAR_BUTTON_OVERRIDE_6) {
 		gear = msg->Msg[0] - CAN_GEAR_BUTTON_NEUTRAL;
+		overridden = true;
 	 }
 }
 
@@ -159,6 +161,11 @@ void read_initial_gear() {
 }
 
 void change_gear() {
+	if (overridden) {
+		overridden = false;
+		printf("Gear overridden to %u\n", gear);
+	}
+
 	if (wanted_gear == gear) {
 		return;
 	}

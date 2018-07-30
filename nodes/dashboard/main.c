@@ -36,10 +36,13 @@ void brightness_level_up();
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b);
 void oil_pressure_warning();
 void show_rpm(void);
-gear_t show_gear(void);
-bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch);
-bool check_down_request(gear_t gear, bool down_btn, bool clutch);
-bool check_up_request(gear_t gear, bool up_btn, bool clutch);
+
+#ifndef DISABLE_ELECTRONIC_GEAR
+	gear_t show_gear(void);
+	bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch);
+	bool check_down_request(gear_t gear, bool down_btn, bool clutch);
+	bool check_up_request(gear_t gear, bool up_btn, bool clutch);
+#endif
 
 int main(void) {
 	setup();
@@ -54,10 +57,14 @@ void setup(void) {
 
 	// Init simple peripherals
 	led_driver_init(true);
+#ifndef DISABLE_ELECTRONIC_GEAR
 	sw_buttons_init();
+#endif
 
 	// CAN filters
+#ifdef DISABLE_ELECTRONIC_GEAR
 	gear_init();
+#endif
 	oil_init();
 	obdii_init();
 
@@ -66,7 +73,7 @@ void setup(void) {
 
 	HAL_Delay(10);
 
-	can_transmit(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_DASHBOARD_STARTED }, 1);
+	can_transmit(CAN_DASHBOARD_STARTED, (uint8_t[]) { 1 }, 1);
 }
 
 void loop(void) {
@@ -76,19 +83,23 @@ void loop(void) {
 	bool clutch = sw_button_get_state(SW_BUTTON6);
 	bool oil_pressure = oil_pressure_ok();
 
-	if (clutch && up_btn) {
+
+#ifndef DISABLE_ELECTRONIC_GEAR
+	gear_t gear = show_gear();
+#endif
+
+	if (neutral_btn && up_btn) {
 		brightness_level_up();
 	}
-
-	gear_t gear = show_gear();
-
-	if (!check_neutral_request(gear, neutral_btn, clutch)) {
+#ifndef DISABLE_ELECTRONIC_GEAR
+	else if (!check_neutral_request(gear, neutral_btn, clutch)) {
 		if (!check_down_request(gear, down_btn, clutch)) {
 			if (!check_up_request(gear, up_btn, clutch)) {
 				triggered = false;
 			}
 		}
 	}
+#endif
 
 	if (oil_pressure) {
 		show_rpm();
@@ -238,10 +249,7 @@ bool check_down_request(gear_t gear, bool down_btn, bool clutch) {
 
 bool check_up_request(gear_t gear, bool up_btn, bool clutch) {
 	if (up_btn) {
-		if (clutch) {
-			return true;
-		}
-		else if (gear > GEAR_5) {
+		if (gear >= GEAR_5) {
 			write_to_led(20, red[0], red[1], red[2]);
 			return true;
 		}
