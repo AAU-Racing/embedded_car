@@ -16,11 +16,13 @@
 #include <shield_drivers/dashboard/rpm.h>
 #include <shield_drivers/dashboard/gear.h>
 #include <shield_drivers/dashboard/oil.h>
+#include <shield_drivers/dashboard/neutral.h>
 
 #define BLINK_PULSE_WIDTH 200
 
-uint8_t brightness_level = 3;
+uint8_t brightness_level = 2;
 bool oil_pressure_warning_state = false;
+bool oil_warning_active = false;
 uint32_t last_state_change = 0;
 bool triggered = false;
 
@@ -36,6 +38,7 @@ void brightness_level_up();
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b);
 void oil_pressure_warning();
 void show_rpm(void);
+void check_neutral_switch();
 
 #ifndef DISABLE_ELECTRONIC_GEAR
 	gear_t show_gear(void);
@@ -57,9 +60,7 @@ void setup(void) {
 
 	// Init simple peripherals
 	led_driver_init(true);
-#ifndef DISABLE_ELECTRONIC_GEAR
 	sw_buttons_init();
-#endif
 
 	// CAN filters
 #ifdef DISABLE_ELECTRONIC_GEAR
@@ -67,6 +68,7 @@ void setup(void) {
 #endif
 	oil_init();
 	obdii_init();
+	neutral_init();
 
 	// Start CAN
 	can_start();
@@ -101,8 +103,17 @@ void loop(void) {
 	}
 #endif
 
+	if (oil_pressure && oil_warning_active) {
+		for (int i = 0; i < 15; i++) {
+			write_to_led(i, 0, 0, 0);
+		}
+	}
+
+	check_neutral_switch();
+
 	if (oil_pressure) {
 		show_rpm();
+		oil_warning_active = false;
 	} else {
 		oil_pressure_warning();
 	}
@@ -126,6 +137,7 @@ void brightness_level_up() {
 }
 
 void oil_pressure_warning() {
+	oil_warning_active = true;
 	if (HAL_GetTick() - last_state_change > BLINK_PULSE_WIDTH) {
 		oil_pressure_warning_state = !oil_pressure_warning_state;
 		last_state_change = HAL_GetTick();
@@ -147,22 +159,34 @@ void show_rpm(void){
 	bool new;
 	int rpm_level = get_rpm_level(&new);
 
-	if (!new) {
-		return; // Reduce
+	if (oil_warning_active || new) {
+		for(int led = 0; led < 15; led++){
+			if (rpm_level > 30 + led) {
+				write_to_led(led, blue[0], blue[1], blue[2]);
+			}
+			else if (rpm_level > 15 + led) {
+				write_to_led(led, red[0], red[1], red[2]);
+			}
+			else if (rpm_level > led) {
+				write_to_led(led, green[0], green[1], green[2]);
+			}
+			else {
+				write_to_led(led, 0, 0, 0);
+			}
+		}
 	}
+}
 
-	for(int led = 0; led < 15; led++){
-		if (rpm_level > 30 + led) {
-			write_to_led(led, blue[0], blue[1], blue[2]);
-		}
-		else if (rpm_level > 15 + led) {
-			write_to_led(led, red[0], red[1], red[2]);
-		}
-		else if (rpm_level > led) {
-			write_to_led(led, green[0], green[1], green[2]);
+void check_neutral_switch() {
+	bool neutral = false;
+	bool new = get_neutral(&neutral);
+
+	if (new) {
+		if (neutral) {
+			write_to_led(15, red[0], red[1], red[2]);
 		}
 		else {
-			write_to_led(led, 0, 0, 0);
+			write_to_led(15, 0, 0, 0);
 		}
 	}
 }

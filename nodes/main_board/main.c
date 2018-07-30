@@ -12,11 +12,13 @@
 
 #include <shield_drivers/main_board/gear.h>
 #include <shield_drivers/main_board/oil_pressure.h>
+#include <shield_drivers/main_board/neutral.h>
 
 void setup(void);
 void loop(void);
 
 static uint32_t last_oil_transmit = 0;
+static uint32_t last_neutral_transmit = 0;
 
 // A main function in the philosophy of Arduino (setup + loop)
 int main(void) {
@@ -27,10 +29,6 @@ int main(void) {
 	}
 
 	return 0;
-}
-
-void AllMsg(CAN_RxFrame* frame) {
-
 }
 
 void setup(void){
@@ -48,10 +46,8 @@ void setup(void){
 		printf("Oil pressure is now low\n");
 	}
 
-#ifndef DISABLE_ELECTRONIC_GEAR
-	init_gear();
-	printf("Init gear complete\n");
-#endif
+	neutral_switch_init();
+	printf("Neutral switch init complete\n");
 
 	//Setting up CAN and it's filters
 	if (can_init(CAN_PD0) != CAN_OK) {
@@ -61,8 +57,12 @@ void setup(void){
 		printf("CAN init complete\n");
 	}
 
+#ifndef DISABLE_ELECTRONIC_GEAR
+	init_gear();
+	printf("Init gear complete\n");
+#endif
+
 	obdii_init();
-	can_filter(0, 0, AllMsg);
 
 	if (can_start() != CAN_OK) {
 		printf("Error starting CAN\n");
@@ -74,7 +74,7 @@ void setup(void){
 	// Wait for everything to be ready
 	HAL_Delay(25);
 
-	// Signal all others that the com node is ready
+	// Signal all others that the main board is ready
 	if (can_transmit(CAN_MAIN_BOARD_STARTED, (uint8_t[]) { 1 }, 1) != CAN_OK) {
 		//log_error(CAN_ERROR, "CAN send error");
 	}
@@ -91,11 +91,14 @@ void setup(void){
 void loop(void){
 	obdii_request_next();
 
-	printf("%08x\n", CAN1->RF0R);
-
 	if (HAL_GetTick() - last_oil_transmit > 100) {
 		can_transmit(CAN_OIL_PRESSURE, (uint8_t[]) { get_oil_pressure() }, 1);
 		last_oil_transmit = HAL_GetTick();
+	}
+
+	if (HAL_GetTick() - last_neutral_transmit > 100) {
+		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { neutral_switch_get_state() }, 1);
+		last_neutral_transmit = HAL_GetTick();
 	}
 
 #ifndef DISABLE_ELECTRONIC_GEAR

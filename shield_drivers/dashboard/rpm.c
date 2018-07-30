@@ -13,7 +13,7 @@ int get_rpm_level(bool *new) {
 	*new = get_rpm(&rpm);
 
 	if(rpm < RPM_CRITICAL){
-		int rpm_level = MAX_LEVEL - ((RPM_CRITICAL - rpm) / RPM_LEVEL_RANGE);
+		int rpm_level = MAX_LEVEL - ((RPM_CRITICAL - rpm) / RPM_LEVEL_RANGE) - 1;
 		if (rpm_level <= MAX_LEVEL) {
 			return rpm_level;
 		}

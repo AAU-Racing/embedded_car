@@ -96,6 +96,7 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_STEERING_WHEEL_POSITION	0x4f0
 #define CAN_BATTERY_CURRENT			0x4f2
 #define CAN_INVERTER_CURRENT		0x4f3
+#define CAN_NEUTRAL_SWITCH          0x4f4
 #define CAN_FUEL_TEMPERATURE		0x500
 #define CAN_SENSOR_DATA_ID_END 		0x640
 

@@ -25,6 +25,7 @@ static void commit_gear() {
 	started = false;
 	start = HAL_GetTick();
 	write_bkpsram(BKPSRAM_GEAR, gear);
+	can_transmit(CAN_GEAR_NUMBER, (uint8_t[]) {gear}, 1);
 }
 
 static void start_change() {
@@ -42,11 +43,11 @@ static void check_neutral_switch() {
 static void neutral_to_first() {
 	if (!started) {
 		start_change();
-		actuator_backward_start();
+		actuator_forward_start();
 	}
 	else {
 		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_backward_stop();
+			actuator_forward_stop();
 			gear = 1;
 			commit_gear();
 		}
@@ -56,11 +57,11 @@ static void neutral_to_first() {
 static void first_to_neutral() {
 	if (!started) {
 		start_change();
-		actuator_forward_slow();
+		actuator_backward_slow();
 	}
 	else {
 		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_forward_stop();
+			actuator_backward_stop();
 			gear = 0;
 			commit_gear();
 		}
@@ -70,13 +71,13 @@ static void first_to_neutral() {
 static void gear_down() {
 	if (!started) {
 		start_change();
-		actuator_backward_start();
+		actuator_forward_start();
 	}
 	else {
 		check_neutral_switch();
 
 		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_backward_stop();
+			actuator_forward_stop();
 			gear--;
 			commit_gear();
 		}
@@ -86,13 +87,13 @@ static void gear_down() {
 static void gear_up() {
 	if (!started) {
 		start_change();
-		actuator_forward_start();
+		actuator_backward_start();
 	}
 	else {
 		check_neutral_switch();
 
 		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_forward_stop();
+			actuator_backward_stop();
 			gear++;
 			commit_gear();
 		}
@@ -115,14 +116,15 @@ static void gear_button_callback(CAN_RxFrame *msg) {
 	}
 	else if (msg->Msg[0] >= CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL &&
 			 msg->Msg[0] <= CAN_GEAR_BUTTON_OVERRIDE_6) {
-		gear = msg->Msg[0] - CAN_GEAR_BUTTON_NEUTRAL;
+		gear = msg->Msg[0] - CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL;
+		wanted_gear = gear;
+		commit_gear();
 		overridden = true;
 	 }
 }
 
 // Public functions
 int init_gear() {
-	neutral_switch_init();
 	init_actuator();
 	init_ignition_cut();
 	init_bkpsram();
@@ -158,6 +160,9 @@ void read_initial_gear() {
 			}
 		}
 	}
+
+	wanted_gear = gear;
+	commit_gear();
 }
 
 void change_gear() {

@@ -19,6 +19,8 @@ typedef enum {
 	Unknown     = -1,
 } MF_CANMode;
 
+bool received = false;
+
 static OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
 
 static OBDII_Mode1_Pid pid_list[] = /*{ MonitorStatus, FuelSystemStatus,

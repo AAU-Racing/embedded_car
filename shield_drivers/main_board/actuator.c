@@ -21,24 +21,24 @@ void init_actuator() {
 	init_pwm_pin(ACTUATOR2_PWM_PORT, ACTUATOR2_PWM_PIN, ACTUATOR2_PWM_GPIO_AF);
 }
 
-void actuator_forward_start() {
+void actuator_backward_start() {
 	configure_pwm_channel(&timer, ACTUATOR1_PWM_CHANNEL, 100);
 	start_pwm_channel(&timer, ACTUATOR1_PWM_CHANNEL);
 }
 
-void actuator_forward_slow() {
+void actuator_backward_slow() {
 	configure_pwm_channel(&timer, ACTUATOR1_PWM_CHANNEL, 25);
 	start_pwm_channel(&timer, ACTUATOR1_PWM_CHANNEL);
 }
 
-void actuator_forward_stop() {
+void actuator_backward_stop() {
 	stop_pwm_channel(&timer, ACTUATOR1_PWM_CHANNEL);
 }
 
-void actuator_backward_start() {
+void actuator_forward_start() {
 	gpio_toggle_on(ACTUATOR2_EN_PORT, ACTUATOR2_EN_PIN);
 }
 
-void actuator_backward_stop() {
+void actuator_forward_stop() {
 	gpio_toggle_off(ACTUATOR2_EN_PORT, ACTUATOR2_EN_PIN);
 }
