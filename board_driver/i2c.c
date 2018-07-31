@@ -79,8 +79,6 @@ int i2c_init(void) {
 	i2cHandle.Init.DutyCycle       = I2C_DUTYCYCLE_16_9, //I2C_DUTYCYCLE_2;
 	i2cHandle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
 	i2cHandle.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
-	// i2cHandle.Init.OwnAddress1     = 0x00;/*I2C_ADDRESS*/;
-	// i2cHandle.Init.OwnAddress2     = 0xFE;
 
 	if(HAL_I2C_Init(&i2cHandle) != HAL_OK) {
 		return -1;
@@ -93,36 +91,18 @@ int i2c_is_ready(uint16_t addr) {
 	return HAL_I2C_IsDeviceReady(&i2cHandle, addr, 1000, 1000);
 }
 
-int i2c_master_transmit_DMA(uint16_t addr, void *buf, size_t n) {
-	while (HAL_I2C_GetState(&i2cHandle) != HAL_I2C_STATE_READY) {}
+int i2c_master_transmit(uint16_t addr, void *buf, size_t n) {
 
-	// retry:
-	if (HAL_I2C_Master_Transmit_DMA(&i2cHandle, addr, (uint8_t*)buf, n) != HAL_OK) {
-		/*if (size < BUFFER_SIZE) {
-			transmit_buffer[head].addr = addr;
-			transmit_buffer[head].n = n;
-			memcpy(transmit_buffer[head].buf, buf, n);
-
-			head = (head + 1) % BUFFER_SIZE;
-			size++;
-		}*/
+	if (HAL_I2C_Master_Transmit(&i2cHandle, addr, (uint8_t*)buf, n) != HAL_OK) {
 
 		return 1;
-		// if (HAL_I2C_GetError(&i2cHandle) == HAL_I2C_ERROR_AF) {
-		// 	goto retry;
-		// }
 	}
 	return 0;
-
-	// return HAL_I2C_Master_Transmit(&i2cHandle, addr, (uint8_t*)buf, n, 1000) == HAL_OK ? 0 : -1;
-	// while (HAL_I2C_GetState(&i2cHandle) != HAL_I2C_STATE_READY) {;}
-	// return HAL_I2C_Master_Transmit_DMA(&i2cHandle, addr, (uint8_t*)buf, n) == HAL_OK ?
-	// 0 : -1;
 }
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
-	static DMA_HandleTypeDef hdma_tx;
-	static DMA_HandleTypeDef hdma_rx;
+	// static DMA_HandleTypeDef hdma_tx;
+	// static DMA_HandleTypeDef hdma_rx;
 
 	GPIO_InitTypeDef  GPIO_InitStruct;
 
@@ -133,7 +113,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
 	/* Enable I2C1 clock */
 	DASHBOARD_I2C_CLK_ENABLE();
 	/* Enable DMA2 clock */
-	DASHBOARD_I2C_DMA_CLK_ENABLE();
+	// DASHBOARD_I2C_DMA_CLK_ENABLE();
 
 	/*##-2- Configure peripheral GPIO ##########################################*/
 	/* I2C TX GPIO pin configuration  */
@@ -153,66 +133,66 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
 
 	/*##-3- Configure the DMA streams ##########################################*/
 	/* Configure the DMA handler for Transmission process */
-	hdma_tx.Instance                 = DASHBOARD_I2C_TX_DMA_STREAM;
-
-	hdma_tx.Init.Channel             = DASHBOARD_I2C_TX_DMA_CHANNEL;
-	hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
-	hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
-	hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
-	hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-	hdma_tx.Init.Mode                = DMA_NORMAL;
-	hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
-
-	HAL_DMA_Init(&hdma_tx);
+	// hdma_tx.Instance                 = DASHBOARD_I2C_TX_DMA_STREAM;
+	//
+	// hdma_tx.Init.Channel             = DASHBOARD_I2C_TX_DMA_CHANNEL;
+	// hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+	// hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+	// hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
+	// hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	// hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+	// hdma_tx.Init.Mode                = DMA_NORMAL;
+	// hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
+	//
+	// HAL_DMA_Init(&hdma_tx);
 
 	/* Associate the initialized DMA handle to the the I2C handle */
-	__HAL_LINKDMA(hi2c, hdmatx, hdma_tx);
+	// __HAL_LINKDMA(hi2c, hdmatx, hdma_tx);
 
 	/* Configure the DMA handler for Transmission process */
-	hdma_rx.Instance                 = DASHBOARD_I2C_RX_DMA_STREAM;
+	// hdma_rx.Instance                 = DASHBOARD_I2C_RX_DMA_STREAM;
+	//
+	// hdma_rx.Init.Channel             = DASHBOARD_I2C_RX_DMA_CHANNEL;
+	// hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+	// hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+	// hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
+	// hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	// hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+	// hdma_rx.Init.Mode                = DMA_NORMAL;
+	// hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
+	// hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+	// hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+	// hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
+	// hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
 
-	hdma_rx.Init.Channel             = DASHBOARD_I2C_RX_DMA_CHANNEL;
-	hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-	hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
-	hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
-	hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-	hdma_rx.Init.Mode                = DMA_NORMAL;
-	hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
-	hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-	hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-	hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
-	hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
-
-	HAL_DMA_Init(&hdma_rx);
+	// HAL_DMA_Init(&hdma_rx);
 
 	/* Associate the initialized DMA handle to the the I2C handle */
-	__HAL_LINKDMA(hi2c, hdmarx, hdma_rx);
+	// __HAL_LINKDMA(hi2c, hdmarx, hdma_rx);
 
 	/*##-4- Configure the NVIC for DMA #########################################*/
 	/* NVIC configuration for DMA transfer complete interrupt (I2C1_TX) */
-	HAL_NVIC_SetPriority(DASHBOARD_I2C_DMA_TX_IRQn, 0, 1);
-	HAL_NVIC_EnableIRQ(DASHBOARD_I2C_DMA_TX_IRQn);
+	// HAL_NVIC_SetPriority(DASHBOARD_I2C_DMA_TX_IRQn, 0, 1);
+	// HAL_NVIC_EnableIRQ(DASHBOARD_I2C_DMA_TX_IRQn);
 
 	/* NVIC configuration for DMA transfer complete interrupt (I2C1_RX) */
-	HAL_NVIC_SetPriority(DASHBOARD_I2C_DMA_RX_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(DASHBOARD_I2C_DMA_RX_IRQn);
+	// HAL_NVIC_SetPriority(DASHBOARD_I2C_DMA_RX_IRQn, 0, 0);
+	// HAL_NVIC_EnableIRQ(DASHBOARD_I2C_DMA_RX_IRQn);
 
 	/*##-5- Configure the NVIC for I2C #########################################*/
 	/* NVIC for I2C1 */
 
-	HAL_NVIC_SetPriority(DASHBOARD_I2C_ER_IRQn, 0, 1);
-	HAL_NVIC_EnableIRQ(DASHBOARD_I2C_ER_IRQn);
-	HAL_NVIC_SetPriority(DASHBOARD_I2C_EV_IRQn, 0, 2);
-	HAL_NVIC_EnableIRQ(DASHBOARD_I2C_EV_IRQn);
+	// HAL_NVIC_SetPriority(DASHBOARD_I2C_ER_IRQn, 0, 1);
+	// HAL_NVIC_EnableIRQ(DASHBOARD_I2C_ER_IRQn);
+	// HAL_NVIC_SetPriority(DASHBOARD_I2C_EV_IRQn, 0, 2);
+	// HAL_NVIC_EnableIRQ(DASHBOARD_I2C_EV_IRQn);
 }
 
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
 	(void) hi2c;
 
-	static DMA_HandleTypeDef hdma_tx;
-	static DMA_HandleTypeDef hdma_rx;
+	// static DMA_HandleTypeDef hdma_tx;
+	// static DMA_HandleTypeDef hdma_rx;
 
 	/*##-1- Reset peripherals ##################################################*/
 	DASHBOARD_I2C_FORCE_RESET();
@@ -226,34 +206,34 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
 
 	/*##-3- Disable the DMA Streams ############################################*/
 	/* De-Initialize the DMA Stream associate to transmission process */
-	HAL_DMA_DeInit(&hdma_tx);
+	// HAL_DMA_DeInit(&hdma_tx);
 	/* De-Initialize the DMA Stream associate to reception process */
-	HAL_DMA_DeInit(&hdma_rx);
+	// HAL_DMA_DeInit(&hdma_rx);
 
 	/*##-4- Disable the NVIC for DMA ###########################################*/
-	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_DMA_TX_IRQn);
-	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_DMA_RX_IRQn);
+	// HAL_NVIC_DisableIRQ(DASHBOARD_I2C_DMA_TX_IRQn);
+	// HAL_NVIC_DisableIRQ(DASHBOARD_I2C_DMA_RX_IRQn);
 
 	/*##-5- Disable the NVIC for I2C ###########################################*/
-	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_ER_IRQn);
-	HAL_NVIC_DisableIRQ(DASHBOARD_I2C_EV_IRQn);
+	// HAL_NVIC_DisableIRQ(DASHBOARD_I2C_ER_IRQn);
+	// HAL_NVIC_DisableIRQ(DASHBOARD_I2C_EV_IRQn);
 }
 
 // interrupts
-void DASHBOARD_I2C_EV_IRQHandler(void) {
-	HAL_I2C_EV_IRQHandler(&i2cHandle);
-}
-
-void DASHBOARD_I2C_ER_IRQHandler(void) {
-	HAL_I2C_ER_IRQHandler(&i2cHandle);
-}
-
-
-void DASHBOARD_I2C_DMA_RX_IRQHandler(void) {
-	HAL_DMA_IRQHandler(i2cHandle.hdmarx);
-}
+// void DASHBOARD_I2C_EV_IRQHandler(void) {
+// 	HAL_I2C_EV_IRQHandler(&i2cHandle);
+// }
+//
+// void DASHBOARD_I2C_ER_IRQHandler(void) {
+// 	HAL_I2C_ER_IRQHandler(&i2cHandle);
+// }
 
 
-void DASHBOARD_I2C_DMA_TX_IRQHandler(void) {
-	HAL_DMA_IRQHandler(i2cHandle.hdmatx);
-}
+// void DASHBOARD_I2C_DMA_RX_IRQHandler(void) {
+// 	HAL_DMA_IRQHandler(i2cHandle.hdmarx);
+// }
+//
+//
+// void DASHBOARD_I2C_DMA_TX_IRQHandler(void) {
+// 	HAL_DMA_IRQHandler(i2cHandle.hdmatx);
+// }
