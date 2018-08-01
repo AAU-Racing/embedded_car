@@ -18,6 +18,8 @@
 #include <shield_drivers/dashboard/oil.h>
 #include <shield_drivers/dashboard/neutral.h>
 
+#define DISABLE_ELECTRONIC_GEAR
+
 #define BLINK_PULSE_WIDTH 200
 
 uint8_t brightness_level = 2;
