@@ -20,7 +20,7 @@ int main(void) {
 
 	while(1) {
 		printf("actuator forward slow\n");
-		actuator_forward_slow();
+		actuator_forward_start();
 
 		HAL_Delay(10000);
 
@@ -28,7 +28,7 @@ int main(void) {
 		actuator_forward_stop();
 
 		printf("actuator backward start\n");
-		actuator_backward_start();
+		actuator_backward_slow();
 
 		HAL_Delay(10000);
 
