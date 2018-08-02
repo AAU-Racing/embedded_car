@@ -17,7 +17,6 @@ bool get_gear(gear_t* gear){
 void gear_callback(CAN_RxFrame* Msg){
 	gear_no = Msg->Msg[0];
 	gear_is_new = true;
-	can_transmit(7, (uint8_t[]) {1}, 1);
 }
 
 int gear_init(void){

@@ -9,10 +9,12 @@
 #include <board_driver/uart.h>
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
+#include <board_driver/adc.h>
 
 #include <shield_drivers/main_board/gear.h>
 #include <shield_drivers/main_board/oil_pressure.h>
 #include <shield_drivers/main_board/neutral.h>
+#include <shield_drivers/main_board/water_temp.h>
 
 #define DISABLE_ELECTRONIC_GEAR
 
@@ -21,6 +23,7 @@ void loop(void);
 
 static uint32_t last_oil_transmit = 0;
 static uint32_t last_neutral_transmit = 0;
+static uint32_t last_water_transmit = 0;
 
 // A main function in the philosophy of Arduino (setup + loop)
 int main(void) {
@@ -50,6 +53,15 @@ void setup(void){
 
 	neutral_switch_init();
 	printf("Neutral switch init complete\n");
+
+	init_adc(2);
+	printf("ADC init complete\n");
+
+	init_water_temp();
+	printf("Water sensor init complete\n");
+
+	start_adc();
+	printf("ADC started\n");
 
 	//Setting up CAN and it's filters
 	if (can_init(CAN_PD0) != CAN_OK) {
@@ -102,6 +114,12 @@ void loop(void){
 	if (HAL_GetTick() - last_neutral_transmit > 100) {
 		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { neutral_switch_get_state() }, 1);
 		last_neutral_transmit = HAL_GetTick();
+	}
+
+	if (HAL_GetTick() - last_water_transmit > 1000) {
+		uint16_t water_temp = read_water_in();
+		can_transmit(CAN_WATER_TEMPERATURE_IN, (uint8_t*) &water_temp, 2);
+		last_water_transmit = HAL_GetTick();
 	}
 
 #ifndef DISABLE_ELECTRONIC_GEAR

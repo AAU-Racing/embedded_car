@@ -74,7 +74,8 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_ERROR_HANDLE_ID_END		0x27f
 #define CAN_ERROR_HANDLE_MASK		0x7c0
 
-#define CAN_SENSOR_DATA_ID_START 	0x4b0
+#define CAN_SENSOR_DATA_ID_START 	0x400
+#define CAN_FUEL_TEMPERATURE		0x400
 #define CAN_WATER_TEMPERATURE_IN 	0x4b0
 #define CAN_WATER_TEMPERATURE_OUT 	0x4b1
 #define CAN_GEAR_FEEDBACK 			0x4b2
@@ -97,8 +98,8 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_BATTERY_CURRENT			0x4f2
 #define CAN_INVERTER_CURRENT		0x4f3
 #define CAN_NEUTRAL_SWITCH          0x4f4
-#define CAN_FUEL_TEMPERATURE		0x500
-#define CAN_SENSOR_DATA_ID_END 		0x640
+#define CAN_SENSOR_DATA_ID_END 		0x4ff
+#define CAN_SENSOR_DATA_MASK        0x700
 
 #define CAN_OBD_ID_START 	0x7df
 #define CAN_OBD_ID_END 		0x7ff

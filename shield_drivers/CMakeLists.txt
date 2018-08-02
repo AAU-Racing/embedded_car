@@ -21,7 +21,7 @@ add_library(shield_drivers
 	dashboard/rpm.c
 	dashboard/gear.c
 	dashboard/oil.c
-	dashboard/neutral.c
+	dashboard/sensor_data.c
 	dashboard/TLC59116.c
 	dashboard/ea_dogxl160w-7.c
 	dashboard/Fonts/font8.c
@@ -36,4 +36,5 @@ target_link_libraries(shield_drivers
 	STM32f4xx_HAL_Driver
 	STM32_USB_Device_Library
 	board_driver
+	m
 )
