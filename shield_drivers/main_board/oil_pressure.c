@@ -9,5 +9,5 @@ bool get_oil_pressure() {
 }
 
 void init_oil_pressure() {
-	gpio_input_init(OIL_PRESSURE_GPIO_PORT, OIL_PRESSURE_PIN, GPIO_PULLUP);
+	gpio_input_init(OIL_PRESSURE_GPIO_PORT, OIL_PRESSURE_PIN, GPIO_PULL_UP);
 }

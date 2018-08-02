@@ -14,6 +14,8 @@
 #include <shield_drivers/main_board/oil_pressure.h>
 #include <shield_drivers/main_board/neutral.h>
 
+#define DISABLE_ELECTRONIC_GEAR
+
 void setup(void);
 void loop(void);
 
@@ -63,6 +65,7 @@ void setup(void){
 #endif
 
 	obdii_init();
+	printf("OBDII init complete\n");
 
 	if (can_start() != CAN_OK) {
 		printf("Error starting CAN\n");

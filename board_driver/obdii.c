@@ -19,8 +19,6 @@ typedef enum {
 	Unknown     = -1,
 } MF_CANMode;
 
-bool received = false;
-
 static OBDII_Mode1_Frame mode1_buffer[MODE1_MAX_PID];
 
 static OBDII_Mode1_Pid pid_list[] = /*{ MonitorStatus, FuelSystemStatus,
@@ -36,7 +34,7 @@ static OBDII_Mode1_Pid pid_list[] = /*{ MonitorStatus, FuelSystemStatus,
 static uint8_t pid_list_length = 1;
 static uint8_t index = 0;
 static bool request_pending = false;
-static uint32_t last_request = 0;
+static uint32_t last_sequence_request = 0;
 
 /////////////////////////////////////
 // Convert to OBDII frame
@@ -207,14 +205,28 @@ uint32_t obdii_mode1_uid(OBDII_Mode1_Pid pid) {
 	return (CAN_OBD_ID_START << 8) | pid;
 }
 
+static bool is_pending_but_not_timeout() {
+	return request_pending && HAL_GetTick() - last_sequence_request < 200;
+}
+
+static bool first_pid_and_should_wait() {
+	return index == 0 && HAL_GetTick() - last_sequence_request < 1;
+}
+
 void obdii_request_next(void) {
-	if (request_pending && HAL_GetTick() - last_request < 200) {
+	if (is_pending_but_not_timeout()) {
 		return;
+	}
+	else if (first_pid_and_should_wait()) {
+		return;
+	}
+
+	if (index == 0) {
+		last_sequence_request = HAL_GetTick();
 	}
 
 	obdii_mode1_request(pid_list[index]);
 	request_pending = true;
-	last_request = HAL_GetTick();
 
 	index++;
 
