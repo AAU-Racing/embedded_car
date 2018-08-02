@@ -39,7 +39,7 @@
 #define DASHBOARD_I2C_ER_IRQHandler              I2C2_ER_IRQHandler
 
 int i2c_init(void);
-int i2c_master_transmit_DMA(uint16_t addr, void *buf, size_t n);
+int i2c_master_transmit(uint16_t addr, void *buf, size_t n);
 int i2c_is_ready(uint16_t addr);
 
 

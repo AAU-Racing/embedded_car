@@ -50,19 +50,17 @@ static enum address controller_lut(uint8_t x) {
 static void write_cmd(enum address addr, enum registers reg, uint8_t value) {
 	uint8_t p[] = {(uint8_t)reg, value};
 
-	if (i2c_master_transmit_DMA(addr, p, 2) != 0) {
+	if (i2c_master_transmit(addr, p, 2) != 0) {
 		while(1); // TODO remove
 	}
-	HAL_Delay(1);
 }
 
 static void write_rgb(enum address addr, enum registers reg, uint8_t r, uint8_t g, uint8_t b) {
 	uint8_t p[] = {(uint8_t)reg | (5 << 5), r, g, b};
 
-	if (i2c_master_transmit_DMA(addr, p, 4) != 0) {
+	if (i2c_master_transmit(addr, p, 4) != 0) {
 		while(1); // TODO remove
 	}
-	HAL_Delay(1);
 }
 
 static void set_rgb(enum address addr, unsigned led, unsigned r, unsigned g, unsigned b) {
