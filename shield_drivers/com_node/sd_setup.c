@@ -3,6 +3,7 @@
 
 static SD_HandleTypeDef uSdHandle;
 static SD_CardInfo uSdCardInfo;
+static HAL_SD_CardStatusTypeDef cardStatus;
 
 static void SD_MspInit(void);
 
@@ -26,14 +27,14 @@ uint8_t SD_Init(void) {
 
 	/* HAL SD initialization */
 	SD_MspInit();
-	if(HAL_SD_Init(&uSdHandle, &uSdCardInfo) != SD_OK) {
+	if(HAL_SD_Init(&uSdHandle) != MSD_OK) {
 		SD_state = MSD_ERROR;
 	}
 
 	/* Configure SD Bus width */
 	if(SD_state == MSD_OK) {
 	/* Enable wide operation */
-		if(HAL_SD_WideBusOperation_Config(&uSdHandle, SDIO_BUS_WIDE_4B) != SD_OK) {
+		if(HAL_SD_ConfigWideBusOperation(&uSdHandle, SDIO_BUS_WIDE_4B) != MSD_OK) {
 			SD_state = MSD_ERROR;
 		} else {
 			SD_state = MSD_OK;
@@ -82,14 +83,14 @@ __weak void SD_DetectCallback(void) {
 }
 
 
-uint8_t SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
-	return (HAL_SD_ReadBlocks(&uSdHandle, pData, ReadAddr, BlockSize, NumOfBlocks) != SD_OK) ?
+uint8_t SD_ReadBlocks(uint8_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
+	return (HAL_SD_ReadBlocks(&uSdHandle, pData, ReadAddr, BlockSize, NumOfBlocks) != MSD_OK) ?
 		MSD_ERROR : MSD_OK;
 }
 
 
-uint8_t SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
-	if(HAL_SD_WriteBlocks(&uSdHandle, pData, WriteAddr, BlockSize, NumOfBlocks) != SD_OK) {
+uint8_t SD_WriteBlocks(uint8_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
+	if(HAL_SD_WriteBlocks(&uSdHandle, pData, WriteAddr, BlockSize, NumOfBlocks) != MSD_OK) {
 		return MSD_ERROR;
 	} else {
 		return MSD_OK;
@@ -97,49 +98,41 @@ uint8_t SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, 
 }
 
 
-uint8_t SD_ReadBlocks_DMA(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
+uint8_t SD_ReadBlocks_DMA(uint8_t *pData, uint64_t ReadAddr, uint32_t NumOfBlocks) {
 	uint8_t SD_state = MSD_OK;
 
 	/* Read block(s) in DMA transfer mode */
-	if(HAL_SD_ReadBlocks_DMA(&uSdHandle, pData, ReadAddr, BlockSize, NumOfBlocks) != SD_OK) {
+	if(HAL_SD_ReadBlocks_DMA(&uSdHandle, pData, ReadAddr, NumOfBlocks) != MSD_OK) {
 		SD_state = MSD_ERROR;
 	}
 
 	/* Wait until transfer is complete */
 	if(SD_state == MSD_OK) {
-		if(HAL_SD_CheckReadOperation(&uSdHandle, (uint32_t)SD_DATATIMEOUT) != SD_OK) {
-			SD_state = MSD_ERROR;
-		} else {
-			SD_state = MSD_OK;
-		}
+		while (HAL_SD_GetState(&uSdHandle) != HAL_SD_STATE_READY) { }
 	}
 
 	return SD_state;
 }
 
 
-uint8_t SD_WriteBlocks_DMA(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks) {
+uint8_t SD_WriteBlocks_DMA(uint8_t *pData, uint64_t WriteAddr, uint32_t NumOfBlocks) {
 	uint8_t SD_state = MSD_OK;
 
 	/* Write block(s) in DMA transfer mode */
-	if(HAL_SD_WriteBlocks_DMA(&uSdHandle, pData, WriteAddr, BlockSize, NumOfBlocks) != SD_OK) {
+	if(HAL_SD_WriteBlocks_DMA(&uSdHandle, pData, WriteAddr, NumOfBlocks) != MSD_OK) {
 		SD_state = MSD_ERROR;
 	}
 
 	/* Wait until transfer is complete */
 	if(SD_state == MSD_OK) {
-		if(HAL_SD_CheckWriteOperation(&uSdHandle, (uint32_t)SD_DATATIMEOUT) != SD_OK) {
-			SD_state = MSD_ERROR;
-		} else {
-			SD_state = MSD_OK;
-		}
+		while (HAL_SD_GetState(&uSdHandle) != HAL_SD_STATE_READY) { }
 	}
 
 	return SD_state;
 }
 
 uint8_t SD_Erase(uint64_t StartAddr, uint64_t EndAddr) {
-	if(HAL_SD_Erase(&uSdHandle, StartAddr, EndAddr) != SD_OK) {
+	if(HAL_SD_Erase(&uSdHandle, StartAddr, EndAddr) != MSD_OK) {
 		return MSD_ERROR;
 	} else {
 		return MSD_OK;
@@ -265,11 +258,11 @@ void SD_DMA_Rx_IRQHandler(void) {
 }
 
 
-HAL_SD_TransferStateTypedef SD_GetStatus(void) {
-	return HAL_SD_GetStatus(&uSdHandle);
+HAL_StatusTypeDef SD_GetStatus(void) {
+	return HAL_SD_GetCardStatus(&uSdHandle, &cardStatus);
 }
 
 
-void SD_GetCardInfo(HAL_SD_CardInfoTypedef *CardInfo) {
-	HAL_SD_Get_CardInfo(&uSdHandle, CardInfo);
+void SD_GetCardInfo(HAL_SD_CardInfoTypeDef *CardInfo) {
+	HAL_SD_GetCardInfo(&uSdHandle, CardInfo);
 }

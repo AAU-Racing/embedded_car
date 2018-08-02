@@ -204,10 +204,10 @@ uint8_t BSP_SD_IsDetected(void)
   __IO uint8_t status = SD_PRESENT;
   
   /* Check SD card detect pin */
-  if(BSP_IO_ReadPin(SD_DETECT_PIN))
-  {
-    status = SD_NOT_PRESENT;
-  }
+  //if(BSP_IO_ReadPin(SD_DETECT_PIN))
+  //{
+  //  status = SD_NOT_PRESENT;
+  //}
   
   return status;
 }

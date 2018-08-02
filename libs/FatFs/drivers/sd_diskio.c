@@ -47,7 +47,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "../ff_gen_drv.h" // TODO: debate moving the entire FatFs into the ComNode shield driver
-#include "../../../shield_drivers/com_node/sd_bsp.h"
+#include <../../../shield_drivers/com_node/sd_bsp.c>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

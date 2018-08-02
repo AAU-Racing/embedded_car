@@ -21,14 +21,30 @@ add_library(shield_drivers
 	dashboard/Fonts/font20.c
 	dashboard/Fonts/font24.c
 
-	#com_node/sd.c
-	#com_node/sd_setup.c
+	com_node/sd.c
+	com_node/sd_setup.c
 	com_node/sd_bsp.c
 	com_node/water_temperature.c
 	com_node/current_clamps.c
 	com_node/wheel_speed.c
 	com_node/xbee.c
 	com_node/error.c
+
+	#com_node/fatfs/diskio.c
+	#com_node/fatfs/ff.c
+	#com_node/fatfs/ff_gen_drv.c
+	#com_node/fatfs/option/cc932.c
+	#com_node/fatfs/option/cc936.c
+	#com_node/fatfs/option/cc949.c
+	#com_node/fatfs/option/cc950.c
+	#com_node/fatfs/option/ccsbcs.c
+	#com_node/fatfs/option/syscall.c
+	#com_node/fatfs/option/unicode.c
+
+	#com_node/fatfs/drivers/sd_diskio.c
+	#com_node/fatfs/drivers/sdram_diskio.c
+	#com_node/fatfs/drivers/sram_diskio.c
+	#com_node/fatfs/drivers/usbh_diskio.c
 )
 
 target_link_libraries(shield_drivers

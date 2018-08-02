@@ -10,6 +10,7 @@
 #include <shield_drivers/com_node/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
+#include <board_driver/rtc.h>
 
 static uint8_t dataBuf[SD_STANDARD_BLOCK_SIZE] = {'\0'};
 static uint8_t* BufEnd = dataBuf;
@@ -54,9 +55,11 @@ void setup(void){
 	(void)BSP_RTC_Init();
 
 	if (init_fatfs(&fs) == 0) {
-		create_file(file_name); //Creates file and writes header
+		create_file(file_name, "LOG", "CSV"); //Creates file and writes header
 		printf("Successfully created file on SD\n");
 	}
+
+	appendData(file_name, "dataBuf", 7);
 }
 
 void loop(void){
@@ -72,11 +75,53 @@ void loop(void){
 }
 
 int main(void){
-	setup();
+	uart_init();
+	printf("UART init complete\n");
 
-	while(1){
-		loop();
+	//(void)BSP_RTC_Init();
+	FIL f;
+	//uint16_t i = 0;
+
+	printf("init: %d\n", init_fatfs(&fs));
+	HAL_Delay(10);
+
+	//Date_Time_t now;
+	//RTC_Get_Date_Time(&now);
+	//char time_str[27] = {'\0'};
+	//sprintf(time_str, "time: %02d:%02d:%02d, %02d/%02d/%02d\n", now.hours, now.minutes, now.seconds, now.date, now.month, (now.year + 1900));
+
+	printf("open: %d\n", f_open(&f, "LOGFILE", FA_READ));
+	HAL_Delay(10);
+
+	{
+		unsigned char text[32] = {0};
+		unsigned int br = 0;
+		int res = f_read(&f, &text, 5, &br);
+		printf("br: %d\n", br);
+		printf("res: %d\n", res);
+		printf("text: %s\n", text);
+		HAL_Delay(10);
 	}
+
+	printf("close: %d\n", f_close(&f));
+	HAL_Delay(1000);
+
+	printf("open: %d\n", f_open(&f, "LOGFILE", FA_WRITE));
+	HAL_Delay(10);
+
+	{
+		unsigned char text[32] = "FUCK THIS";
+		unsigned int bw = 0;
+		int res = f_write(&f, &text, 5, &bw);
+		printf("br: %d\n", bw);
+		printf("res: %d\n", res);
+		printf("text: %s\n", text);
+		HAL_Delay(10);
+	}
+
+	printf("sync: %d\n", f_sync(&f));
+	printf("close: %d\n", f_close(&f));
+	HAL_Delay(1000);
 
 	return 0;
 }

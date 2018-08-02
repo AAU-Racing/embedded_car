@@ -79,8 +79,6 @@ void appendData(char *file_name, void *data, uint16_t len) {
 	f_close(&f);
 }
 
-
-
 void printError(FRESULT rc) {
 	switch (rc) {
 		case FR_OK:
