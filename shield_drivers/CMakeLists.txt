@@ -29,7 +29,6 @@ add_library(shield_drivers
 	dashboard/Fonts/font16.c
 	dashboard/Fonts/font20.c
 	dashboard/Fonts/font24.c
-<<<<<<< HEAD
 
 	com_node/sd.c
 	com_node/sd_setup.c
@@ -55,8 +54,6 @@ add_library(shield_drivers
 	#com_node/fatfs/drivers/sdram_diskio.c
 	#com_node/fatfs/drivers/sram_diskio.c
 	#com_node/fatfs/drivers/usbh_diskio.c
-=======
->>>>>>> f8467ab676fa1da0c050a5a3a7df97a2968b2abd
 )
 
 target_link_libraries(shield_drivers
@@ -64,9 +61,5 @@ target_link_libraries(shield_drivers
 	STM32f4xx_HAL_Driver
 	STM32_USB_Device_Library
 	board_driver
-<<<<<<< HEAD
-)
-=======
 	m
 )
->>>>>>> f8467ab676fa1da0c050a5a3a7df97a2968b2abd
