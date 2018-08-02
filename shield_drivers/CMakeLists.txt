@@ -30,14 +30,14 @@ add_library(shield_drivers
 	dashboard/Fonts/font20.c
 	dashboard/Fonts/font24.c
 
-	com_node/sd.c
-	com_node/sd_setup.c
-	com_node/sd_bsp.c
-	com_node/water_temperature.c
-	com_node/current_clamps.c
-	com_node/wheel_speed.c
-	com_node/xbee.c
-	com_node/error.c
+	#com_node/sd.c
+	#com_node/sd_setup.c
+	#com_node/sd_bsp.c
+	#com_node/water_temperature.c
+	#com_node/current_clamps.c
+	#com_node/wheel_speed.c
+	#com_node/xbee.c
+	#com_node/error.c
 
 	#com_node/fatfs/diskio.c
 	#com_node/fatfs/ff.c
