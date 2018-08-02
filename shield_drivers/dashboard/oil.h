@@ -2,5 +2,5 @@
 
 #include <board_driver/can.h>
 
-bool oilPressure_OK();
+bool oil_pressure_ok();
 HAL_StatusTypeDef oil_init(void);

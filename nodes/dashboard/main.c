@@ -16,24 +16,40 @@
 #include <shield_drivers/dashboard/rpm.h>
 #include <shield_drivers/dashboard/gear.h>
 #include <shield_drivers/dashboard/oil.h>
+#include <shield_drivers/dashboard/sensor_data.h>
 
+#define DISABLE_ELECTRONIC_GEAR
 
-uint8_t brightness_level = 3;
-bool oil_pressure_is_ok = false;
+#define BLINK_PULSE_WIDTH 200
 
-uint8_t red[] = 	{0x4, 0x0, 0x0};
-uint8_t green[] = 	{0x0, 0x3, 0x0};
-uint8_t blue[] = 	{0x0, 0x0, 0x6};
-uint8_t yellow[] = 	{0x3, 0x3, 0x0};
-uint8_t white[] = 	{0x2, 0x2, 0x2};
+uint8_t brightness_level = 2;
+bool oil_pressure_warning_state = false;
+bool oil_warning_active = false;
+uint32_t last_state_change = 0;
+bool triggered = false;
+
+uint8_t red[] = 	{0x14, 0x00, 0x00};
+uint8_t green[] = 	{0x00, 0x0F, 0x00};
+uint8_t blue[] = 	{0x00, 0x00, 0x1E};
+uint8_t yellow[] = 	{0x0F, 0x0F, 0x00};
+uint8_t white[] = 	{0x0A, 0x0A, 0x0A};
 
 void setup(void);
 void loop(void);
 void brightness_level_up();
-void write_to_led(uint8_t ledNumber, uint16_t r, uint16_t g, uint16_t b);
-void low_oil_pressure_warning();
+void brightness_level_down();
+void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b);
+void oil_pressure_warning();
 void show_rpm(void);
-void show_gear(void);
+void check_neutral_switch();
+void check_water_temp();
+
+#ifndef DISABLE_ELECTRONIC_GEAR
+	gear_t show_gear(void);
+	bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch);
+	bool check_down_request(gear_t gear, bool down_btn, bool clutch);
+	bool check_up_request(gear_t gear, bool up_btn);
+#endif
 
 int main(void) {
 	setup();
@@ -44,108 +60,280 @@ int main(void) {
 }
 
 void setup(void) {
-	CAN_Init(CAN_PD0);
+	can_init(CAN_PD0);
 
+	// Init simple peripherals
 	led_driver_init(true);
-	init_lcd();
-	dashboard_buttons_init();
 	sw_buttons_init();
-	//gear_init();
+
+	// CAN filters
+#ifdef DISABLE_ELECTRONIC_GEAR
+	gear_init();
+#endif
 	oil_init();
+	obdii_init();
+	sensor_data_init();
 
-	OBDII_Init();
-	CAN_Start();
+	// Start CAN
+	can_start();
 
-	CAN_Send(CAN_NODE_STARTED, (uint8_t[]) { CAN_NODE_DASHBOARD_STARTED }, 1);
+	HAL_Delay(10);
+
+	can_transmit(CAN_DASHBOARD_STARTED, (uint8_t[]) { 1 }, 1);
 }
 
 void loop(void) {
-	if(is_triggered(DASHBOARD_BUTTON1)){
+	bool up_btn = sw_button_get_state(SW_BUTTON6);
+	bool neutral_btn = sw_button_get_state(SW_BUTTON4);
+	bool down_btn = sw_button_get_state(SW_BUTTON2);
+#ifndef DISABLE_ELECTRONIC_GEAR
+	bool clutch = sw_button_get_state(SW_BUTTON1);
+#endif
+	bool oil_pressure = oil_pressure_ok();
+
+
+#ifndef DISABLE_ELECTRONIC_GEAR
+	gear_t gear = show_gear();
+#endif
+
+#ifndef DISABLE_ELECTRONIC_GEAR
+	if (!check_neutral_request(gear, neutral_btn, clutch)) {
+		if (!check_down_request(gear, down_btn, clutch)) {
+			if (!check_up_request(gear, up_btn)) {
+				triggered = false;
+			}
+		}
+	}
+#else
+	if (neutral_btn && up_btn) {
 		brightness_level_up();
 	}
+	else if (neutral_btn && down_btn) {
+		brightness_level_down();
+	}
+#endif
 
-	oilPressure_OK(&oil_pressure_is_ok);
-	while(!oil_pressure_is_ok) {
-		low_oil_pressure_warning();
-		oilPressure_OK(&oil_pressure_is_ok);
+	if (oil_pressure && oil_warning_active) {
+		for (int i = 0; i < 15; i++) {
+			write_to_led(i, 0, 0, 0);
+		}
 	}
 
+	check_neutral_switch();
+	check_water_temp();
 
-
-
-	show_rpm();
-	//show_gear();
+	if (oil_pressure) {
+		show_rpm();
+		oil_warning_active = false;
+	} else {
+		oil_pressure_warning();
+	}
 }
 
-void write_to_led(uint8_t ledNumber, uint16_t r, uint16_t g, uint16_t b){
+void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b) {
 	r = r * 5 * brightness_level;
 	g = g * 5 * brightness_level;
 	b = b * 5 * brightness_level;
 
-	set_led(ledNumber, r, g, b);
+	set_led(led_number, r, g, b);
 }
 
-void brightness_level_up(){
-	if (brightness_level <= 7){
+void brightness_level_up() {
+	if (brightness_level < 8) {
 		brightness_level++;
 	}
-	else{
-		brightness_level = 1;
+}
+
+void brightness_level_down() {
+	if (brightness_level > 1) {
+		brightness_level--;
 	}
 }
 
-void low_oil_pressure_warning(){
+void oil_pressure_warning() {
+	oil_warning_active = true;
+	if (HAL_GetTick() - last_state_change > BLINK_PULSE_WIDTH) {
+		oil_pressure_warning_state = !oil_pressure_warning_state;
+		last_state_change = HAL_GetTick();
 
-	for(int i = 0; i < 15; i++){
-		write_to_led(i, red[0], red[1], red[2]);
-	}
-
-	HAL_Delay(200);
-
-	for(int i = 0; i < 15; i++){
-		write_to_led(i, 0, 0, 0);
-	}
-
-	HAL_Delay(200);
-}
-
-void show_rpm(void){
-	uint8_t rpm_level = get_rpm_level();
-
-	for(uint8_t led = 0; led < 15; led++){
-		write_to_led(led, 0, 0, 0);
-	}
-
-	for(uint8_t led = 0; led < 5; led++){
-		if(rpm_level > led)
-			write_to_led(led, green[0], green[1], green[2]);
-	}
-
-	for(uint8_t led = 5; led < 10; led++){
-		if(rpm_level > led)
-			write_to_led(led, red[0], red[1], red[2]);
-	}
-
-	if(rpm_level == 11){
-		for(uint8_t led = 10; led < 15; led++){
-			write_to_led(led, blue[0], blue[1], blue[2]);
+		if (oil_pressure_warning_state) {
+			for(int i = 0; i < 15; i++){
+				write_to_led(i, red[0], red[1], red[2]);
+			}
+		}
+		else {
+			for(int i = 0; i < 15; i++){
+				write_to_led(i, 0, 0, 0);
+			}
 		}
 	}
 }
 
-void show_gear(void){
-	gear_t gear;
-	get_gear(&gear);
+void show_rpm(void){
+	bool new;
+	int rpm_level = get_rpm_level(&new);
 
+	if (oil_warning_active || new) {
+		for(int led = 0; led < 15; led++) {
+			if (rpm_level > 30 + led) {
+				write_to_led(led, blue[0], blue[1], blue[2]);
+			}
+			else if (rpm_level > 15 + led) {
+				write_to_led(led, red[0], red[1], red[2]);
+			}
+			else if (rpm_level > led) {
+				write_to_led(led, green[0], green[1], green[2]);
+			}
+			else {
+				write_to_led(led, 0, 0, 0);
+			}
+		}
+	}
+}
+
+void check_neutral_switch() {
+	bool neutral = false;
+	bool new = get_neutral(&neutral);
+
+	if (new) {
+		if (neutral) {
+			write_to_led(15, red[0], red[1], red[2]);
+		}
+		else {
+			write_to_led(15, 0, 0, 0);
+		}
+	}
+}
+
+gear_t show_gear(void){
+	gear_t gear;
+	bool new = get_gear(&gear);
+
+	if (!new) {
+		return gear;
+	}
+
+	// Can only show gear 1 to 4 and neutral
 	if(gear < GEAR_5){
 		for(uint8_t led = 15; led < 20; led++){
 			write_to_led(led, 0, 0, 0);
 		}
-		write_to_led((gear + 15), white[0], white[1], white[2]);
+
+		if (gear == GEAR_N) {
+			write_to_led((gear + 15), red[0], red[1], red[2]);
+		}
+		else {
+			write_to_led((gear + 15), green[0], green[1], green[2]);
+		}
 	}
-	else{
+	else {
 		for(uint8_t led = 15; led < 20; led++){
 			write_to_led(led, white[0], white[1], white[2]);
+		}
+	}
+
+	return gear;
+}
+
+static void transmit_gear_request(uint8_t button_msg) {
+	if (!triggered) {
+		can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) { button_msg }, 1);
+		triggered = true;
+	}
+}
+
+bool check_neutral_request(gear_t gear, bool neutral_btn, bool clutch) {
+	if (neutral_btn) {
+		if (!clutch) {
+			write_to_led(20, blue[0], blue[1], blue[2]);
+			return true;
+		}
+		else if (gear != GEAR_1) {
+			write_to_led(20, red[0], red[1], red[2]);
+			return true;
+		}
+		else {
+			write_to_led(20, 0, 0, 0);
+		}
+
+		transmit_gear_request(CAN_GEAR_BUTTON_NEUTRAL);
+
+		return true;
+	}
+
+	return false;
+}
+
+
+bool check_down_request(gear_t gear, bool down_btn, bool clutch) {
+	if (down_btn) {
+		if (!clutch) {
+			write_to_led(20, blue[0], blue[1], blue[2]);
+			return true;
+		}
+		else if (gear < GEAR_2) {
+			write_to_led(20, red[0], red[1], red[2]);
+			return true;
+		}
+		else {
+			write_to_led(20, 0, 0, 0);
+		}
+
+		transmit_gear_request(CAN_GEAR_BUTTON_DOWN);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool check_up_request(gear_t gear, bool up_btn) {
+	if (up_btn) {
+		if (gear >= GEAR_5) {
+			write_to_led(20, red[0], red[1], red[2]);
+			return true;
+		}
+		else {
+			write_to_led(20, 0, 0, 0);
+		}
+
+		transmit_gear_request(CAN_GEAR_BUTTON_UP);
+
+		return true;
+	}
+
+	return false;
+}
+
+void check_water_temp() {
+	float value;
+	bool new = get_water_in(&value);
+
+	if (!new) {
+		return;
+	}
+
+	int temperature = (int) value;
+
+	static int offset = 30;
+	static int step = 5;
+
+	int index = (temperature - offset) / step;
+
+	for (int led = 24; led >= 20; led--) {
+		int led_number = 24 - led;
+
+		if (index >= 10 + led_number) {
+			write_to_led(led, red[0], red[1], red[2]);
+		}
+		else if (index >= 5 + led_number) {
+			write_to_led(led, yellow[0], yellow[1], yellow[2]);
+		}
+		else if (index >= led_number) {
+			write_to_led(led, green[0], green[1], green[2]);
+		}
+		else {
+			write_to_led(led, 0, 0, 0);
 		}
 	}
 }

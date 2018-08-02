@@ -10,43 +10,38 @@ typedef enum {
 	SW_BUTTON3,
 	SW_BUTTON4,
 	SW_BUTTON5,
+	SW_BUTTON6,
+	SW_BUTTON7,
+	SW_BUTTON8,
 
 	SW_BUTTONn // number of buttons
 } sw_button;
 
-
-#define SW_BUTTON1_PIN                    PIN_13
+#define SW_BUTTON1_PIN                    PIN_1
 #define SW_BUTTON1_GPIO_PORT              GPIOB
 
-#define SW_BUTTON2_PIN                    PIN_15
-#define SW_BUTTON2_GPIO_PORT              GPIOB
+#define SW_BUTTON2_PIN                    PIN_7
+#define SW_BUTTON2_GPIO_PORT              GPIOE
 
-#define SW_BUTTON3_PIN                    PIN_11
-#define SW_BUTTON3_GPIO_PORT              GPIOD
+#define SW_BUTTON3_PIN                    PIN_8
+#define SW_BUTTON3_GPIO_PORT              GPIOE
 
-#define SW_BUTTON4_PIN                    PIN_6
-#define SW_BUTTON4_GPIO_PORT              GPIOC
+#define SW_BUTTON4_PIN                    PIN_9
+#define SW_BUTTON4_GPIO_PORT              GPIOE
 
-#define SW_BUTTON5_PIN                    PIN_9
-#define SW_BUTTON5_GPIO_PORT              GPIOD
+#define SW_BUTTON5_PIN                    PIN_10
+#define SW_BUTTON5_GPIO_PORT              GPIOE
 
+#define SW_BUTTON6_PIN                    PIN_11
+#define SW_BUTTON6_GPIO_PORT              GPIOE
 
-#define SW_BUTTON_PORT ((GPIO_TypeDef* const []) { \
-	SW_BUTTON1_GPIO_PORT, \
-	SW_BUTTON2_GPIO_PORT, \
-	SW_BUTTON3_GPIO_PORT, \
-	SW_BUTTON4_GPIO_PORT, \
-	SW_BUTTON5_GPIO_PORT, \
-})
+#define SW_BUTTON7_PIN                    PIN_12
+#define SW_BUTTON7_GPIO_PORT              GPIOE
 
-#define SW_BUTTON_PIN ((const uint16_t const []) { \
-	SW_BUTTON1_PIN, \
-	SW_BUTTON2_PIN, \
-	SW_BUTTON3_PIN, \
-	SW_BUTTON4_PIN, \
-	SW_BUTTON5_PIN, \
-})
+#define SW_BUTTON8_PIN                    PIN_13
+#define SW_BUTTON8_GPIO_PORT              GPIOE
 
 void sw_buttons_init(void);
+bool sw_button_get_state(sw_button b);
 
 #endif /* STEERING_WHEEL_BUTTONS_H */

@@ -21,27 +21,27 @@ void setup() {
 
 	printf("UART init complete\n");
 
-	if (CAN_Init(CAN_PB5) != CAN_OK) {
+	if (can_init(CAN_PB5) != CAN_OK) {
 		printf("CAN init error\n");
 	}
 
-	if (OBDII_Init() != HAL_OK) {
+	if (obdii_init() != HAL_OK) {
 		printf("CAN filter error\n");
 	}
 
 	HAL_Delay(100);
 
-	if (CAN_Start() != CAN_OK){
+	if (can_start() != CAN_OK){
 		printf("CAN start error\n");
 	}
 	else {
 		printf("CAN send started\n");
 	}
 
-	// if (OBDII_Mode1_Request(EngineRPM) != HAL_OK) {
+	// if (obdii_mode1_request(EngineRPM) != HAL_OK) {
 	// 	printf("Initial rpm request failed\n");
 	// }
-	if (OBDII_Mode1_Request(ThrottlePosition) != HAL_OK) {
+	if (obdii_mode1_request(ThrottlePosition) != HAL_OK) {
 		printf("Initial throttle position request failed\n");
 	}
 
@@ -50,7 +50,7 @@ void setup() {
 }
 
 void loop() {
-	// OBDII_Mode1_Frame frame = OBDII_Mode1_Response(EngineRPM);
+	// OBDII_Mode1_Frame frame = obdii_mode1_response(EngineRPM);
 	//
 	// if (frame.New) {
 	// 	printf("Pid: %u\n", frame.Pid);
@@ -62,12 +62,12 @@ void loop() {
 	// 	printf("\n");
 	//
 	// 	lastRPMTick = HAL_GetTick();
-	// 	if (OBDII_Mode1_Request(EngineRPM) != HAL_OK) {
+	// 	if (obdii_mode1_request(EngineRPM) != HAL_OK) {
 	// 		printf("Update rpm request failed\n");
 	// 	}
 	// }
 
-	OBDII_Mode1_Frame frame = OBDII_Mode1_Response(ThrottlePosition);
+	OBDII_Mode1_Frame frame = obdii_mode1_response(ThrottlePosition);
 
 	if (frame.New) {
 		printf("Pid: %u\n", frame.Pid);
@@ -79,21 +79,21 @@ void loop() {
 		printf("\n");
 
 		lastThrottleTick = HAL_GetTick();
-		if (OBDII_Mode1_Request(ThrottlePosition) != HAL_OK) {
+		if (obdii_mode1_request(ThrottlePosition) != HAL_OK) {
 			printf("Update throttle position request failed\n");
 		}
 	}
 
 	// if (lastRPMTick + RPM_TIMEOUT < HAL_GetTick()) {
 	// 	lastRPMTick = HAL_GetTick();
-	// 	if (OBDII_Mode1_Request(EngineRPM) != HAL_OK) {
+	// 	if (obdii_mode1_request(EngineRPM) != HAL_OK) {
 	// 		printf("Timeout rpm request failed\n");
 	// 	}
 	// }
 
 	if (lastThrottleTick + THROTTLE_POSITION_TIMEOUT < HAL_GetTick()) {
 		lastThrottleTick = HAL_GetTick();
-		if (OBDII_Mode1_Request(ThrottlePosition) != HAL_OK) {
+		if (obdii_mode1_request(ThrottlePosition) != HAL_OK) {
 			printf("Timeout throttle position request failed\n");
 		}
 	}

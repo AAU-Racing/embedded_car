@@ -1,18 +1,27 @@
 add_library(shield_drivers
-	traction_control/water_temp.c
-	traction_control/wheel_sensor.c
-	traction_control/brake_pressure.c
-	traction_control/gear_feedback.c
-	traction_control/gear.c
-	traction_control/oil_pressure.c
-	traction_control/hbridge.c
-	traction_control/current_clamps.c
+	#main_board/sd.c
+	#main_board/sd_setup.c
+	main_board/sd_bsp.c
+	main_board/current_clamps.c
+	main_board/xbee.c
+	main_board/error.c
+	main_board/water_temp.c
+	main_board/wheel_sensor.c
+	main_board/gear_feedback.c
+	main_board/ignition_cut.c
+	main_board/gear.c
+	main_board/oil_pressure.c
+	main_board/neutral.c
+	main_board/actuator.c
+	main_board/current_clamps.c
+	main_board/power.c
 
 	dashboard/buttons.c
 	dashboard/steering_wheel_buttons.c
 	dashboard/rpm.c
 	dashboard/gear.c
 	dashboard/oil.c
+	dashboard/sensor_data.c
 	dashboard/TLC59116.c
 	dashboard/ea_dogxl160w-7.c
 	dashboard/Fonts/font8.c
@@ -20,6 +29,7 @@ add_library(shield_drivers
 	dashboard/Fonts/font16.c
 	dashboard/Fonts/font20.c
 	dashboard/Fonts/font24.c
+<<<<<<< HEAD
 
 	com_node/sd.c
 	com_node/sd_setup.c
@@ -45,6 +55,8 @@ add_library(shield_drivers
 	#com_node/fatfs/drivers/sdram_diskio.c
 	#com_node/fatfs/drivers/sram_diskio.c
 	#com_node/fatfs/drivers/usbh_diskio.c
+=======
+>>>>>>> f8467ab676fa1da0c050a5a3a7df97a2968b2abd
 )
 
 target_link_libraries(shield_drivers
@@ -52,4 +64,9 @@ target_link_libraries(shield_drivers
 	STM32f4xx_HAL_Driver
 	STM32_USB_Device_Library
 	board_driver
+<<<<<<< HEAD
 )
+=======
+	m
+)
+>>>>>>> f8467ab676fa1da0c050a5a3a7df97a2968b2abd
