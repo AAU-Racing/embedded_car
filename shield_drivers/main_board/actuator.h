@@ -35,7 +35,7 @@
 void init_actuator();
 void actuator_forward_start();
 void actuator_forward_stop();
-void actuator_forward_slow();
+void actuator_backward_slow();
 void actuator_backward_start();
 void actuator_backward_stop();
 
