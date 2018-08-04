@@ -22,17 +22,17 @@
 
 #define BLINK_PULSE_WIDTH 200
 
-uint8_t brightness_level = 2;
+uint8_t brightness_level = 1;
 bool oil_pressure_warning_state = false;
 bool oil_warning_active = false;
 uint32_t last_state_change = 0;
 bool triggered = false;
 
-uint8_t red[] = 	{0x14, 0x00, 0x00};
-uint8_t green[] = 	{0x00, 0x0F, 0x00};
-uint8_t blue[] = 	{0x00, 0x00, 0x1E};
-uint8_t yellow[] = 	{0x0F, 0x0F, 0x00};
-uint8_t white[] = 	{0x0A, 0x0A, 0x0A};
+uint8_t red[] = 	{0x04, 0x00, 0x00};
+uint8_t green[] = 	{0x00, 0x03, 0x00};
+uint8_t blue[] = 	{0x00, 0x00, 0x06};
+uint8_t yellow[] = 	{0x05, 0x02, 0x00};
+uint8_t white[] = 	{0x02, 0x02, 0x02};
 
 void setup(void);
 void loop(void);
@@ -131,9 +131,9 @@ void loop(void) {
 }
 
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b) {
-	r = r * 5 * brightness_level;
-	g = g * 5 * brightness_level;
-	b = b * 5 * brightness_level;
+	r = r * brightness_level;
+	g = g * brightness_level;
+	b = b * brightness_level;
 
 	set_led(led_number, r, g, b);
 }
@@ -315,7 +315,7 @@ void check_water_temp() {
 
 	int temperature = (int) value;
 
-	static int offset = 30;
+	static int offset = 50;
 	static int step = 5;
 
 	int index = (temperature - offset) / step;
@@ -323,14 +323,17 @@ void check_water_temp() {
 	for (int led = 24; led >= 20; led--) {
 		int led_number = 24 - led;
 
-		if (index >= 10 + led_number) {
+		if (index >= 15 + led_number) {
 			write_to_led(led, red[0], red[1], red[2]);
 		}
-		else if (index >= 5 + led_number) {
+		else if (index >= 10 + led_number) {
 			write_to_led(led, yellow[0], yellow[1], yellow[2]);
 		}
-		else if (index >= led_number) {
+		else if (index >= 5 + led_number) {
 			write_to_led(led, green[0], green[1], green[2]);
+		}
+		else if (index >= led_number) {
+			write_to_led(led, blue[0], blue[1], blue[2]);
 		}
 		else {
 			write_to_led(led, 0, 0, 0);
