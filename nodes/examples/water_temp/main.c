@@ -10,6 +10,16 @@
 #include <board_driver/float_print.h>
 #include <shield_drivers/main_board/water_temp.h>
 
+static float convert_water_temp(uint16_t v_out) {
+	float v_in		  = 4095;  // Max ADC value = 3.3V
+	float r_1  		  = 10000; // R_1 = 10kOhm
+	float r_2 		  = (v_out * r_1) / (v_in - v_out);
+	 // http://www.bosch-motorsport.com/media/catalog_resources/Temperature_Sensor_NTC_M12_Datasheet_51_en_2782569739pdf.pdf
+	 // Also check sync
+	float temperature = -31.03 * log(r_2) + 262.55;
+	return temperature;
+}
+
 int main(void) {
 	uart_init();
 	printf("uart init complete\n");
@@ -32,8 +42,8 @@ int main(void) {
 		int in = read_water_in();
 		int out = read_water_out();
 
-	    float water_in = -27.271952718 * log(10000 * in / (4095.0 - in)) + 240.1851825535;
-	    float water_out = -27.271952718 * log(10000 * out / (4095.0 - out)) + 240.1851825535;
+	    float water_in = convert_water_temp(in);
+	    float water_out = convert_water_temp(out);
 
 	    printf("%5d, %4d, %4d, ", i, in, out);
 	    print_double(water_in, 5, 2);
