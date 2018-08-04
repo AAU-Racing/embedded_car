@@ -79,6 +79,8 @@ void setup(void) {
 
 	HAL_Delay(10);
 
+	start_iwdg();
+
 	can_transmit(CAN_DASHBOARD_STARTED, (uint8_t[]) { 1 }, 1);
 }
 
@@ -128,6 +130,8 @@ void loop(void) {
 	} else {
 		oil_pressure_warning();
 	}
+
+	reset_iwdg();
 }
 
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b) {

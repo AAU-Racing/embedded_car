@@ -10,6 +10,7 @@
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 #include <board_driver/adc.h>
+#include <board_driver/iwdg.h>
 
 #include <shield_drivers/main_board/gear.h>
 #include <shield_drivers/main_board/oil_pressure.h>
@@ -89,18 +90,16 @@ void setup(void){
 	// Wait for everything to be ready
 	HAL_Delay(25);
 
-	// Signal all others that the main board is ready
-	if (can_transmit(CAN_MAIN_BOARD_STARTED, (uint8_t[]) { 1 }, 1) != CAN_OK) {
-		//log_error(CAN_ERROR, "CAN send error");
-	}
-
-	// Wait then start initial gear sequence to detect which gear we are in
-	HAL_Delay(10);
-
 #ifndef DISABLE_ELECTRONIC_GEAR
 	read_initial_gear();
 	printf("Initial gear is %d\n", gear_number());
 #endif
+
+	start_iwdg();
+	printf("Independent watchdog started\n");
+
+	// Signal all others that the main board is ready
+	can_transmit(CAN_MAIN_BOARD_STARTED, (uint8_t[]) { 1 }, 1);
 }
 
 void loop(void){
@@ -125,4 +124,6 @@ void loop(void){
 #ifndef DISABLE_ELECTRONIC_GEAR
 	change_gear();
 #endif
+
+	reset_iwdg();
 }

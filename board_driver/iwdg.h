@@ -1,9 +1,8 @@
 #ifndef IWDG_H
 #define IWDG_H
 
-void setup_IWDG();
-int was_reset_by_IWDG();
-void init_IWDG();
-void reset_IWDG();
+void start_iwdg();
+int was_reset_by_iwdg();
+void reset_iwdg();
 
 #endif

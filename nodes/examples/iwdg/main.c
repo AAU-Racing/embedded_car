@@ -11,8 +11,8 @@
 int main(void) {
 	usb_init();
     HAL_Delay(1000);
-    setup_IWDG();
-    init_IWDG();
+    init_iwdg();
+    start_iwdg();
     printf("Starting\r\n");
 
     while (1) {
