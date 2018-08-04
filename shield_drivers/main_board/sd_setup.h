@@ -2,9 +2,9 @@
 #define SD_H
 
 #include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal_sd.h>
 
-
-#define SD_CardInfo HAL_SD_CardInfoTypedef
+#define SD_CardInfo HAL_SD_CardInfoTypeDef
 
 #define MSD_OK         0x00
 #define MSD_ERROR      0x01
@@ -37,16 +37,16 @@ uint8_t SD_Init(void);
 uint8_t SD_ITConfig(void);
 void    SD_DetectIT(void);
 void    SD_DetectCallback(void);
-uint8_t SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
-uint8_t SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
-uint8_t SD_ReadBlocks_DMA(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
-uint8_t SD_WriteBlocks_DMA(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
+uint8_t SD_ReadBlocks(uint8_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
+uint8_t SD_WriteBlocks(uint8_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
+uint8_t SD_ReadBlocks_DMA(uint8_t *pData, uint64_t ReadAddr, uint32_t NumOfBlocks);
+uint8_t SD_WriteBlocks_DMA(uint8_t *pData, uint64_t WriteAddr, uint32_t NumOfBlocks);
 uint8_t SD_Erase(uint64_t StartAddr, uint64_t EndAddr);
 void    SD_IRQHandler(void);
 void    SD_DMA_Tx_IRQHandler(void);
 void    SD_DMA_Rx_IRQHandler(void);
-HAL_SD_TransferStateTypedef SD_GetStatus(void);
-void    SD_GetCardInfo(HAL_SD_CardInfoTypedef *CardInfo);
+HAL_StatusTypeDef SD_GetStatus(void);
+void    SD_GetCardInfo(HAL_SD_CardInfoTypeDef *CardInfo);
 uint8_t SD_IsDetected(void);
 
 #endif /* SD_H */
