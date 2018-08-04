@@ -40,7 +40,7 @@ static void pwr_voltage_scaling_config() {
 }
 
 static void wait_until_hse_ready() {
-    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == RESET);
+    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == RESET) {}
 }
 
 static void enable_hse() {
@@ -52,7 +52,7 @@ static void enable_hse() {
 static void disable_pll() {
     CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
 
-    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == SET);
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RCC_CR_PLLRDY) {}
 }
 
 static void configure_pll() {
@@ -64,15 +64,15 @@ static void configure_pll() {
 
     SET_BIT(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC); // Set HSE as input source for PLL
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM_Msk, (HSE_is_odd ? HSE_mhz : (HSE_mhz / 2)) << RCC_PLLCFGR_PLLM_Pos); // should match HSE freq in mhz so HSE / PLLM == 1
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN_Msk, (HSE_is_odd ? (168*2) : 168) << RCC_PLLCFGR_PLLN_Pos); // 336 / 2 == 168 == max core clk
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 168 (max core clk)
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN_Msk, (HSE_is_odd ? (160 * 2) : 160) << RCC_PLLCFGR_PLLN_Pos); // 320 / 2 == 160 == max core clk
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLP_Msk, 0 << RCC_PLLCFGR_PLLP_Pos); // PLLP division factor = 2, ((HSE/pllm) * plln) / pllp == 160 (max core clk)
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ_Msk, 7 << RCC_PLLCFGR_PLLQ_Pos); // ((HSE/pllm) * plln) / pllq == 48 (USB needs 48 and sdio needs 48 or lower)
 }
 
 static void enable_pll() {
     SET_BIT(RCC->CR, RCC_CR_PLLON);
 
-    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RESET);
+    while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) == RESET) {}
 }
 
 static void set_flash_latency() {
@@ -82,20 +82,20 @@ static void set_flash_latency() {
 }
 
 static void configure_ahbclk() {
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE_Msk, RCC_CFGR_HPRE_DIV1 << RCC_CFGR_HPRE_Pos);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE_Msk, RCC_CFGR_HPRE_DIV1);
 }
 
 static void configure_sysclk() {
     // Set sysclk source to PLL
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW_Msk, RCC_CFGR_SW_PLL << RCC_CFGR_SW_Pos);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW_Msk, RCC_CFGR_SW_PLL);
 }
 
 static void configure_apb1clk() {
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1_Msk, RCC_CFGR_PPRE1_DIV1 << RCC_CFGR_PPRE1_Pos);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1_Msk, RCC_CFGR_PPRE1_DIV4);
 }
 
 static void configure_apb2clk() {
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2_Msk, RCC_CFGR_PPRE2_DIV2 << RCC_CFGR_PPRE2_Pos);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2_Msk, RCC_CFGR_PPRE2_DIV2);
 }
 
 void set_system_clock_168mhz(void) {

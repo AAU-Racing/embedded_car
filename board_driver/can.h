@@ -55,7 +55,8 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_GEAR_NUMBER					0x1e0
 #define CAN_GEAR_CHANGE_FAILED          0x1e1
 #define CAN_IGNITION_CUT				0x1f0
-#define CAN_NODE_STARTED				0x1f2
+#define CAN_DASHBOARD_STARTED			0x1f1
+#define CAN_MAIN_BOARD_STARTED			0x1f2
 #define CAN_MISSION_CRITICAL_ID_END 	0x1ff
 #define CAN_MISSION_CRITICAL_MASK		0x7c0
 
@@ -74,7 +75,8 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_ERROR_HANDLE_ID_END		0x27f
 #define CAN_ERROR_HANDLE_MASK		0x7c0
 
-#define CAN_SENSOR_DATA_ID_START 	0x4b0
+#define CAN_SENSOR_DATA_ID_START 	0x400
+#define CAN_FUEL_TEMPERATURE		0x400
 #define CAN_WATER_TEMPERATURE_IN 	0x4b0
 #define CAN_WATER_TEMPERATURE_OUT 	0x4b1
 #define CAN_GEAR_FEEDBACK 			0x4b2
@@ -96,15 +98,24 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_STEERING_WHEEL_POSITION	0x4f0
 #define CAN_BATTERY_CURRENT			0x4f2
 #define CAN_INVERTER_CURRENT		0x4f3
-#define CAN_FUEL_TEMPERATURE		0x500
-#define CAN_SENSOR_DATA_ID_END 		0x640
+#define CAN_NEUTRAL_SWITCH          0x4f4
+#define CAN_SENSOR_DATA_ID_END 		0x4ff
+#define CAN_SENSOR_DATA_MASK        0x700
 
 #define CAN_OBD_ID_START 	0x7df
 #define CAN_OBD_ID_END 		0x7ff
 
 // Definitions for discrete valued data
-#define CAN_GEAR_BUTTON_UP 		1
-#define CAN_GEAR_BUTTON_DOWN 	2
+#define CAN_GEAR_BUTTON_UP 		10
+#define CAN_GEAR_BUTTON_DOWN 	11
+#define CAN_GEAR_BUTTON_NEUTRAL 12
+#define CAN_GEAR_BUTTON_OVERRIDE_NEUTRAL 100
+#define CAN_GEAR_BUTTON_OVERRIDE_1       101
+#define CAN_GEAR_BUTTON_OVERRIDE_2       102
+#define CAN_GEAR_BUTTON_OVERRIDE_3       103
+#define CAN_GEAR_BUTTON_OVERRIDE_4       104
+#define CAN_GEAR_BUTTON_OVERRIDE_5       105
+#define CAN_GEAR_BUTTON_OVERRIDE_6       106
 
 #define CAN_OIL_PRESSURE_ON		1
 #define CAN_OIL_PRESSURE_OFF	0
@@ -119,11 +130,11 @@ typedef void (*CAN_RX_Callback) (CAN_RxFrame *msg);
 #define CAN_NODE_TRACTION_CONTROL_STARTED	1
 #define CAN_NODE_DASHBOARD_STARTED			2
 
-uint8_t CAN_Send(uint16_t id, uint8_t msg[], uint8_t length);
+uint8_t can_transmit(uint16_t id, uint8_t msg[], uint8_t length);
 // !!!!!!!!!!!!!!!! Printf is not allow inside the callback !!!!!!!!!!!!!!!
-uint8_t CAN_Filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
-uint8_t CAN_Start();
-uint8_t CAN_Init(uint8_t config);
-CAN_Statistics CAN_GetStats();
+uint8_t can_filter(uint16_t id, uint16_t mask, CAN_RX_Callback callback);
+uint8_t can_start();
+uint8_t can_init(uint8_t config);
+CAN_Statistics can_get_stats();
 
 #endif /* CAN_GUARD */

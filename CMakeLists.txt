@@ -12,7 +12,7 @@ set(gc_flags "-ffunction-sections -fdata-sections -Wl,--gc-sections")
 set(mcu_flags "-mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork")
 set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles -Wl,-Map=./result.map")
 set(WARNINGS "-Wall -Wextra")
-set(CFLAGS "-O0 -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
+set(CFLAGS "-Os -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
 set(CMAKE_C_FLAGS "${CFLAGS} ${CMAKE_C_FLAGS}")
 add_definitions(-DHSE_VALUE=24000000 -DSTM32F407xx -DUSE_USB_FS)
 

@@ -12,4 +12,4 @@ typedef enum {
 } gear_t;
 
 bool get_gear(gear_t* gear);
-HAL_StatusTypeDef gear_init();
+int gear_init();
