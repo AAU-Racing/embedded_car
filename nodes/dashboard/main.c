@@ -6,6 +6,7 @@
 
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
+#include <board_driver/iwdg.h>
 
 #include <shield_driver/dashboard/TLC59116.h>
 #include <shield_driver/dashboard/ea_dogxl160w-7.h>
