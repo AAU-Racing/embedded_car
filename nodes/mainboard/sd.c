@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <shield_drivers/com_node/sd.h>
+#include <shield_driver/com_node/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
 #include <shield_driver/dashboard/oil.h>

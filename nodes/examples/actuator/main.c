@@ -5,7 +5,7 @@
 #include <stm32f4xx_hal.h>
 
 #include <board_driver/uart.h>
-#include <shield_driver/main_board/actuator.h>
+#include <shield_driver/mainboard/actuator.h>
 
 int main(void) {
 	uart_init();

@@ -1,4 +1,4 @@
-add_library(shield_drivers
+add_library(shield_driver
 	#mainboard/sd.c
 	#mainboard/sd_setup.c
 	mainboard/sd_bsp.c
@@ -56,7 +56,7 @@ add_library(shield_drivers
 	#com_node/fatfs/drivers/usbh_diskio.c
 )
 
-target_link_libraries(shield_drivers
+target_link_libraries(shield_driver
 	CMSIS
 	STM32f4xx_HAL_Driver
 	STM32_USB_Device_Library

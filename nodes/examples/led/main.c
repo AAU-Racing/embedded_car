@@ -1,6 +1,6 @@
 #include <stm32f4xx_hal.h>
 
-#include <shield_drivers/dashboard/TLC59116.h>
+#include <shield_driver/dashboard/TLC59116.h>
 
 #include <stdint.h>
 

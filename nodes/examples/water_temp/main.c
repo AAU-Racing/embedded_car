@@ -8,7 +8,7 @@
 #include <board_driver/uart.h>
 #include <board_driver/adc.h>
 #include <board_driver/float_print.h>
-#include <shield_driver/main_board/water_temp.h>
+#include <shield_driver/mainboard/water_temp.h>
 
 static float convert_water_temp(uint16_t v_out) {
 	float v_in		  = 4095;  // Max ADC value = 3.3V

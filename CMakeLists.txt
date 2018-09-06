@@ -55,7 +55,7 @@ endfunction()
 
 
 add_subdirectory(board_driver)
-add_subdirectory(shield_drivers)
+add_subdirectory(shield_driver)
 add_subdirectory(libs)
 add_subdirectory(bootloader)
 
