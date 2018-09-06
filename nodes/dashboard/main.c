@@ -7,16 +7,16 @@
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 
-#include <shield_drivers/dashboard/TLC59116.h>
-#include <shield_drivers/dashboard/ea_dogxl160w-7.h>
+#include <shield_driver/dashboard/TLC59116.h>
+#include <shield_driver/dashboard/ea_dogxl160w-7.h>
 
-#include <shield_drivers/dashboard/buttons.h>
-#include <shield_drivers/dashboard/steering_wheel_buttons.h>
+#include <shield_driver/dashboard/buttons.h>
+#include <shield_driver/dashboard/steering_wheel_buttons.h>
 
-#include <shield_drivers/dashboard/rpm.h>
-#include <shield_drivers/dashboard/gear.h>
-#include <shield_drivers/dashboard/oil.h>
-#include <shield_drivers/dashboard/sensor_data.h>
+#include <shield_driver/dashboard/rpm.h>
+#include <shield_driver/dashboard/gear.h>
+#include <shield_driver/dashboard/oil.h>
+#include <shield_driver/dashboard/sensor_data.h>
 
 #define DISABLE_ELECTRONIC_GEAR
 

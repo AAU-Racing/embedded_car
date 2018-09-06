@@ -1,6 +1,6 @@
 #include <stm32f4xx_hal.h>
 
-#include <shield_drivers/main_board/xbee.h>
+#include <shield_driver/main_board/xbee.h>
 #include <board_driver/uart.h>
 
 #include <string.h>

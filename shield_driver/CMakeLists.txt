@@ -1,20 +1,20 @@
 add_library(shield_drivers
-	#main_board/sd.c
-	#main_board/sd_setup.c
-	main_board/sd_bsp.c
-	main_board/current_clamps.c
-	main_board/xbee.c
-	main_board/error.c
-	main_board/water_temp.c
-	main_board/wheel_sensor.c
-	main_board/gear_feedback.c
-	main_board/ignition_cut.c
-	main_board/gear.c
-	main_board/oil_pressure.c
-	main_board/neutral.c
-	main_board/actuator.c
-	main_board/current_clamps.c
-	main_board/power.c
+	#mainboard/sd.c
+	#mainboard/sd_setup.c
+	mainboard/sd_bsp.c
+	mainboard/current_clamps.c
+	mainboard/xbee.c
+	mainboard/error.c
+	mainboard/water_temp.c
+	mainboard/wheel_sensor.c
+	mainboard/gear_feedback.c
+	mainboard/ignition_cut.c
+	mainboard/gear.c
+	mainboard/oil_pressure.c
+	mainboard/neutral.c
+	mainboard/actuator.c
+	mainboard/current_clamps.c
+	mainboard/power.c
 
 	dashboard/buttons.c
 	dashboard/steering_wheel_buttons.c

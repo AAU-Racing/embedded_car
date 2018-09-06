@@ -7,7 +7,7 @@
 
 #include <board_driver/uart.h>
 
-#include <shield_drivers/com_node/sd.h>
+#include <shield_driver/com_node/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
 #include <board_driver/rtc.h>

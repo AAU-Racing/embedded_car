@@ -61,4 +61,4 @@ add_subdirectory(examples/i2c)
 add_subdirectory(examples/bkpsram)
 
 add_subdirectory(dashboard)
-add_subdirectory(main_board)
+add_subdirectory(mainboard)

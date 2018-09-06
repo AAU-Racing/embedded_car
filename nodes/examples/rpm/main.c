@@ -1,8 +1,8 @@
 #include <stm32f4xx_hal.h>
 #include <stdint.h>
 
-#include <shield_drivers/dashboard/TLC59116.h>
-#include <shield_drivers/dashboard/rpm.h>
+#include <shield_driver/dashboard/TLC59116.h>
+#include <shield_driver/dashboard/rpm.h>
 
 int main(void) {
 	led_driver_init(true);

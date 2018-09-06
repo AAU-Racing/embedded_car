@@ -7,6 +7,6 @@ set(SRC_FILES
 add_executable(${target_name} ${SRC_FILES})
 target_link_libraries(${target_name}
 	board_driver
-    shield_drivers
+    shield_driver
     m
 )

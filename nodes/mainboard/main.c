@@ -11,11 +11,12 @@
 #include <board_driver/obdii.h>
 #include <board_driver/adc.h>
 #include <board_driver/iwdg.h>
+#include <board_driver/float_print.h>
 
-#include <shield_drivers/main_board/gear.h>
-#include <shield_drivers/main_board/oil_pressure.h>
-#include <shield_drivers/main_board/neutral.h>
-#include <shield_drivers/main_board/water_temp.h>
+#include <shield_driver/mainboard/gear.h>
+#include <shield_driver/mainboard/oil_pressure.h>
+#include <shield_driver/mainboard/neutral.h>
+#include <shield_driver/mainboard/water_temp.h>
 
 #define DISABLE_ELECTRONIC_GEAR
 
@@ -102,23 +103,42 @@ void setup(void){
 	can_transmit(CAN_MAIN_BOARD_STARTED, (uint8_t[]) { 1 }, 1);
 }
 
+static float convert_water_temp(uint16_t v_out) {
+	float v_in		  = 4095;  // Max ADC value = 3.3V
+	float r_1  		  = 10000; // R_1 = 10kOhm
+	float r_2 		  = (v_out * r_1) / (v_in - v_out);
+	 // http://www.bosch-motorsport.com/media/catalog_resources/Temperature_Sensor_NTC_M12_Datasheet_51_en_2782569739pdf.pdf
+	 // Also check sync
+	float temperature = -31.03 * log(r_2) + 262.55;
+	return temperature;
+}
+
 void loop(void){
 	obdii_request_next();
 
 	if (HAL_GetTick() - last_oil_transmit > 100) {
-		can_transmit(CAN_OIL_PRESSURE, (uint8_t[]) { get_oil_pressure() }, 1);
+		bool oil_pressure = get_oil_pressure();
+		can_transmit(CAN_OIL_PRESSURE, (uint8_t[]) { oil_pressure }, 1);
 		last_oil_transmit = HAL_GetTick();
 	}
 
 	if (HAL_GetTick() - last_neutral_transmit > 100) {
-		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { neutral_switch_get_state() }, 1);
+		bool neutral = neutral_switch_get_state();
+		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { 0 }, 1);
 		last_neutral_transmit = HAL_GetTick();
 	}
 
 	if (HAL_GetTick() - last_water_transmit > 1000) {
 		uint16_t water_temp = read_water_in();
-		can_transmit(CAN_WATER_TEMPERATURE_IN, (uint8_t*) &water_temp, 2);
+		uint8_t water_temp_lsb = water_temp & 0xFF;
+		uint8_t water_temp_msb = (water_temp >> 8) & 0xFF;
+		can_transmit(CAN_WATER_TEMPERATURE_IN, (uint8_t[]) { water_temp_msb, water_temp_lsb }, 2);
 		last_water_transmit = HAL_GetTick();
+
+		float temperature = convert_water_temp(water_temp);
+		printf("Current coolant temperature: ");
+		print_double(temperature, 6, 2);
+		printf("\n");
 	}
 
 #ifndef DISABLE_ELECTRONIC_GEAR

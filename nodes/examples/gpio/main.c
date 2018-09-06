@@ -1,8 +1,8 @@
 #include <stm32f4xx_hal.h>
 
-#include <shield_drivers/dashboard/TLC59116.h>
-#include <shield_drivers/dashboard/buttons.h>
-#include <shield_drivers/dashboard/steering_wheel_buttons.h>
+#include <shield_driver/dashboard/TLC59116.h>
+#include <shield_driver/dashboard/buttons.h>
+#include <shield_driver/dashboard/steering_wheel_buttons.h>
 #include <board_driver/gpio.h>
 
 #include <stdint.h>

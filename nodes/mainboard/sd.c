@@ -5,11 +5,11 @@
 #include <shield_drivers/com_node/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
-#include <shield_drivers/dashboard/oil.h>
-#include <shield_drivers/com_node/water_temperature.h>
-#include <shield_drivers/com_node/current_clamps.h>
-#include <shield_drivers/com_node/wheel_speed.h>
-#include <shield_drivers/com_node/error.h>
+#include <shield_driver/dashboard/oil.h>
+#include <shield_driver/com_node/water_temperature.h>
+#include <shield_driver/com_node/current_clamps.h>
+#include <shield_driver/com_node/wheel_speed.h>
+#include <shield_driver/com_node/error.h>
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 

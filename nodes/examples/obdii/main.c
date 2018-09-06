@@ -8,7 +8,7 @@
 #include <board_driver/can.h>
 #include <board_driver/obdii.h>
 
-#include <shield_drivers/dashboard/TLC59116.h>
+#include <shield_driver/dashboard/TLC59116.h>
 
 #define RPM_TIMEOUT 1000
 #define THROTTLE_POSITION_TIMEOUT 5

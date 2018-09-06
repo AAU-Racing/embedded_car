@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#include <shield_drivers/dashboard/rpm.h>
+#include <shield_driver/dashboard/rpm.h>
 #include <board_driver/can.h>
 
 int main(void) {

@@ -1,9 +1,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <shield_drivers/com_node/xbee.h>
-#include <shield_drivers/com_node/water_temperature.h>
-#include <shield_drivers/dashboard/oil.h>
+#include <shield_driver/com_node/xbee.h>
+#include <shield_driver/com_node/water_temperature.h>
+#include <shield_driver/dashboard/oil.h>
 #include <board_driver/obdii.h>
 
 #include "sd.h"
