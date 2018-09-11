@@ -9,6 +9,8 @@
 #define MSD_OK         0x00
 #define MSD_ERROR      0x01
 
+#define   SD_TRANSFER_OK                ((uint8_t)0x00)
+#define   SD_TRANSFER_BUSY              ((uint8_t)0x01)
 
 #define SD_DETECT_PIN                    GPIO_PIN_3
 #define SD_DETECT_GPIO_PORT              GPIOD
@@ -33,20 +35,17 @@
 #define SD_DetectIRQHandler()             HAL_GPIO_EXTI_IRQHandler(SD_DETECT_PIN)
 
 
-uint8_t SD_Init(void);
-uint8_t SD_ITConfig(void);
-void    SD_DetectIT(void);
-void    SD_DetectCallback(void);
-uint8_t SD_ReadBlocks(uint8_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
-uint8_t SD_WriteBlocks(uint8_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks);
-uint8_t SD_ReadBlocks_DMA(uint8_t *pData, uint64_t ReadAddr, uint32_t NumOfBlocks);
-uint8_t SD_WriteBlocks_DMA(uint8_t *pData, uint64_t WriteAddr, uint32_t NumOfBlocks);
-uint8_t SD_Erase(uint64_t StartAddr, uint64_t EndAddr);
-void    SD_IRQHandler(void);
-void    SD_DMA_Tx_IRQHandler(void);
-void    SD_DMA_Rx_IRQHandler(void);
-HAL_StatusTypeDef SD_GetStatus(void);
-void    SD_GetCardInfo(HAL_SD_CardInfoTypeDef *CardInfo);
-uint8_t SD_IsDetected(void);
+uint8_t BSP_SD_Init(void);
+uint8_t BSP_SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t NumOfBlocks, uint32_t Timeout);
+uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t NumOfBlocks, uint32_t Timeout);
+// uint8_t BSP_SD_ReadBlocks_DMA(uint8_t *pData, uint64_t ReadAddr, uint32_t NumOfBlocks);
+// uint8_t BSP_SD_WriteBlocks_DMA(uint8_t *pData, uint64_t WriteAddr, uint32_t NumOfBlocks);
+uint8_t BSP_SD_Erase(uint64_t StartAddr, uint64_t EndAddr);
+void    BSP_SD_IRQHandler(void);
+// void    SD_DMA_Tx_IRQHandler(void);
+// void    SD_DMA_Rx_IRQHandler(void);
+uint8_t BSP_SD_GetCardState(void);
+void    BSP_SD_GetCardInfo(HAL_SD_CardInfoTypeDef *CardInfo);
+uint8_t BSP_SD_IsDetected(void);
 
 #endif /* SD_H */

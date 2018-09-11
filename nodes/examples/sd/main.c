@@ -7,10 +7,9 @@
 
 #include <board_driver/uart.h>
 
-#include <shield_driver/com_node/sd.h>
+#include <shield_driver/mainboard/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
-#include <board_driver/rtc.h>
 
 static uint8_t dataBuf[SD_STANDARD_BLOCK_SIZE] = {'\0'};
 static uint8_t* BufEnd = dataBuf;
@@ -19,7 +18,7 @@ static FATFS fs;
 static uint8_t count = 0;
 static uint32_t last_write_time = 0;
 
-void append_buffer_to_sd(void){
+static void append_buffer_to_sd(void){
 	uint16_t data_length = BufEnd - dataBuf;
 	appendData(file_name, dataBuf, data_length);
 	memset(dataBuf, '\0', SD_STANDARD_BLOCK_SIZE);
@@ -27,7 +26,7 @@ void append_buffer_to_sd(void){
 	last_write_time = HAL_GetTick();
 }
 
-void output_data(void *data, uint8_t size){
+static void output_data(void *data, uint8_t size){
 	for(uint8_t i = 0; i < size; i++){
 		*BufEnd = *(uint8_t*)(data + i); //Transfering to main buffer
 		//data[i] = '\0';
@@ -44,11 +43,16 @@ static int init_fatfs(FATFS* fs) {
 
 	// SD_Driver is exported from sd_diskio.h
 	if (FATFS_LinkDriver(&SD_Driver, SDPath) != 0) return -1;
-	if (f_mount(fs, SDPath, 1) != FR_OK) return -1;
+
+	uint8_t status = f_mount(fs, SDPath, 1);
+
+	printf("Status: %d\n", status);
+	if (status != FR_OK) return -1;
+	printf("def\n");
 	return 0;
 }
 
-void setup(void){
+static void setup(void){
 	uart_init();
 	printf("UART init complete\n");
 
@@ -62,7 +66,7 @@ void setup(void){
 	appendData(file_name, "dataBuf", 7);
 }
 
-void loop(void){
+static void loop(void){
 	output_data(&count, 1);
 	count++;
 
@@ -78,17 +82,12 @@ int main(void){
 	uart_init();
 	printf("UART init complete\n");
 
-	//(void)BSP_RTC_Init();
+	HAL_Delay(10);
+
 	FIL f;
-	//uint16_t i = 0;
 
 	printf("init: %d\n", init_fatfs(&fs));
 	HAL_Delay(10);
-
-	//Date_Time_t now;
-	//RTC_Get_Date_Time(&now);
-	//char time_str[27] = {'\0'};
-	//sprintf(time_str, "time: %02d:%02d:%02d, %02d/%02d/%02d\n", now.hours, now.minutes, now.seconds, now.date, now.month, (now.year + 1900));
 
 	printf("open: %d\n", f_open(&f, "LOGFILE", FA_READ));
 	HAL_Delay(10);

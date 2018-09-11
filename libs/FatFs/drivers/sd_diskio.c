@@ -47,7 +47,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "../ff_gen_drv.h" // TODO: debate moving the entire FatFs into the ComNode shield driver
-#include <../../../shield_driver/mainboard/sd_bsp.c>
+#include <../../../shield_driver/mainboard/sd_setup.c>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -92,7 +92,7 @@ DSTATUS SD_initialize(BYTE lun)
   Stat = STA_NOINIT;
 
   /* Configure the uSD device */
-  if(BSP_SD_Init() == MSD_OK)
+  if (BSP_SD_Init() == MSD_OK)
   {
     Stat &= ~STA_NOINIT;
   }
@@ -190,7 +190,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
-  BSP_SD_CardInfo CardInfo;
+  SD_CardInfo CardInfo;
 
   if (Stat & STA_NOINIT) return RES_NOTRDY;
 
