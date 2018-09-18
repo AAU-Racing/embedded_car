@@ -46,9 +46,7 @@ static int init_fatfs(FATFS* fs) {
 
 	uint8_t status = f_mount(fs, SDPath, 1);
 
-	printf("Status: %d\n", status);
 	if (status != FR_OK) return -1;
-	printf("def\n");
 	return 0;
 }
 

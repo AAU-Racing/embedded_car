@@ -12,8 +12,8 @@
 #define   SD_TRANSFER_OK                ((uint8_t)0x00)
 #define   SD_TRANSFER_BUSY              ((uint8_t)0x01)
 
-#define SD_DETECT_PIN                    GPIO_PIN_3
-#define SD_DETECT_GPIO_PORT              GPIOD
+#define SD_DETECT_PIN                    GPIO_PIN_8
+#define SD_DETECT_GPIO_PORT              GPIOA
 #define __SD_DETECT_GPIO_CLK_ENABLE()    __GPIOD_CLK_ENABLE()
 #define SD_DETECT_IRQn                   EXTI15_10_IRQn
 

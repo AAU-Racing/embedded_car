@@ -28,7 +28,7 @@ uint8_t BSP_SD_Init(void) {
 	uSdHandle.Init.ClockEdge           = SDIO_CLOCK_EDGE_RISING;
 	uSdHandle.Init.ClockBypass         = SDIO_CLOCK_BYPASS_DISABLE;
 	uSdHandle.Init.ClockPowerSave      = SDIO_CLOCK_POWER_SAVE_DISABLE;
-	uSdHandle.Init.BusWide             = SDIO_BUS_WIDE_1B;
+	uSdHandle.Init.BusWide             = SDIO_BUS_WIDE_4B;
 	uSdHandle.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
 	uSdHandle.Init.ClockDiv            = SDIO_TRANSFER_CLK_DIV;
 
@@ -48,7 +48,9 @@ uint8_t BSP_SD_Init(void) {
 	/* Configure SD Bus width */
 	if (SD_state == MSD_OK) {
 	/* Enable wide operation */
-		if (HAL_SD_ConfigWideBusOperation(&uSdHandle, SDIO_BUS_WIDE_4B) != MSD_OK) {
+		uint8_t result = HAL_SD_ConfigWideBusOperation(&uSdHandle, SDIO_BUS_WIDE_4B);
+		printf("Status: %d\n", result);
+		if (result != MSD_OK) {
 			SD_state = MSD_ERROR;
 		} else {
 			SD_state = MSD_OK;
