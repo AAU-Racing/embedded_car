@@ -42,14 +42,14 @@ int main(void) {
 		int in = read_water_in();
 		int out = read_water_out();
 
-	    float water_in = convert_water_temp(in);
-	    float water_out = convert_water_temp(out);
+    float water_in = convert_water_temp(in);
+    float water_out = convert_water_temp(out);
 
-	    printf("%5d, %4d, %4d, ", i, in, out);
-	    print_double(water_in, 5, 2);
-	    printf(", ");
-	    print_double(water_out, 5, 2);
-	    printf("\n");
+    printf("%5d, %4d, %4d, ", i, in, out);
+    // print_double(water_in, 5, 2);
+    // printf(", ");
+    // print_double(water_out, 5, 2);
+    printf("\n");
 
 		HAL_Delay(2);
 	}

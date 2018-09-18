@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 2.8.8)
-
-include(CMakeForceCompiler)
-CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
+cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
+set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+set(CMAKE_OBJDUMP arm-none-eabi-objdump)
+set(CMAKE_SIZE arm-none-eabi-size)
+
 project(AAU-Racing C ASM)
 
 # Following flags helps with dead code elimination.
