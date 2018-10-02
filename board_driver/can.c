@@ -477,6 +477,7 @@ static void clear_request_complete_flags() {
 
 void CAN_RxCallback() {
     stats.receive++;
+    stats.last_receive = HAL_GetTick();
     CAN_RxFrame frame;
 
     get_latest_msg(&frame);

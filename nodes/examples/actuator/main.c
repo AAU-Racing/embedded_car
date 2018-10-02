@@ -19,20 +19,40 @@ int main(void) {
 	HAL_Delay(5);
 
 	while(1) {
-		printf("actuator forward slow\n");
+		printf("actuator forward start\n");
 		actuator_forward_start();
 
-		HAL_Delay(10000);
+		HAL_Delay(20);
 
 		printf("actuator forward stop\n");
 		actuator_forward_stop();
 
-		printf("actuator backward start\n");
-		actuator_backward_slow();
+		uint32_t start = HAL_GetTick();
+		uint32_t last_print = 0;
 
-		HAL_Delay(10000);
+		while (HAL_GetTick() - start < 5000) {
+			if (HAL_GetTick() - last_print > 500) {
+				printf("waiting\n");
+				last_print = HAL_GetTick();
+			}
+		}
+
+		printf("actuator backward start\n");
+		actuator_backward_start();
+
+		HAL_Delay(20);
 
 		printf("actuator backward stop\n");
 		actuator_backward_stop();
+
+		start = HAL_GetTick();
+		last_print = 0;
+
+		while (HAL_GetTick() - start < 5000) {
+			if (HAL_GetTick() - last_print > 500) {
+				printf("waiting\n");
+				last_print = HAL_GetTick();
+			}
+		}
 	}
 }

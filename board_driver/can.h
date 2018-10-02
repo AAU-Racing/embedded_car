@@ -7,6 +7,7 @@
 #include "gpio.h"
 
 typedef struct {
+    uint32_t last_receive;
     uint32_t transmit;
     uint32_t receive;
     uint32_t error_total;

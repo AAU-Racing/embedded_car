@@ -1,4 +1,4 @@
-set(target_name example_IWDG)
+set(target_name example_iwdg)
 
 set(SRC_FILES
 	main.c
