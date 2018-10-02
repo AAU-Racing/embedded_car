@@ -25,9 +25,10 @@
 
 uint8_t brightness_level = 1;
 bool oil_pressure_warning_state = false;
-bool oil_warning_active = false;
+bool warning_active = false;
 uint32_t last_state_change = 0;
 bool triggered = false;
+bool com_fail_warning_state = false;
 
 uint8_t red[] = 	{0x04, 0x00, 0x00};
 uint8_t green[] = 	{0x00, 0x03, 0x00};
@@ -41,6 +42,7 @@ void brightness_level_up();
 void brightness_level_down();
 void write_to_led(uint8_t led_number, uint16_t r, uint16_t g, uint16_t b);
 void oil_pressure_warning();
+void com_fail_warning();
 void show_rpm(void);
 void check_neutral_switch();
 void check_water_temp();
@@ -86,6 +88,8 @@ void setup(void) {
 }
 
 void loop(void) {
+	CAN_Statistics stats = can_get_stats();
+
 	bool up_btn = sw_button_get_state(SW_BUTTON6);
 	bool neutral_btn = sw_button_get_state(SW_BUTTON4);
 	bool down_btn = sw_button_get_state(SW_BUTTON2);
@@ -116,7 +120,7 @@ void loop(void) {
 	}
 #endif
 
-	if (oil_pressure && oil_warning_active) {
+	if (oil_pressure && HAL_GetTick() - stats.last_receive < 10000 && warning_active) {
 		for (int i = 0; i < 15; i++) {
 			write_to_led(i, 0, 0, 0);
 		}
@@ -125,9 +129,11 @@ void loop(void) {
 	check_neutral_switch();
 	check_water_temp();
 
-	if (oil_pressure) {
+	if (HAL_GetTick() - stats.last_receive > 10000 || stats.last_receive == 0) {
+	 	com_fail_warning();
+	} else if (oil_pressure) {
 		show_rpm();
-		oil_warning_active = false;
+		warning_active = false;
 	} else {
 		oil_pressure_warning();
 	}
@@ -155,8 +161,27 @@ void brightness_level_down() {
 	}
 }
 
+void com_fail_warning() {
+	warning_active = true;
+	if (HAL_GetTick() - last_state_change > BLINK_PULSE_WIDTH) {
+		com_fail_warning_state = !com_fail_warning_state;
+		last_state_change = HAL_GetTick();
+
+		if (com_fail_warning_state) {
+			for(int i = 0; i < 15; i++){
+				write_to_led(i, blue[0] / 2, blue[1] / 2, blue[2] / 2);
+			}
+		}
+		else {
+			for(int i = 0; i < 15; i++){
+				write_to_led(i, 0, 0, 0);
+			}
+		}
+	}
+}
+
 void oil_pressure_warning() {
-	oil_warning_active = true;
+	warning_active = true;
 	if (HAL_GetTick() - last_state_change > BLINK_PULSE_WIDTH) {
 		oil_pressure_warning_state = !oil_pressure_warning_state;
 		last_state_change = HAL_GetTick();
@@ -178,7 +203,7 @@ void show_rpm(void){
 	bool new;
 	int rpm_level = get_rpm_level(&new);
 
-	if (oil_warning_active || new) {
+	if (warning_active || new) {
 		for(int led = 0; led < 15; led++) {
 			if (rpm_level > 30 + led) {
 				write_to_led(led, blue[0], blue[1], blue[2]);

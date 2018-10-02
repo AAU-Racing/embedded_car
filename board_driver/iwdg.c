@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stm32f4xx_hal.h>
+#include "iwdg.h"
 
 #define ENABLE_WRITE_ACCESS 0x5555
 #define SET_PRESCALER32 0x03

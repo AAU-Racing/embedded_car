@@ -62,3 +62,4 @@ add_subdirectory(examples/bkpsram)
 
 add_subdirectory(dashboard)
 add_subdirectory(mainboard)
+add_subdirectory(ecu)
