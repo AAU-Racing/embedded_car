@@ -46,14 +46,15 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
-#include "../ff_gen_drv.h" // TODO: debate moving the entire FatFs into the ComNode shield driver
-#include <../../../shield_driver/mainboard/sd_setup.c>
+#include "ff_gen_drv.h"
+#include "../../shield_driver/mainboard/sd_setup.c"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
+__IO uint32_t writestatus, readstatus = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 DSTATUS SD_initialize (BYTE);
@@ -92,7 +93,7 @@ DSTATUS SD_initialize(BYTE lun)
   Stat = STA_NOINIT;
 
   /* Configure the uSD device */
-  if (BSP_SD_Init() == MSD_OK)
+  if(BSP_SD_Init() == MSD_OK)
   {
     Stat &= ~STA_NOINIT;
   }
@@ -128,19 +129,17 @@ DSTATUS SD_status(BYTE lun)
 DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
   DRESULT res = RES_ERROR;
-  uint32_t timeout = 100000;
 
-  if(BSP_SD_ReadBlocks((uint32_t*)buff,
-                       (uint32_t) (sector),
-                       count, SD_DATATIMEOUT) == MSD_OK)
+  if(BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
-    while(BSP_SD_GetCardState()!= MSD_OK)
-    {
-      if (timeout-- == 0)
-      {
-        return RES_ERROR;
-      }
-    }
+    BSP_SD_ReadBlocks_DMA((uint32_t *)buff, (uint32_t)(sector), count);
+
+    /* Wait for Rx Transfer completion */
+    while (readstatus == 0){}
+    readstatus = 0;
+
+    /* Wait until SD card is ready to use for new operation */
+    while (BSP_SD_GetCardState() != SD_TRANSFER_OK){}
     res = RES_OK;
   }
 
@@ -159,19 +158,17 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
   DRESULT res = RES_ERROR;
-  uint32_t timeout = 100000;
 
-  if(BSP_SD_WriteBlocks((uint32_t*)buff,
-                        (uint32_t)(sector),
-                        count, SD_DATATIMEOUT) == MSD_OK)
+  if(BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
-    while(BSP_SD_GetCardState()!= MSD_OK)
-    {
-      if (timeout-- == 0)
-      {
-        return RES_ERROR;
-      }
-    }
+    BSP_SD_WriteBlocks_DMA((uint32_t *)buff, (uint32_t)(sector), count);
+
+    /* Wait for Tx Transfer completion */
+    while (writestatus == 0){}
+    writestatus = 0;
+
+    /* Wait until SD card is ready to use for new operation */
+    while (BSP_SD_GetCardState() != SD_TRANSFER_OK){}
     res = RES_OK;
   }
 
@@ -190,7 +187,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
-  SD_CardInfo CardInfo;
+  BSP_SD_CardInfo CardInfo;
 
   if (Stat & STA_NOINIT) return RES_NOTRDY;
 
@@ -228,6 +225,27 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
   return res;
 }
+
+/**
+  * @brief BSP Tx Transfer completed callbacks
+  * @param None
+  * @retval None
+  */
+void BSP_SD_WriteCpltCallback(void)
+{
+  writestatus = 1;
+}
+
+/**
+  * @brief BSP Rx Transfer completed callbacks
+  * @param None
+  * @retval None
+  */
+void BSP_SD_ReadCpltCallback(void)
+{
+  readstatus = 1;
+}
+
 #endif /* _USE_IOCTL == 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

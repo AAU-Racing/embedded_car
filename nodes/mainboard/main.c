@@ -124,7 +124,7 @@ void loop(void){
 
 	if (HAL_GetTick() - last_neutral_transmit > 100) {
 		bool neutral = neutral_switch_get_state();
-		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { 0 }, 1);
+		can_transmit(CAN_NEUTRAL_SWITCH, (uint8_t[]) { neutral }, 1);
 		last_neutral_transmit = HAL_GetTick();
 	}
 

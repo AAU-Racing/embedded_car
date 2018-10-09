@@ -23,7 +23,7 @@ int main(void) {
 		HAL_Delay(1);
 
 		while (1) {
-			printf("Value: %u\n", read_bkpsram(8));
+			printf("Value: %u\n", (unsigned int) read_bkpsram(8));
 			HAL_Delay(1000);
 		}
 	}

@@ -15,7 +15,7 @@ int main (void)
 	while(1)
 	{
 		HAL_Delay(500);
-		printf("%u\n", get_rng(1,101));
+		printf("%u\n", (unsigned int) get_rng(1,101));
 	}
 
 	return 0;

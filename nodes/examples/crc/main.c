@@ -30,8 +30,8 @@ int main(void) {
 	printf("crc calculate complete\n");
 
 	// Print the result and expected
-	printf("Result = %x\n", result);
-	printf("Result expected HEX= %x\n", expecthex);
+	printf("Result = %x\n", (unsigned int) result);
+	printf("Result expected HEX= %x\n", (unsigned int) expecthex);
 
 	while(1);
 }
