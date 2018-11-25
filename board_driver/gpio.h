@@ -76,6 +76,7 @@ typedef enum {
 typedef void (*GPIO_Callback)(uint16_t);
 
 void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Pull pull);
+void gpio_analog_input_init(GPIO_TypeDef *port, GPIO_Pin pin);
 void gpio_exti_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_InterruptMode mode, GPIO_Callback callback);
 void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin);
 void gpio_af_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Speed speed, GPIO_OutputType ot, GPIO_AlternateFunction af);

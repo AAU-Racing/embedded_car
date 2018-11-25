@@ -1,20 +1,45 @@
-#define ADCx	                        ADC1
-#define ADCx_CLK_ENABLE()               __HAL_RCC_ADC1_CLK_ENABLE()
-#define DMAx_CLK_ENABLE()               __HAL_RCC_DMA2_CLK_ENABLE()
-#define ADCx_FORCE_RESET()              __HAL_RCC_ADC_FORCE_RESET()
-#define ADCx_RELEASE_RESET()            __HAL_RCC_ADC_RELEASE_RESET()
+#ifndef ADC_H_GUARD
+#define ADC_H_GUARD
 
-#define ADCx_DMA_CHANNEL                DMA_CHANNEL_0
-#define ADCx_DMA_STREAM                 DMA2_Stream0
+typedef enum {
+    CHANNEL_0,
+    CHANNEL_1,
+    CHANNEL_2,
+    CHANNEL_3,
+    CHANNEL_4,
+    CHANNEL_5,
+    CHANNEL_6,
+    CHANNEL_7,
+    CHANNEL_8,
+    CHANNEL_9,
+    CHANNEL_10,
+    CHANNEL_11,
+    CHANNEL_12,
+    CHANNEL_13,
+    CHANNEL_14,
+    CHANNEL_15,
+    CHANNEL_16,
+    CHANNEL_17,
+    CHANNEL_18,
+    CHANNEL_TEMPSENSOR = CHANNEL_16,
+    CHANNEL_VREFINT = CHANNEL_17,
+    CHANNEL_VBAT = CHANNEL_18,
+} ADC_Channel;
 
-#define ADCx_DMA_IRQn                   DMA2_Stream0_IRQn
-#define ADCx_DMA_IRQHandler             DMA2_Stream0_IRQHandler
+typedef enum {
+    SAMPLETIME_3CYCLES,
+    SAMPLETIME_15CYCLES,
+    SAMPLETIME_28CYCLES,
+    SAMPLETIME_56CYCLES,
+    SAMPLETIME_84CYCLES,
+    SAMPLETIME_112CYCLES,
+    SAMPLETIME_144CYCLES,
+    SAMPLETIME_480CYCLES,
+} ADC_Sampletime;
 
-#define ADCx_IRQn						ADC_IRQn
-
-HAL_StatusTypeDef init_adc(int num_conv);
-void init_analog_pins(GPIO_TypeDef *port, uint32_t pin);
-HAL_StatusTypeDef init_adc_channel(uint32_t channel, uint8_t *number);
-HAL_StatusTypeDef start_adc();
-HAL_StatusTypeDef stop_adc();
+void init_adc(int num_conv);
+void init_adc_channel(ADC_Channel channel, uint8_t *number);
+void start_adc();
 int read_adc_value(uint8_t number);
+
+#endif

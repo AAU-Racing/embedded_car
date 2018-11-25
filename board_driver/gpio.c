@@ -135,6 +135,19 @@ void gpio_input_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_Pull pull) {
 	set_speed(port, pos, GPIO_MEDIUM_SPEED);
 }
 
+void gpio_analog_input_init(GPIO_TypeDef *port, GPIO_Pin pin) {
+	// Init clock
+	init_gpio_clock(port);
+
+	// Get pin number
+	uint8_t pos = pin_number(pin);
+
+	// Set parameters
+	set_mode(port, pos, GPIO_ANALOG);
+	set_pull(port, pos, GPIO_NO_PULL);
+	set_speed(port, pos, GPIO_MEDIUM_SPEED);
+}
+
 void gpio_exti_init(GPIO_TypeDef *port, GPIO_Pin pin, GPIO_InterruptMode mode, GPIO_Callback callback) {
 	// Init clock
 	init_gpio_clock(port);
