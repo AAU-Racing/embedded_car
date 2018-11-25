@@ -35,6 +35,6 @@ int main(void) {
 
 	    printf("%5d, %4d, %4d, %4d, %4d\n", i, in1, in2, in3, in4);
 
-		HAL_Delay(2);
+		HAL_Delay(1000);
 	}
 }

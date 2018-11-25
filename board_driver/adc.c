@@ -4,13 +4,12 @@
 
 #define ADC_DMA_CHANNEL 			0
 #define ADC_DMA_PERIPH_TO_MEMORY 	0
-#define ADC_DMA_PERIPH_INC_DISABLE 	0
-#define ADC_DMA_MEM_INC_ENABLE		DMA_SxCR_MINC
+#define ADC_DMA_PERIPH_INC		 	DMA_SxCR_PINC
+#define ADC_DMA_MEM_INC				DMA_SxCR_MINC
 #define ADC_DMA_PDATAALIGN_WORD		DMA_SxCR_PSIZE_1
 #define ADC_DMA_MDATAALIGN_WORD     DMA_SxCR_MSIZE_1
 #define ADC_DMA_CIRCULAR			DMA_SxCR_CIRC
 #define ADC_DMA_PRIORITY_HIGH		DMA_SxCR_PL_1
-#define ADC_FIFOMODE_DISABLE		0
 
 #define TEMPSENSOR_DELAY_US   10
 #define STABILZATION_DELAY_US 10
@@ -22,23 +21,20 @@ ADC_TypeDef* handle;
 DMA_Stream_TypeDef* dma_stream;
 
 static void clk_init() {
-	SET_BIT(RCC->APB2ENR, RCC_APB2ENR_ADC2EN);
+	SET_BIT(RCC->APB2ENR, RCC_APB2ENR_ADC1EN);
 	SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN);
 }
 
-static void dma_interrupt_init() {
-	NVIC_SetPriority(DMA2_Stream0_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x0, 0x0));
-	NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-}
-
 static void dma_init() {
-	dma_stream->CR = (ADC_DMA_CHANNEL            | ADC_DMA_PERIPH_TO_MEMORY |
-					  ADC_DMA_PERIPH_INC_DISABLE | ADC_DMA_MEM_INC_ENABLE   |
-					  ADC_DMA_PDATAALIGN_WORD    | ADC_DMA_MDATAALIGN_WORD  |
-					  ADC_DMA_CIRCULAR           | ADC_DMA_PRIORITY_HIGH);
-	dma_stream->FCR = ADC_FIFOMODE_DISABLE;
-
-	// dma_interrupt_init();
+	SET_BIT(dma_stream->CR, ADC_DMA_MEM_INC);
+	CLEAR_BIT(dma_stream->CR, ADC_DMA_PERIPH_INC);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_DIR, ADC_DMA_PERIPH_TO_MEMORY);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_PSIZE_Msk, ADC_DMA_PDATAALIGN_WORD);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_MSIZE_Msk, ADC_DMA_MDATAALIGN_WORD);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
+	SET_BIT(dma_stream->CR, ADC_DMA_CIRCULAR);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_PL, ADC_DMA_PRIORITY_HIGH);
 }
 
 static void set_prescaler() {
@@ -189,6 +185,9 @@ void start_adc() {
     dma_stream->NDTR = number_of_conversions;
 	dma_stream->PAR = (uint32_t) &handle->DR;
 	dma_stream->M0AR = (uint32_t) &values;
+
+	printf("(%08x, %08x, %08x, %08x)\n", dma_stream->CR, dma_stream->NDTR, dma_stream->PAR, dma_stream->M0AR);
+
 	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
     start_conversion();
 }
