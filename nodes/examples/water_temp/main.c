@@ -53,6 +53,6 @@ int main(void) {
 	    // print_double(water_out, 5, 2);
 	    printf("\n");
 
-		HAL_Delay(10000);
+		HAL_Delay(2);
 	}
 }

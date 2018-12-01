@@ -6,8 +6,8 @@
 #define ADC_DMA_PERIPH_TO_MEMORY 	0
 #define ADC_DMA_PERIPH_INC		 	DMA_SxCR_PINC
 #define ADC_DMA_MEM_INC				DMA_SxCR_MINC
-#define ADC_DMA_PDATAALIGN_WORD		DMA_SxCR_PSIZE_0
-#define ADC_DMA_MDATAALIGN_WORD     DMA_SxCR_MSIZE_0
+#define ADC_DMA_PDATAALIGN_WORD		DMA_SxCR_PSIZE_1
+#define ADC_DMA_MDATAALIGN_WORD     DMA_SxCR_MSIZE_1
 #define ADC_DMA_CIRCULAR			DMA_SxCR_CIRC
 #define ADC_DMA_PRIORITY_HIGH		DMA_SxCR_PL_1
 
@@ -15,7 +15,7 @@
 #define STABILZATION_DELAY_US 10
 
 static int sequence_number = 1;
-__IO uint16_t values[16];
+__IO uint32_t values[16];
 int number_of_conversions = 0;
 ADC_TypeDef* handle;
 DMA_Stream_TypeDef* dma_stream;
@@ -66,7 +66,8 @@ static void enable_continuous_mode() {
 }
 
 static void set_number_of_conversions(int num_conv) {
-	MODIFY_REG(handle->SQR1, ADC_SQR1_L_Msk, num_conv << ADC_SQR1_L_Pos);
+	int l_bits = num_conv - 1;
+	MODIFY_REG(handle->SQR1, ADC_SQR1_L_Msk, l_bits << ADC_SQR1_L_Pos);
 }
 
 static void enable_dma_continuous_mode() {
@@ -187,12 +188,12 @@ void start_adc() {
     dma_stream->NDTR = number_of_conversions;
 	dma_stream->PAR = (uint32_t) &handle->DR;
 	dma_stream->M0AR = (uint32_t) values;
+	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
 
 	printf("(%08x, %08x, %08x, %08x, %08x)\n", ADC1->SR, ADC1->CR1, ADC1->CR2, ADC1->SMPR1, ADC1->SMPR2);
 	printf("(%08x, %08x, %08x, %08x, %08x, %08x)\n", ADC1->SQR1, ADC1->SQR2, ADC1->SQR3, ADC1->DR, ADC->CSR, ADC->CCR);
 	printf("(%08x, %08x, %08x, %08x, %08x)\n", DMA2_Stream0->CR, DMA2_Stream0->NDTR, DMA2_Stream0->PAR, DMA2_Stream0->M0AR, DMA2_Stream0->FCR);
 
-	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
     start_conversion();
 }
 
