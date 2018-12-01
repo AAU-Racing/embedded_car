@@ -6,8 +6,8 @@
 #define ADC_DMA_PERIPH_TO_MEMORY 	0
 #define ADC_DMA_PERIPH_INC		 	DMA_SxCR_PINC
 #define ADC_DMA_MEM_INC				DMA_SxCR_MINC
-#define ADC_DMA_PDATAALIGN_WORD		DMA_SxCR_PSIZE_1
-#define ADC_DMA_MDATAALIGN_WORD     DMA_SxCR_MSIZE_1
+#define ADC_DMA_PDATAALIGN_WORD		DMA_SxCR_PSIZE_0
+#define ADC_DMA_MDATAALIGN_WORD     DMA_SxCR_MSIZE_0
 #define ADC_DMA_CIRCULAR			DMA_SxCR_CIRC
 #define ADC_DMA_PRIORITY_HIGH		DMA_SxCR_PL_1
 
@@ -15,7 +15,7 @@
 #define STABILZATION_DELAY_US 10
 
 static int sequence_number = 1;
-__IO uint32_t values[16];
+__IO uint16_t values[16];
 int number_of_conversions = 0;
 ADC_TypeDef* handle;
 DMA_Stream_TypeDef* dma_stream;
@@ -25,16 +25,21 @@ static void clk_init() {
 	SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN);
 }
 
-static void dma_init() {
-	SET_BIT(dma_stream->CR, ADC_DMA_MEM_INC);
-	CLEAR_BIT(dma_stream->CR, ADC_DMA_PERIPH_INC);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_DIR, ADC_DMA_PERIPH_TO_MEMORY);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_PSIZE_Msk, ADC_DMA_PDATAALIGN_WORD);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_MSIZE_Msk, ADC_DMA_MDATAALIGN_WORD);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
-	SET_BIT(dma_stream->CR, ADC_DMA_CIRCULAR);
-	MODIFY_REG(dma_stream->CR, DMA_SxCR_PL, ADC_DMA_PRIORITY_HIGH);
+static void enable_adc() {
+	SET_BIT(handle->CR2, ADC_CR2_ADON);
+}
+
+static void wait_for_stabilization() {
+	// Delay for ADC stabilization time
+	// Compute number of CPU cycles to wait for
+	uint32_t counter = ADC_STAB_DELAY_US * 160; // 160 MHz core clock
+	while(counter != 0U) {
+		counter--;
+	}
+}
+
+static void enable_adc_dma_mode() {
+	SET_BIT(handle->CR2, ADC_CR2_DMA);
 }
 
 static void set_prescaler() {
@@ -68,13 +73,29 @@ static void enable_dma_continuous_mode() {
 	SET_BIT(handle->CR2, ADC_CR2_DDS);
 }
 
+static void dma_init() {
+	SET_BIT(dma_stream->CR, ADC_DMA_MEM_INC);
+	CLEAR_BIT(dma_stream->CR, ADC_DMA_PERIPH_INC);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_DIR, ADC_DMA_PERIPH_TO_MEMORY);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_PSIZE_Msk, ADC_DMA_PDATAALIGN_WORD);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_MSIZE_Msk, ADC_DMA_MDATAALIGN_WORD);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_CHSEL, ADC_DMA_CHANNEL);
+	SET_BIT(dma_stream->CR, ADC_DMA_CIRCULAR);
+	MODIFY_REG(dma_stream->CR, DMA_SxCR_PL, ADC_DMA_PRIORITY_HIGH);
+
+	dma_stream->FCR = 0;
+}
+
 void init_adc(int num_conv) {
 	number_of_conversions = num_conv;
 	handle = ADC1;
 	dma_stream = DMA2_Stream0;
 
 	clk_init();
-	dma_init();
+	enable_adc();
+	wait_for_stabilization();
+	enable_adc_dma_mode();
 	set_prescaler();
 	enable_scan_conv();
 	set_resolution();
@@ -82,6 +103,8 @@ void init_adc(int num_conv) {
 	enable_continuous_mode();
 	set_number_of_conversions(num_conv);
 	enable_dma_continuous_mode();
+
+	dma_init();
 }
 
 static void set_sampletime(ADC_Channel channel) {
@@ -155,38 +178,19 @@ void init_adc_channel(ADC_Channel channel, uint8_t *array_index) {
 	sequence_number++;
 }
 
-static void enable_adc() {
-	SET_BIT(handle->CR2, ADC_CR2_ADON);
-}
-
-static void wait_for_stabilization() {
-	// Delay for ADC stabilization time
-	// Compute number of CPU cycles to wait for
-	uint32_t counter = ADC_STAB_DELAY_US * 160; // 160 MHz core clock
-	while(counter != 0U) {
-		counter--;
-	}
-}
-
-static void enable_adc_dma_mode() {
-	SET_BIT(handle->CR2, ADC_CR2_DMA);
-}
-
 static void start_conversion() {
 	SET_BIT(handle->CR2, ADC_CR2_SWSTART);
 }
 
 void start_adc() {
-	enable_adc();
-	wait_for_stabilization();
-
-	enable_adc_dma_mode();
 
     dma_stream->NDTR = number_of_conversions;
 	dma_stream->PAR = (uint32_t) &handle->DR;
-	dma_stream->M0AR = (uint32_t) &values;
+	dma_stream->M0AR = (uint32_t) values;
 
-	printf("(%08x, %08x, %08x, %08x)\n", dma_stream->CR, dma_stream->NDTR, dma_stream->PAR, dma_stream->M0AR);
+	printf("(%08x, %08x, %08x, %08x, %08x)\n", ADC1->SR, ADC1->CR1, ADC1->CR2, ADC1->SMPR1, ADC1->SMPR2);
+	printf("(%08x, %08x, %08x, %08x, %08x, %08x)\n", ADC1->SQR1, ADC1->SQR2, ADC1->SQR3, ADC1->DR, ADC->CSR, ADC->CCR);
+	printf("(%08x, %08x, %08x, %08x, %08x)\n", DMA2_Stream0->CR, DMA2_Stream0->NDTR, DMA2_Stream0->PAR, DMA2_Stream0->M0AR, DMA2_Stream0->FCR);
 
 	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
     start_conversion();
