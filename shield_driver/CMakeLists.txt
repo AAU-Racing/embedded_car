@@ -30,6 +30,8 @@ add_library(shield_driver
 	dashboard/Fonts/font24.c
 
 	ecu/ignition.c
+
+	devboard/potmeter.c
 )
 
 target_link_libraries(shield_driver

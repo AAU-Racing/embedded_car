@@ -7,22 +7,12 @@
 
 static uint8_t channel_rank[2];
 
-HAL_StatusTypeDef init_water_temp() {
-	ADC_WATER_IN_CHANNEL_GPIO_CLK_ENABLE();
-	ADC_WATER_OUT_CHANNEL_GPIO_CLK_ENABLE();
+void init_water_temp() {
+	gpio_analog_input_init(ADC_WATER_IN_GPIO_PORT, ADC_WATER_IN_PIN);
+	gpio_analog_input_init(ADC_WATER_OUT_GPIO_PORT, ADC_WATER_OUT_PIN);
 
-	init_analog_pins(ADC_WATER_IN_CHANNEL_GPIO_PORT, ADC_WATER_IN_CHANNEL_PIN);
-	init_analog_pins(ADC_WATER_OUT_CHANNEL_GPIO_PORT, ADC_WATER_OUT_CHANNEL_PIN);
-
-	if (init_adc_channel(ADC_WATER_IN_CHANNEL, channel_rank) != HAL_OK) {
-		return HAL_ERROR;
-	}
-
-	if (init_adc_channel(ADC_WATER_OUT_CHANNEL, channel_rank + 1) != HAL_OK) {
-		return HAL_ERROR;
-	}
-
-	return HAL_OK;
+	init_adc_channel(ADC_WATER_IN_CHANNEL, channel_rank);
+	init_adc_channel(ADC_WATER_OUT_CHANNEL, channel_rank + 1);
 }
 
 uint16_t read_water_in() {
