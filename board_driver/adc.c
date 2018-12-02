@@ -179,20 +179,31 @@ void init_adc_channel(ADC_Channel channel, uint8_t *array_index) {
 	sequence_number++;
 }
 
+static void set_dma_number_of_conversions() {
+    dma_stream->NDTR = number_of_conversions;
+}
+
+static void set_peripheral_address() {
+	dma_stream->PAR = (uint32_t) &handle->DR;
+}
+
+static void set_memory_address() {
+	dma_stream->M0AR = (uint32_t) values;
+}
+
+static void enable_dma_stream() {
+	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
+}
+
 static void start_conversion() {
 	SET_BIT(handle->CR2, ADC_CR2_SWSTART);
 }
 
 void start_adc() {
-
-    dma_stream->NDTR = number_of_conversions;
-	dma_stream->PAR = (uint32_t) &handle->DR;
-	dma_stream->M0AR = (uint32_t) values;
-	SET_BIT(dma_stream->CR, DMA_SxCR_EN);
-
-	printf("(%08x, %08x, %08x, %08x, %08x)\n", ADC1->SR, ADC1->CR1, ADC1->CR2, ADC1->SMPR1, ADC1->SMPR2);
-	printf("(%08x, %08x, %08x, %08x, %08x, %08x)\n", ADC1->SQR1, ADC1->SQR2, ADC1->SQR3, ADC1->DR, ADC->CSR, ADC->CCR);
-	printf("(%08x, %08x, %08x, %08x, %08x)\n", DMA2_Stream0->CR, DMA2_Stream0->NDTR, DMA2_Stream0->PAR, DMA2_Stream0->M0AR, DMA2_Stream0->FCR);
+	set_dma_number_of_conversions();
+	set_peripheral_address();
+	set_memory_address();
+	enable_dma_stream();
 
     start_conversion();
 }
