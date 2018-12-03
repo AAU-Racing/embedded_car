@@ -56,7 +56,7 @@ void setup(void){
 	neutral_switch_init();
 	printf("Neutral switch init complete\n");
 
-	init_adc(2);
+	init_adc();
 	printf("ADC init complete\n");
 
 	init_water_temp();

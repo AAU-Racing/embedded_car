@@ -37,7 +37,7 @@ typedef enum {
     SAMPLETIME_480CYCLES,
 } ADC_Sampletime;
 
-void init_adc(int num_conv);
+void init_adc();
 void init_adc_channel(ADC_Channel channel, uint8_t *number);
 void start_adc();
 int read_adc_value(uint8_t number);

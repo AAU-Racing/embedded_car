@@ -26,7 +26,7 @@ int main(void) {
 
 	HAL_Delay(100);
 
-	init_adc(2);
+	init_adc();
 	printf("adc init complete\n");
 
 	init_water_temp();

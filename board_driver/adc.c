@@ -16,7 +16,6 @@
 
 static int sequence_number = 1;
 __IO uint32_t values[16];
-int number_of_conversions = 0;
 ADC_TypeDef* handle;
 DMA_Stream_TypeDef* dma_stream;
 
@@ -65,11 +64,6 @@ static void enable_continuous_mode() {
 	SET_BIT(handle->CR2, ADC_CR2_CONT);
 }
 
-static void set_number_of_conversions(int num_conv) {
-	int l_bits = num_conv - 1;
-	MODIFY_REG(handle->SQR1, ADC_SQR1_L_Msk, l_bits << ADC_SQR1_L_Pos);
-}
-
 static void enable_dma_continuous_mode() {
 	SET_BIT(handle->CR2, ADC_CR2_DDS);
 }
@@ -88,8 +82,7 @@ static void dma_init() {
 	dma_stream->FCR = 0;
 }
 
-void init_adc(int num_conv) {
-	number_of_conversions = num_conv;
+void init_adc() {
 	handle = ADC1;
 	dma_stream = DMA2_Stream0;
 
@@ -102,7 +95,6 @@ void init_adc(int num_conv) {
 	set_resolution();
 	set_data_align();
 	enable_continuous_mode();
-	set_number_of_conversions(num_conv);
 	enable_dma_continuous_mode();
 
 	dma_init();
@@ -179,8 +171,13 @@ void init_adc_channel(ADC_Channel channel, uint8_t *array_index) {
 	sequence_number++;
 }
 
+static void set_number_of_conversions() {
+	int l_bits = sequence_number - 2;
+	MODIFY_REG(handle->SQR1, ADC_SQR1_L_Msk, l_bits << ADC_SQR1_L_Pos);
+}
+
 static void set_dma_number_of_conversions() {
-    dma_stream->NDTR = number_of_conversions;
+    dma_stream->NDTR = sequence_number - 1;
 }
 
 static void set_peripheral_address() {
@@ -200,6 +197,7 @@ static void start_conversion() {
 }
 
 void start_adc() {
+	set_number_of_conversions();
 	set_dma_number_of_conversions();
 	set_peripheral_address();
 	set_memory_address();

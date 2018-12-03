@@ -15,7 +15,7 @@ int main(void) {
 
 	HAL_Delay(100);
 
-	init_adc(4);
+	init_adc();
 	printf("adc init complete\n");
 
 	init_potmeter_input();
