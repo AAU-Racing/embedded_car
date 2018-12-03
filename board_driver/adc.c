@@ -172,6 +172,7 @@ void init_adc_channel(ADC_Channel channel, uint8_t *array_index) {
 }
 
 static void set_number_of_conversions() {
+	// Notice off by one.
 	int l_bits = sequence_number - 2;
 	MODIFY_REG(handle->SQR1, ADC_SQR1_L_Msk, l_bits << ADC_SQR1_L_Pos);
 }
