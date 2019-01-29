@@ -32,6 +32,7 @@ add_library(shield_driver
 	ecu/ignition.c
 
 	devboard/potmeter.c
+	devboard/TLC59116.c
 )
 
 target_link_libraries(shield_driver

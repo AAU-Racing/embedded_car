@@ -8,7 +8,7 @@
 #include <board_driver/can.h>
 
 int main(void) {
-	led_driver_init(false);
+	led_driver_init_dash(false);
 	can_init(CAN_PD0);
 	HAL_Delay(10);
 	can_start();
@@ -20,9 +20,9 @@ int main(void) {
 				uint8_t green = (color == 1) * 0xF;
 				uint8_t blue = (color == 2) * 0xF;
 
-				set_led(led, red, green, blue);
+				set_led_dash(led, red, green, blue);
 
-				HAL_Delay(1);
+				HAL_Delay(10);
 			}
 		}
 	}

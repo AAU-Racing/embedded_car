@@ -31,6 +31,7 @@ add_library(board_driver
 	rtc.c
 	crc.c
     iwdg.c
+	TLC59116.c
 )
 
 add_dependencies(board_driver

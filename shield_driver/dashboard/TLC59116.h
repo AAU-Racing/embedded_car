@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-int led_driver_init(bool);
-void set_led(unsigned, unsigned, unsigned, unsigned);
+void set_led_dash(unsigned led, unsigned r, unsigned g, unsigned b);
+int led_driver_init_dash(bool china);
 
-#endif /* TLC59116_H */
+#endif

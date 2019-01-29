@@ -1,132 +1,133 @@
-#include <stm32f4xx_hal.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include "i2c.h"
+#include "gpio.h"
 
 #define BUFFER_SIZE 256
+#define WRITE 0
 
-static I2C_HandleTypeDef i2cHandle;
+typedef struct {
+	uint16_t addr;
+	uint8_t buf[32];
+	size_t n;
+} i2c_msg;
 
-static void set_SDA_as_input_pin(void) {
-	GPIO_InitTypeDef  GPIO_InitStruct;
+static I2C_TypeDef *handle;
 
-	GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull      = GPIO_PULLUP;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-	GPIO_InitStruct.Pin       = DASHBOARD_I2C_SDA_PIN;
-	// GPIO_InitStruct.Alternate = 0; // Disablw, how?
-
-	HAL_GPIO_Init(DASHBOARD_I2C_SDA_GPIO_PORT, &GPIO_InitStruct);
+static void init_sda_pin() {
+	gpio_af_init(I2C_SDA_GPIO_PORT, I2C_SDA_PIN, GPIO_HIGH_SPEED, GPIO_OPENDRAIN, I2C_SDA_AF);
 }
 
-static void set_SCL_as_output_pin(void) {
-	GPIO_InitTypeDef  GPIO_InitStruct;
-	GPIO_InitStruct.Pin       = DASHBOARD_I2C_SCL_PIN;
-	GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull      = GPIO_PULLUP;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-
-	HAL_GPIO_Init(DASHBOARD_I2C_SCL_GPIO_PORT, &GPIO_InitStruct);
-
+static void init_scl_pin() {
+	gpio_af_init(I2C_SCL_GPIO_PORT, I2C_SCL_PIN, GPIO_HIGH_SPEED, GPIO_OPENDRAIN, I2C_SCL_AF);
 }
 
-static bool SDA_is_low(void) {
-	return HAL_GPIO_ReadPin(DASHBOARD_I2C_SDA_GPIO_PORT, DASHBOARD_I2C_SDA_PIN) == GPIO_PIN_RESET;
+static void i2c_enable() {
+	SET_BIT(handle->CR1, I2C_CR1_PE);
 }
 
-static void set_SCL_high(void) {
-	HAL_GPIO_WritePin(DASHBOARD_I2C_SCL_GPIO_PORT, DASHBOARD_I2C_SCL_PIN, GPIO_PIN_SET);
+static void i2c_freqrange(){
+	handle->CR2 = 40; // 40 MHz
 }
 
-static void toggle_SCL(void) {
-	HAL_GPIO_TogglePin(DASHBOARD_I2C_SCL_GPIO_PORT, DASHBOARD_I2C_SCL_PIN);
+static void i2c_rise_time(){
+	handle->TRISE = 0xD;
 }
 
-static int bus_recovering(void) {
-	set_SDA_as_input_pin();
-	if (SDA_is_low()) {
-		set_SCL_as_output_pin();
-		set_SCL_high();
+static void i2c_speed(){
+	SET_BIT(handle->CCR, I2C_CCR_FS);
+	SET_BIT(handle->CCR, I2C_CCR_DUTY);
+	MODIFY_REG(handle->CCR, I2C_CCR_CCR_Msk, 4);
+}
 
-		int retry_limit = 100;
-		while (SDA_is_low()) {
-			toggle_SCL();
-			if (!retry_limit--) return -1; // Should not take more than 8 cycles or there is another problem
-		}
-	}
-	return 0;
+static void i2c_start_clock(){
+	SET_BIT(RCC->APB1ENR, RCC_APB1ENR_I2C2EN);
 }
 
 int i2c_init(void) {
-	bus_recovering();
+    init_sda_pin();
+    init_scl_pin();
 
-	i2cHandle.Instance             = DASHBOARD_I2C;
-
-	i2cHandle.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT,//I2C_ADDRESSINGMODE_10BIT;
-	i2cHandle.Init.ClockSpeed      = 400000;
-	i2cHandle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-	i2cHandle.Init.DutyCycle       = I2C_DUTYCYCLE_16_9, //I2C_DUTYCYCLE_2;
-	i2cHandle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	i2cHandle.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
-
-	if(HAL_I2C_Init(&i2cHandle) != HAL_OK) {
-		return -1;
-	}
+	handle = I2C2;
+    i2c_start_clock();
+	i2c_freqrange();
+	i2c_speed();
+	i2c_rise_time();
+	i2c_enable();
 
 	return 0;
 }
 
 int i2c_is_ready(uint16_t addr) {
-	return HAL_I2C_IsDeviceReady(&i2cHandle, addr, 1000, 1000);
+	return 1;
 }
 
-int i2c_master_transmit(uint16_t addr, void *buf, size_t n) {
+static void wait_for_start_generation() {
+	// I2C_SR1_SB: 1 means start sequence was generated
+	while(READ_BIT(handle->SR1, I2C_SR1_SB) == RESET) {}
+}
 
-	if (HAL_I2C_Master_Transmit(&i2cHandle, addr, (uint8_t*)buf, n, 2) != HAL_OK) {
+static void start_condition(){
+	SET_BIT(handle->CR1, I2C_CR1_START);
+	wait_for_start_generation();
+}
 
-		return 1;
+static void wait_for_addr_sent() {
+	// I2C_SR1_ADDR: 1 means address was sent
+	while(READ_BIT(handle->SR1, I2C_SR1_ADDR) == RESET) {}
+}
+
+static void clear_addr_sent() {
+	handle->SR1;
+	handle->SR2;
+}
+
+static void set_slave_addr(uint8_t addr) {
+	// Clear EV5 by reading SR1 register
+	handle->SR1;
+
+	// Not for correct placement
+	addr = addr & ~1;
+
+	// Set slave address
+	handle->DR = addr | WRITE;
+
+	wait_for_addr_sent();
+	clear_addr_sent();
+}
+
+static void wait_for_dr_empty(){
+	//I2C_FLAG_TXE: Data register empty flag (1 means empty)
+	while(READ_BIT(handle->SR1, I2C_SR1_TXE) == RESET) {}
+}
+
+static void transmit_byte(uint8_t byte) { // Write data to DR
+	handle->DR = byte;
+}
+
+static void wait_for_byte_transfer_finished() {
+	//I2C_FLAG_BTF: Byte transfer finished flag (1 means finished)
+	while(READ_BIT(handle->SR1, I2C_SR1_BTF) == RESET) {}
+}
+
+static void stop_condition(){
+	handle->CR1 |= I2C_CR1_STOP;
+}
+
+int i2c_master_transmit(uint16_t addr, uint8_t *buf, size_t n) { // No DMA
+
+	start_condition();
+	set_slave_addr(addr);
+
+	for (uint8_t i = 0; i < n; i++) {
+		wait_for_dr_empty();
+		transmit_byte(buf[i]);
 	}
+
+	wait_for_dr_empty();
+	wait_for_byte_transfer_finished();
+	stop_condition();
+
 	return 0;
-}
-
-void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	/*##-1- Enable peripherals and GPIO Clocks #################################*/
-	/* Enable GPIO TX/RX clock */
-	DASHBOARD_I2C_SCL_GPIO_CLK_ENABLE();
-	DASHBOARD_I2C_SDA_GPIO_CLK_ENABLE();
-	/* Enable I2C1 clock */
-	DASHBOARD_I2C_CLK_ENABLE();
-
-	/*##-2- Configure peripheral GPIO ##########################################*/
-	/* I2C TX GPIO pin configuration  */
-	GPIO_InitStruct.Pin       = DASHBOARD_I2C_SCL_PIN;
-	GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
-	GPIO_InitStruct.Pull      = GPIO_PULLUP;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
-	GPIO_InitStruct.Alternate = DASHBOARD_I2C_SCL_AF;
-
-	HAL_GPIO_Init(DASHBOARD_I2C_SCL_GPIO_PORT, &GPIO_InitStruct);
-
-	/* I2C RX GPIO pin configuration  */
-	GPIO_InitStruct.Pin = DASHBOARD_I2C_SDA_PIN;
-	GPIO_InitStruct.Alternate = DASHBOARD_I2C_SDA_AF;
-
-	HAL_GPIO_Init(DASHBOARD_I2C_SDA_GPIO_PORT, &GPIO_InitStruct);
-}
-
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
-	(void) hi2c;
-
-	/*##-1- Reset peripherals ##################################################*/
-	DASHBOARD_I2C_FORCE_RESET();
-	DASHBOARD_I2C_RELEASE_RESET();
-
-	/*##-2- Disable peripherals and GPIO Clocks ################################*/
-	/* Configure I2C Tx as alternate function  */
-	HAL_GPIO_DeInit(DASHBOARD_I2C_SCL_GPIO_PORT, DASHBOARD_I2C_SCL_PIN);
-	/* Configure I2C Rx as alternate function  */
-	HAL_GPIO_DeInit(DASHBOARD_I2C_SDA_GPIO_PORT, DASHBOARD_I2C_SDA_PIN);
 }
