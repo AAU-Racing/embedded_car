@@ -2,8 +2,15 @@
 #include <stdio.h>
 
 #include "uart.h"
+#include "ringbuffer.h"
+
+#define BUF_SIZE 1024
 
 UART_HandleTypeDef UartHandle;
+ringbuffer_t uartx_rec;
+ringbuffer_t uartx_send;
+uint8_t uartx_rec_buf[BUF_SIZE];
+uint8_t uartx_send_buf[BUF_SIZE];
 
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
@@ -41,7 +48,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 	HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
 }
 
-int BSP_UART_init(void) {
+void uart_init(void) {
 	UartHandle.Instance = USARTx;
 
 	UartHandle.Init.BaudRate     = 115200;
@@ -52,18 +59,44 @@ int BSP_UART_init(void) {
 	UartHandle.Init.Mode         = UART_MODE_TX_RX;
 	UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
 
-	return HAL_UART_Init(&UartHandle) == HAL_OK ? 0 : -1;
+	rb_init(&uartx_rec, uartx_rec_buf, BUF_SIZE);
+	rb_init(&uartx_send, uartx_send_buf, BUF_SIZE);
+	HAL_UART_Init(&UartHandle);
+	SET_BIT(UartHandle.Instance->CR1, USART_CR1_RXNEIE);
 }
 
-int BSP_UARTx_transmit(uint8_t* buf, size_t n) {
-	return HAL_UART_Transmit(&UartHandle, buf, n, 0xFFFF) == HAL_OK ? 0 : -1;
+void USARTx_IRQHandler(void) {
+	uint32_t isrflags = READ_REG(UartHandle.Instance->SR);
+
+	if (isrflags & USART_SR_RXNE) {
+		uint8_t data_in = (uint8_t)(UartHandle.Instance->DR & (uint8_t)0x00FF);
+		rb_push(&uartx_rec, data_in);
+	}
+
+	if (isrflags & USART_SR_TXE) {
+		uint8_t data_out;
+		if (rb_pop(&uartx_send, &data_out)) {
+			CLEAR_BIT(UartHandle.Instance->CR1, USART_CR1_TXEIE);
+		} else {
+			UartHandle.Instance->DR = data_out & (uint8_t)0x00FF;
+		}
+	}
 }
 
-void BSP_UARTx_IRQHandler(void) {
-	HAL_UART_IRQHandler(&UartHandle);
+uint8_t uart_read_byte(void) {
+	uint8_t data;
+	while (rb_pop(&uartx_rec, &data));
+	return data;
 }
 
-size_t BSP_UARTx_Receive(uint8_t *pData, uint16_t size) {
-	HAL_UART_Receive(&UartHandle, pData, size, 10000);
-	return 1;
+void uart_send_byte(uint8_t data) {
+	while (rb_isFull(&uartx_send));
+	rb_push(&uartx_send, data);
+	SET_BIT(UartHandle.Instance->CR1, USART_CR1_TXEIE);
+}
+
+void uart_send_buf(uint8_t *data, size_t n) {
+	for (size_t i = 0; i < n; i++) {
+		uart_send_byte(data[i]);
+	}
 }

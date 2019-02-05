@@ -14,11 +14,10 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
 	FLASH    (xrw)    : ORIGIN = 0x08000000, LENGTH = 512K
-	FIRMWARE (xrw)    : ORIGIN = LDADDR,     LENGTH = 128K
+	FIRMWARE (xrw)    : ORIGIN = LDADDR,     LENGTH = 256K
 	RAM      (xrw)    : ORIGIN = 0x20000000, LENGTH = 128K
 	CCMRAM    (rw)    : ORIGIN = 0x10000000, LENGTH =  64K
 }
-
 
 /* Define output sections */
 SECTIONS

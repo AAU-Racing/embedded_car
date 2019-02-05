@@ -1,21 +1,25 @@
-cmake_minimum_required(VERSION 2.8.8)
-
-include(CMakeForceCompiler)
-CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
+cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
+set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+set(CMAKE_OBJDUMP arm-none-eabi-objdump)
+set(CMAKE_SIZE arm-none-eabi-size)
+
 project(AAU-Racing C ASM)
 
 # Following flags helps with dead code elimination.
 # More info can found at http://stackoverflow.com/a/10809541
 set(gc_flags "-ffunction-sections -fdata-sections -Wl,--gc-sections")
-set(mcu_flags "-mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mlittle-endian \
-	-mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork")
-set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles")
+set(mcu_flags "-mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork")
+set(linker_flags "-Wl,-gc-sections -Wl,-LTO -nostartfiles -Wl,-Map=./result.map")
 set(WARNINGS "-Wall -Wextra")
-set(CFLAGS "-O0 -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
+set(CFLAGS "-Os -g -LTO -std=c11 ${WARNINGS} ${gc_flags} ${mcu_flags} ${linker_flags}")
 set(CMAKE_C_FLAGS "${CFLAGS} ${CMAKE_C_FLAGS}")
-add_definitions(-DHSE_VALUE=16000000 -DSTM32F415xx)
+add_definitions(-DHSE_VALUE=24000000 -DSTM32F407xx -DUSE_USB_FS)
 
 include_directories(
 	# Root
@@ -24,9 +28,18 @@ include_directories(
 	# CMSIS
 	libs/CMSIS/Include
 	libs/CMSIS/stm32f415xx
+	libs/CMSIS/stm32f407xx
 
 	# STM32 HAL
 	libs/STM32F4xx_HAL_Driver/Inc
+
+	# STM32 USB
+	libs/STM32_USB_Device_Library/Class/CDC/Inc
+	libs/STM32_USB_Device_Library/Core/Inc
+
+  # FatFs
+  libs/FatFs
+  libs/FatFs/drivers
 )
 
 # Make it possible to Flash using openOCD
@@ -38,7 +51,7 @@ function(open_ocd_write_flash elf_file)
 		COMMAND ${OPEN_OCD}
 			-f ${OPEN_OCD_CONFIG}
 			-c "init; reset halt"
-			-c "flash write_image erase ${elf_file}"
+			-c "program ${elf_file}"
 			-c "reset run; exit;"
 		DEPENDS ${elf_file}
 		VERBATIM
@@ -47,9 +60,15 @@ endfunction()
 
 
 add_subdirectory(board_driver)
+add_subdirectory(shield_driver)
 add_subdirectory(libs)
 add_subdirectory(bootloader)
 
 # The directory 'nodes' must be added last since it overides
 # the 'add_executable' and 'add_library' functions.
 add_subdirectory(nodes)
+
+add_custom_target(rebuild
+	COMMAND cmake -E echo
+	COMMENT "asdsad"
+)

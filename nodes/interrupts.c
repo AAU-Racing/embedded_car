@@ -1,5 +1,5 @@
 #include <stm32f4xx_hal.h>
-#include "uart.h"
+#include <board_driver/uart.h>
 
 
 /******************************************************************************/
@@ -42,6 +42,15 @@ void SysTick_Handler(void) {
 /*  file (startup_stm32f407xx.s).                                               */
 /******************************************************************************/
 
-void USARTx_IRQHandler(void) {
-	BSP_UARTx_IRQHandler();
+extern PCD_HandleTypeDef hpcd; // TODO make a get function for this instead!?
+
+#ifdef USE_USB_FS
+void OTG_FS_IRQHandler(void)
+#else
+void OTG_HS_IRQHandler(void)
+#endif
+{
+	HAL_PCD_IRQHandler(&hpcd);
 }
+
+// TODO are we missing the uart interupts here for using uart over usb?
