@@ -1,6 +1,7 @@
 #include <stm32f4xx_hal.h>
 #include <stdio.h>
 
+#include "gpio.h"
 #include "uart.h"
 #include "ringbuffer.h"
 
@@ -12,44 +13,31 @@ ringbuffer_t uartx_send;
 uint8_t uartx_rec_buf[BUF_SIZE];
 uint8_t uartx_send_buf[BUF_SIZE];
 
-
-void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
-	(void)huart;
-
-	USARTx_TX_GPIO_CLK_ENABLE();
-	USARTx_RX_GPIO_CLK_ENABLE();
-	USARTx_CLK_ENABLE();
-
-	GPIO_InitTypeDef gpio_init = {
-		.Pin       = USARTx_TX_PIN,
-		.Mode      = GPIO_MODE_AF_PP,
-		.Pull      = GPIO_PULLUP,
-		.Speed     = GPIO_SPEED_FAST,
-		.Alternate = USARTx_TX_AF,
-	};
-	HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &gpio_init);
-	gpio_init.Pin       = USARTx_RX_PIN;
-	gpio_init.Alternate = USARTx_RX_AF;
-	HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &gpio_init);
-
-	// Insert rx / tx DMA here
-
-	HAL_NVIC_SetPriority(USARTx_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USARTx_IRQn);
-}
-
-void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
-	(void)huart;
-
-	USARTx_FORCE_RESET();
-	USARTx_RELEASE_RESET();
-
-	HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
-	HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
-}
-
 void uart_init(void) {
 	UartHandle.Instance = USARTx;
+
+	gpio_af_init(USARTx_TX_GPIO_PORT, USARTx_TX_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, USARTx_TX_AF);
+	gpio_af_init(USARTx_RX_GPIO_PORT, USARTx_RX_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, USARTx_RX_AF);
+
+    SET_BIT(USARTx_CLKR, USARTx_CLK_Msk);
+
+    NVIC_SetPriority(USARTx_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x0));
+    NVIC_EnableIRQ(USARTx_IRQn);
+
+	SET_BIT(USARTx->CR1, USART_CR1_TE);
+	SET_BIT(USARTx->CR1, USART_CR1_RE);
+
+	if (USARTx == USART1 || USARTx == USART6)
+    {
+      USARTx->BRR =  (((UART_DIVMANT_SAMPLING16((HAL_RCC_GetPCLK2Freq), (_BAUD_)) << 4U) + \
+                                                        (UART_DIVFRAQ_SAMPLING16((HAL_RCC_GetPCLK2Freq), (_BAUD_)) & 0xF0U)) + \
+                                                        (UART_DIVFRAQ_SAMPLING16((HAL_RCC_GetPCLK2Freq), (_BAUD_)) & 0x0FU))
+
+    }
+    else
+    {
+      USARTx->BRR = UART_BRR_SAMPLING16(HAL_RCC_GetPCLK1Freq(), huart->Init.BaudRate);
+    }
 
 	UartHandle.Init.BaudRate     = 115200;
 	UartHandle.Init.WordLength   = UART_WORDLENGTH_8B;
@@ -62,7 +50,7 @@ void uart_init(void) {
 	rb_init(&uartx_rec, uartx_rec_buf, BUF_SIZE);
 	rb_init(&uartx_send, uartx_send_buf, BUF_SIZE);
 	HAL_UART_Init(&UartHandle);
-	SET_BIT(UartHandle.Instance->CR1, USART_CR1_RXNEIE);
+	SET_BIT(USARTx->CR1, USART_CR1_RXNEIE);
 }
 
 void USARTx_IRQHandler(void) {

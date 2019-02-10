@@ -204,7 +204,7 @@ void show_rpm(void){
 	int rpm_level = get_rpm_level(&new);
 
 	if (warning_active || new) {
-		for(int led = 0; led < 15; led++) {
+		for (int led = 0; led < 15; led++) {
 			if (rpm_level > 30 + led) {
 				write_to_led(led, blue[0], blue[1], blue[2]);
 			}
