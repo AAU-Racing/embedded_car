@@ -11,7 +11,7 @@
 
 #define ACTUATOR_DELAY 20
 
-static uint8_t gear = 255;
+static uint8_t gear = 0;
 static uint8_t wanted_gear = 0;
 
 static bool started = false;
@@ -191,4 +191,16 @@ void change_gear() {
 
 uint8_t gear_number() {
 	return gear;
+}
+
+void wanted_gear_up() {
+	if(wanted_gear < 6) {
+		wanted_gear++;
+	}
+}
+
+void wanted_gear_down() {
+	if(wanted_gear > 0) {
+		wanted_gear--;
+	}
 }
