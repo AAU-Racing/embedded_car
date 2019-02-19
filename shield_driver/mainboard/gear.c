@@ -192,15 +192,3 @@ void change_gear() {
 uint8_t gear_number() {
 	return gear;
 }
-
-void wanted_gear_up() {
-	if(wanted_gear < 6) {
-		wanted_gear++;
-	}
-}
-
-void wanted_gear_down() {
-	if(wanted_gear > 0) {
-		wanted_gear--;
-	}
-}
