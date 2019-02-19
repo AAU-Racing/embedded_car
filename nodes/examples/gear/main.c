@@ -5,6 +5,7 @@
 #include <stm32f4xx_hal.h>
 
 #include <board_driver/gpio.h>
+#include <board_driver/can.h>
 #include <board_driver/uart.h>
 
 #include <shield_driver/mainboard/gear.h>
@@ -15,25 +16,6 @@
 
 bool change_up_ok = true;
 bool change_down_ok = true;
-
-uint8_t gear = 0;
-uint8_t wanted_gear = 0;
-
-uint8_t gear_number() {
-    return gear;
-}
-
-void wanted_gear_up() {
-    if(gear < 6) {
-        gear++;
-    }
-}
-
-void wanted_gear_down() {
-    if(gear > 0) {
-        gear--;
-    }
-}
 
 int main(void) {
 
@@ -47,7 +29,7 @@ int main(void) {
             change_up_ok = false;
             //wanted_gear_up();
             //change_gear();
-            wanted_gear_up();
+            can_transmit(CAN_GEAR_NUMBER, (uint8_t[]) {gear}, 1);
             printf("gear up: %d\n\r", gear_number());
             HAL_Delay(200);
         }
@@ -55,7 +37,6 @@ int main(void) {
             change_down_ok = false;
             //wanted_gear_down();
             //change_gear();
-            wanted_gear_down();
             printf("gear down: %d\n\r", gear_number());
             HAL_Delay(200);
         }
