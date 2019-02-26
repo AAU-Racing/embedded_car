@@ -16,6 +16,7 @@
 
 bool change_up_ok = true;
 bool change_down_ok = true;
+uint8_t gear = 0;
 
 int main(void) {
 
@@ -27,20 +28,19 @@ int main(void) {
     while(1) {
         if(gpio_get_state(GEARGPIO, GEARUP) && change_up_ok == true) {
             change_up_ok = false;
-            //wanted_gear_up();
-            //change_gear();
-            can_transmit(CAN_GEAR_NUMBER, (uint8_t[]) {gear}, 1);
-            printf("gear up: %d\n\r", gear_number());
+            gear_up();
+            can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) {CAN_GEAR_BUTTON_UP}, 1);
+            printf("gear up: %d\n\r", gear);
             HAL_Delay(200);
         }
         else if(gpio_get_state(GEARGPIO, GEARDOWN) && change_down_ok == true) {
             change_down_ok = false;
-            //wanted_gear_down();
-            //change_gear();
-            printf("gear down: %d\n\r", gear_number());
+            gear_down();
+            can_transmit(CAN_GEAR_BUTTONS, (uint8_t[]) {CAN_GEAR_BUTTON_DOWN}, 1);
+            printf("gear down: %d\n\r", gear);
             HAL_Delay(200);
         }
-        
+
         if((!gpio_get_state(GEARGPIO, GEARUP)) && change_up_ok == false) {
             change_up_ok = true;
         }
@@ -49,4 +49,16 @@ int main(void) {
             change_down_ok = true;
         }
     }
+}
+
+if gear_up() {
+  if (gear < 6) {
+    gear++;
+  }
+}
+
+if gear_down() {
+  if (gear > 0) {
+    gear--;
+  }
 }
