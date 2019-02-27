@@ -190,5 +190,6 @@ void change_gear() {
 }
 
 uint8_t gear_number() {
+	printf("Wanted gear %u\n", wanted_gear);
 	return gear;
 }

@@ -21,6 +21,21 @@ uint8_t gear = 0;
 int main(void) {
 
     uart_init();
+    //Setting up CAN and it's filters
+    if (can_init(CAN_PD0) != CAN_OK) {
+      printf("Error initializing CAN\n");
+    }
+    else {
+      printf("CAN init complete\n");
+    }
+
+    if (can_start() != CAN_OK) {
+      printf("Error starting CAN\n");
+    }
+    else {
+      printf("CAN started\n");
+    }
+
 
     gpio_input_init(GEARGPIO, GEARUP, GPIO_PULL_DOWN);
     gpio_input_init(GEARGPIO, GEARDOWN, GPIO_PULL_DOWN);
@@ -51,13 +66,13 @@ int main(void) {
     }
 }
 
-if gear_up() {
+void gear_up() {
   if (gear < 6) {
     gear++;
   }
 }
 
-if gear_down() {
+void gear_down() {
   if (gear > 0) {
     gear--;
   }
