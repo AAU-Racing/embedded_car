@@ -1,4 +1,3 @@
-#include <stm32f4xx_hal.h>
 #include <stdio.h>
 
 #include "gpio.h"
@@ -6,18 +5,47 @@
 #include "ringbuffer.h"
 
 #define BUF_SIZE 1024
+#define CHANNELS 3
+#define CONFIGS 7
+
+typedef struct {
+	ringbuffer_t rb_tx;
+	ringbuffer_t rb_rx;
+	uint8_t buffer_tx[BUF_SIZE];
+	uint8_t buffer_rx[BUF_SIZE];
+} uart_channel;
+
+typedef struct {
+	uint8_t channel;
+	GPIO_Pin tx_pin;
+	GPIO_Pin rx_pin;
+	GPIO_TypeDef *tx_port;
+	GPIO_TypeDef *rx_port;
+	GPIO_AlternateFunction tx_af;
+	GPIO_AlternateFunction rx_af;
+	
+} uart_config;
+
+uart_channel channels[CHANNELS];
+
+uint8_t channel_configs[CONFIGS] = { 255, 255, 255, 255, 255, 255, 255 };
 
 ringbuffer_t uartx_rec;
 ringbuffer_t uartx_send;
 uint8_t uartx_rec_buf[BUF_SIZE];
 uint8_t uartx_send_buf[BUF_SIZE];
 
-void uart_init(void) {
-	rb_init(&uartx_rec, uartx_rec_buf, BUF_SIZE);
-	rb_init(&uartx_send, uartx_send_buf, BUF_SIZE);
 
-	gpio_af_init(USARTx_TX_GPIO_PORT, USARTx_TX_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, USARTx_TX_AF);
-	gpio_af_init(USARTx_RX_GPIO_PORT, USARTx_RX_PIN, GPIO_HIGH_SPEED, GPIO_PUSHPULL, USARTx_RX_AF);
+void uart_init(uart_config *config) {
+
+	uart_channel channel = channels[config->channel];
+
+	rb_init(&channel.rb_rx, channel.buffer_rx, BUF_SIZE);
+	rb_init(&channel.rb_tx, channel.buffer_tx, BUF_SIZE);
+
+
+	gpio_af_init(config->tx_port, config->tx_pin, GPIO_HIGH_SPEED, GPIO_PUSHPULL, config->tx_af);
+	gpio_af_init(config->rx_port, config->rx_pin, GPIO_HIGH_SPEED, GPIO_PUSHPULL, config->rx_af);
 
     SET_BIT(USARTx_CLKR, USARTx_CLK_Msk);
 
@@ -44,8 +72,12 @@ void uart_init(void) {
 	SET_BIT(USARTx->CR1, USART_CR1_UE);
 }
 
-void USARTx_IRQHandler(void) {
-	uint32_t isrflags = READ_REG(USARTx->SR);
+void USART3_IRQHandler(void) {
+	USARTx_IRQHandler(2, USART3);
+}
+
+void USARTx_IRQHandler(uint8_t config, USART_HandleTypeDef* instance) {
+	uint32_t isrflags = READ_REG(instance->SR);
 
 	if (isrflags & USART_SR_RXNE) {
 		uint8_t data_in = (uint8_t)(USARTx->DR & (uint8_t)0x00FF);
