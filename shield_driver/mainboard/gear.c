@@ -44,59 +44,44 @@ static void neutral_to_first() {
 	if (!started) {
 		start_change();
 		actuator_forward_start();
-	}
-	else {
-		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_forward_stop();
-			gear = 1;
-			commit_gear();
-		}
-	}
+		HAL_Delay(20);
+		actuator_forward_stop();
+		gear = 1;
+		commit_gear();
 }
 
 static void first_to_neutral() {
 	if (!started) {
 		start_change();
 		actuator_backward_slow();
-	}
-	else {
-		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_backward_stop();
-			gear = 0;
-			commit_gear();
-		}
+		HAL_Delay(20);
+		actuator_backward_stop();
+		gear = 0;
+		commit_gear();
 	}
 }
 
 static void gear_down() {
 	if (!started) {
 		start_change();
-		actuator_forward_start();
-	}
-	else {
+		actuator_backward_start();
 		check_neutral_switch();
-
-		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_forward_stop();
-			gear--;
-			commit_gear();
-		}
+		HAL_Delay(20);
+		actuator_backward_stop();
+		gear--;
+		commit_gear();
 	}
 }
 
 static void gear_up() {
 	if (!started) {
 		start_change();
-		actuator_backward_start();
-	}
-	else {
+		actuator_forward_start();
 		check_neutral_switch();
-
-		if (HAL_GetTick() - start > ACTUATOR_DELAY) {
-			actuator_backward_stop();
-			gear++;
-			commit_gear();
-		}
+		HAL_Delay(20);
+		actuator_forward_stop();
+		gear++;
+		commit_gear();
 	}
 }
 
@@ -190,6 +175,5 @@ void change_gear() {
 }
 
 uint8_t gear_number() {
-	printf("Wanted gear %u\n", wanted_gear);
 	return gear;
 }
