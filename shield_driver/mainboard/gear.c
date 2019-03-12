@@ -48,6 +48,7 @@ static void neutral_to_first() {
 		actuator_forward_stop();
 		gear = 1;
 		commit_gear();
+	}
 }
 
 static void first_to_neutral() {
