@@ -9,7 +9,7 @@
 #include <board_driver/obdii.h>
 
 #include <shield_driver/dashboard/TLC59116.h>
-
+#include "../../newlib_calls.h"
 #define RPM_TIMEOUT 1000
 #define THROTTLE_POSITION_TIMEOUT 5
 
@@ -17,7 +17,7 @@ uint32_t lastRPMTick = 0;
 uint32_t lastThrottleTick = 0;
 
 void setup() {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 
 	printf("UART init complete\n");
 

@@ -5,9 +5,11 @@
 #include <board_driver/rng.h>
 #include <board_driver/uart.h>
 
+#include "../../newlib_calls.h"
+
 int main (void)
 {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	rng_init();
 
 	printf("Starting Random Generation:\n");

@@ -10,6 +10,8 @@
 #include <board_driver/float_print.h>
 #include <shield_driver/mainboard/water_temp.h>
 
+#include "../../newlib_calls.h"
+
 static float convert_water_temp(uint16_t v_out) {
 	float v_in		  = 4095;  // Max ADC value = 3.3V
 	float r_1  		  = 10000; // R_1 = 10kOhm
@@ -21,7 +23,7 @@ static float convert_water_temp(uint16_t v_out) {
 }
 
 int main(void) {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("uart init complete\n");
 
 	HAL_Delay(100);

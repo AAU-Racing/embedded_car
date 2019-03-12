@@ -9,8 +9,10 @@
 #include <board_driver/adc.h>
 #include <shield_driver/devboard/potmeter.h>
 
+#include "../../newlib_calls.h"
+
 int main(void) {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("uart init complete\n");
 
 	HAL_Delay(100);

@@ -6,6 +6,7 @@
 
 #include <board_driver/uart.h>
 #include <board_driver/can.h>
+#include "../../newlib_calls.h"
 
 static CAN_RxFrame lastMsg;
 static bool received = false;
@@ -13,7 +14,7 @@ static bool received = false;
 void AllMsg(CAN_RxFrame *msg);
 
 int main(void) {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 
 	printf("UART init complete\n");
 	if (can_init(CAN_PD0) != CAN_OK) {
