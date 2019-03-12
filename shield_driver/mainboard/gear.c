@@ -54,7 +54,7 @@ static void neutral_to_first() {
 static void first_to_neutral() {
 	if (!started) {
 		start_change();
-		actuator_backward_slow();
+		actuator_backward_start();
 		HAL_Delay(20);
 		actuator_backward_stop();
 		gear = 0;
