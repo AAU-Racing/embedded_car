@@ -59,6 +59,6 @@ void setup(void){
 void loop(void){
   change_gear();
 
-  printf("Current gear: %d\n", gear_number());
+  //printf("Current gear: %d\n", gear_number());
   HAL_Delay(100);
 }
