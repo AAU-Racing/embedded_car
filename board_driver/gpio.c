@@ -206,7 +206,8 @@ void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin) {
 }
 
 void gpio_toggle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
-	uint8_t pos = pin_number(pin);				 	// Get pin position
+	uint8_t pos = pin_number(pin);
+	printf("pos %d, pin %d\n", pos, pin_number(pin));				 	// Get pin position
 	SET_BIT(port->ODR, pos);						// Set the output bit for that pin
 }
 
