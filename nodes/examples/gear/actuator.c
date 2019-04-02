@@ -11,21 +11,37 @@
 #include <shield_driver/mainboard/gear.h>
 int main(void) {
 	uart_init();
-	printf("uart init complete\n");
+	//Setting up CAN and it's filters
+	if (can_init(CAN_PD0) != CAN_OK) {
+	  printf("Error initializing CAN\n");
+	}
+	else {
+	  printf("CAN init complete\n");
+	}
 
+	if (can_start() != CAN_OK) {
+	  printf("Error starting CAN\n");
+	}
+	else {
+	  printf("CAN started\n");
+	}
 	HAL_Delay(100);
 
 	//init_actuator();
 	//printf("actuator init complete\n");
 
-	HAL_Delay(5);
-    gpio_output_init(GPIOD, PIN_15);
-    gpio_input_init(GPIOD, PIN_15, GPIO_PULL_UP);
-    gpio_toggle_on(GPIOD, PIN_15);
-    SET_BIT(GPIOD->ODR, 15);
-    printf("%d\n", gpio_get_state(GPIOD, 15));
-    //actuator_backward_start();
-    while (1) {
+	while (1) {
+		HAL_Delay(20);
+		gpio_output_init(GPIOD, PIN_12);
+	    gpio_toggle_on(GPIOD, PIN_12);
+		HAL_Delay(20);
+		gpio_toggle_off(GPIOD, PIN_12);
+		HAL_Delay(20);
+		gpio_output_init(GPIOD, PIN_13);
+	    gpio_toggle_on(GPIOD, PIN_13);
+		HAL_Delay(20);
+		gpio_toggle_off(GPIOD, PIN_13);
+		HAL_Delay(20);
+	}
 
-    }
 }

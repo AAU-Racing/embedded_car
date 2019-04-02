@@ -10,8 +10,8 @@
 
 #include <shield_driver/mainboard/gear.h>
 
-#define GEARGPIO GPIOD
-#define GEARUP PIN_12
+#define GEARGPIO GPIOB
+#define GEARUP PIN_14
 #define GEARDOWN PIN_13
 
 bool change_up_ok = true;
@@ -41,11 +41,11 @@ int main(void) {
     //gpio_input_init(GEARGPIO, GEARDOWN, GPIO_PULL_DOWN);
 
     gpio_output_init(GEARGPIO, GEARUP);
-    gpio_output_init(GEARGPIO, GEARDOWN);
+    //gpio_output_init(GEARGPIO, GEARDOWN);
 
     gpio_toggle_on(GEARGPIO, GEARUP);
     HAL_Delay(200);
-    gpio_toggle_on(GEARGPIO, GEARDOWN);
+    //gpio_toggle_on(GEARGPIO, GEARDOWN);
     HAL_Delay(200);
 
 

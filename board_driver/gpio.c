@@ -40,8 +40,8 @@ static uint8_t pin_number(GPIO_Pin pin) {
 	// Pin 2 = 0x0004U
 	// Etc.
 	while (pin != 1) {
-		pin = pin >> 1;
-		i++;
+	pin = pin >> 1;
+	 	i++;
 	}
 
 	return i;
@@ -206,14 +206,11 @@ void gpio_output_init(GPIO_TypeDef *port, GPIO_Pin pin) {
 }
 
 void gpio_toggle_on(GPIO_TypeDef *port, GPIO_Pin pin) {
-	uint8_t pos = pin_number(pin);
-	//printf("pos %d, pin %d\n", pos, pin_number(pin));				 	// Get pin position
-	SET_BIT(port->ODR, pos);						// Set the output bit for that pin
+	SET_BIT(port->ODR, pin); // Set the output bit for that pin
 }
 
 void gpio_toggle_off(GPIO_TypeDef *port, GPIO_Pin pin) {
-	uint8_t pos = pin_number(pin);				 	// Get pin position
-	CLEAR_BIT(port->ODR, pos);						// Clear the output bit for that pin
+	CLEAR_BIT(port->ODR, pin);	// Clear the output bit for that pin
 }
 
 // Get state of a normal pin
