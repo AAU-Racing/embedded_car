@@ -25,23 +25,25 @@ int main(void) {
 	else {
 	  printf("CAN started\n");
 	}
+
 	HAL_Delay(100);
+
+	gpio_output_init(GPIOB, PIN_5);
+	//gpio_output_init(GPIOD, PIN_13);
 
 	//init_actuator();
 	//printf("actuator init complete\n");
 
-	while (1) {
-		HAL_Delay(20);
-		gpio_output_init(GPIOD, PIN_12);
-	    gpio_toggle_on(GPIOD, PIN_12);
-		HAL_Delay(20);
-		gpio_toggle_off(GPIOD, PIN_12);
-		HAL_Delay(20);
-		gpio_output_init(GPIOD, PIN_13);
-	    gpio_toggle_on(GPIOD, PIN_13);
-		HAL_Delay(20);
-		gpio_toggle_off(GPIOD, PIN_13);
-		HAL_Delay(20);
-	}
+	HAL_Delay(1000);
+
+	gpio_toggle_on(GPIOB, PIN_5);
+	HAL_Delay(20);
+	gpio_toggle_off(GPIOB, PIN_5);
+
+	HAL_Delay(1000);
+
+	//gpio_toggle_on(GPIOD, PIN_13);
+	//HAL_Delay(20);
+	//gpio_toggle_off(GPIOD, PIN_13);
 
 }
