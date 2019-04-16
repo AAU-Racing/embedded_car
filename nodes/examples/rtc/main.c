@@ -4,10 +4,10 @@
 
 #include <board_driver/uart.h>
 #include <board_driver/rtc.h>
-
+#include "../../newlib_calls.h"
 
 int main(void) {
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("Starting\n\n");
 	printf("RTC status: %d\n", BSP_RTC_Init());
 

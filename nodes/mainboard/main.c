@@ -18,6 +18,8 @@
 #include <shield_driver/mainboard/neutral.h>
 #include <shield_driver/mainboard/water_temp.h>
 
+#include "../newlib_calls.h"
+
 #define DISABLE_ELECTRONIC_GEAR
 
 void setup(void);
@@ -39,7 +41,7 @@ int main(void) {
 }
 
 void setup(void){
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("\n\n");
 	printf("UART init complete\n");
 

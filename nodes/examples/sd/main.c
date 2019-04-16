@@ -11,7 +11,7 @@
 #include <shield_driver/mainboard/sd.h>
 #include <ff_gen_drv.h>
 #include <sd_diskio.h>
-
+#include "../../newlib_calls.h"
 // static uint8_t dataBuf[SD_STANDARD_BLOCK_SIZE] = {'\0'};
 // static uint8_t* BufEnd = dataBuf;
 // static char file_name[16] = {'\0'};
@@ -52,7 +52,7 @@ static int init_fatfs(FATFS* fs) {
 }
 
 // static void setup() {
-// 	uart_init();
+//	debug_uart_init(DEV_DEBUG_UART);
 // 	printf("UART init complete\n");
 //
 // 	(void)BSP_RTC_Init();
@@ -78,7 +78,7 @@ static int init_fatfs(FATFS* fs) {
 // }
 
 int main(void){
-	uart_init();
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("UART init complete\n");
 	HAL_Delay(10);
 
