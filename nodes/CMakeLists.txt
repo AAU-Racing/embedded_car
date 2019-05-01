@@ -33,6 +33,8 @@ function(add_executable target_name)
 		PROPERTY LINK_DEPENDS ${ldscript_path}
 	)
 	open_ocd_write_flash(${target_name})
+	open_ocd_start_debug(${target_name})
+	start_gdb(${target_name})
 	add_custom_command(OUTPUT ${target_name}.bin
 		POST_BUILD COMMAND arm-none-eabi-objcopy ${target_name} -O binary ${target_name}.bin
 		DEPENDS ${target_name}

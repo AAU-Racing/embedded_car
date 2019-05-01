@@ -135,6 +135,11 @@ void loop(void){
 		uint8_t water_temp_lsb = water_temp & 0xFF;
 		uint8_t water_temp_msb = (water_temp >> 8) & 0xFF;
 		can_transmit(CAN_WATER_TEMPERATURE_IN, (uint8_t[]) { water_temp_msb, water_temp_lsb }, 2);
+
+		water_temp = read_water_out();
+		water_temp_lsb = water_temp & 0xFF;
+		water_temp_msb = (water_temp >> 8) & 0xFF;
+		can_transmit(CAN_WATER_TEMPERATURE_OUT, (uint8_t[]) { water_temp_msb, water_temp_lsb }, 2);
 		last_water_transmit = HAL_GetTick();
 
 		float temperature = convert_water_temp(water_temp);
