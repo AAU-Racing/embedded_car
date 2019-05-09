@@ -8,7 +8,6 @@ target_compile_options(STM32f4xx_HAL_Driver PRIVATE -Wno-extra -Wno-pedantic)
 
 ######## CMSIS ########
 add_library(CMSIS
-	CMSIS/stm32f415xx/startup_stm32f415xx.s
 	CMSIS/stm32f407xx/startup_stm32f407xx.s
 	CMSIS/system_stm32f4xx.c
 )
