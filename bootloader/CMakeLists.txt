@@ -3,7 +3,7 @@ set(ldscript_path ${CMAKE_SOURCE_DIR}/bootloader/ldscript.ld)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-T${ldscript_path}")
 
 set(SRC_FILES
-	newlib_calls.c
+	../nodes/newlib_calls.c
 	main.c
 )
 
