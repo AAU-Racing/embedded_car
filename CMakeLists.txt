@@ -79,7 +79,6 @@ endfunction()
 add_subdirectory(board_driver)
 add_subdirectory(shield_driver)
 add_subdirectory(libs)
-add_subdirectory(bootloader)
 
 # The directory 'nodes' must be added last since it overides
 # the 'add_executable' and 'add_library' functions.
