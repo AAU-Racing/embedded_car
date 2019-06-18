@@ -9,7 +9,7 @@
 
 int main(void) {
 	HAL_Delay(10);
-	debug_uart_init(DASH_DEBUG_UART);
+	debug_uart_init(DEV_DEBUG_UART);
 	printf("Starting\n\n");
 	printf("Write something in the terminal and hit Enter:\n");
 

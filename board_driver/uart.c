@@ -91,60 +91,70 @@ uint8_t channel_configs[CONFIGS] = { 255, 255, 255, 255, 255, 255, 255, 255 };
 uint8_t current_channel = 0;
 uint8_t instance_channels[INSTANCES] = {255, 255, 255, 255};
 
-
-void uart_init(uint8_t config) {
-
-    channel_configs[config] = current_channel++;
+static void init_rb(uint8_t config) {
     uart_channel* channel = channels + channel_configs[config];
 
     rb_init(&channel->rb_rx, channel->buffer_rx, BUF_SIZE);
     rb_init(&channel->rb_tx, channel->buffer_tx, BUF_SIZE);
+}
 
+static void init_gpio(uint8_t config) {
     gpio_af_init(UART_TX_PORT[config], UART_TX_PIN[config], GPIO_HIGH_SPEED, GPIO_PUSHPULL, UART_AF[config]);
     gpio_af_init(UART_RX_PORT[config], UART_RX_PIN[config], GPIO_HIGH_SPEED, GPIO_PUSHPULL, UART_AF[config]);
+}
+
+
+void uart_init(uint8_t config) {
+    channel_configs[config] = current_channel++;
+    init_rb(config);
+    init_gpio(config);
 
     USART_TypeDef* instance = UART_INSTANCE[config];
 
-    if (instance == USART6) {
+    if (instance == USART1){
         instance_channels[0] = channel_configs[config];
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART6EN);
-
-        NVIC_SetPriority(USART6_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x0));
-        NVIC_EnableIRQ(USART6_IRQn);
-    } else if (instance == USART3) {
-        instance_channels[1] = channel_configs[config];
-        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
-
-        NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x0));
-        NVIC_EnableIRQ(USART3_IRQn);
-
-    } else if (instance == USART2) {
-        instance_channels[2] = channel_configs[config];
-        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
-
-        NVIC_SetPriority(USART2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x0));
-        NVIC_EnableIRQ(USART2_IRQn);
-    } else if (instance == USART1){
-        instance_channels[3] = channel_configs[config];
         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
 
         NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x0));
         NVIC_EnableIRQ(USART1_IRQn);
+    } else if (instance == USART2) {
+        instance_channels[1] = channel_configs[config];
+        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
+
+        NVIC_SetPriority(USART2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x1));
+        NVIC_EnableIRQ(USART2_IRQn);
+    } else if (instance == USART3) {
+        instance_channels[2] = channel_configs[config];
+        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
+
+        NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x2));
+        NVIC_EnableIRQ(USART3_IRQn);
+
+    } else if (instance == USART6) {
+        instance_channels[3] = channel_configs[config];
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART6EN);
+
+        NVIC_SetPriority(USART6_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x1, 0x3));
+        NVIC_EnableIRQ(USART6_IRQn);
     }
 
     SET_BIT(instance->CR1, USART_CR1_TE);
     SET_BIT(instance->CR1, USART_CR1_RE);
 
     if (instance == USART1 || instance == USART6) {
-        // APB2
-        // 43.375
-        // 0000 0010 1011 0110 = 0x02b6
-        instance->BRR = 0x02b6;
+        // APB2 = 80 MHz
+        // 80 MHz / (115200 baud * 16) = 43.402777778
+        // 0.402777778 * 16 = 6.444444448, floor(6.444444448) = 0x6
+        // 43 << 4 = 0x2b0
+        // 0x2b0 + 0x6 = 0x2b6
+        instance->BRR = 0x2b6;
     }
     else {
-        // APB1
-        // 21.6875
-        //0000 0001 0101 1011 = 0x015b
+        // APB1 = 40 MHz
+        // 40 MHz / (115200 baud * 16) = 21.701388889
+        // 0.701388889 * 16 = 11.222222224, floor(11.222222224) = 0xb
+        // 21 << 4 = 0x150
+        // 0x150 + 0xb = 0x15b
         instance->BRR = 0x015b;
     }
 
@@ -153,39 +163,37 @@ void uart_init(uint8_t config) {
 }
 
 void USARTx_IRQHandler(uint8_t config, USART_TypeDef* instance) {
-    uint32_t isrflags = READ_REG(instance->SR);
-
     uart_channel* channel = channels + instance_channels[config];
 
-    if (isrflags & USART_SR_RXNE) {
-        uint8_t data_in = (uint8_t)(instance->DR & (uint8_t)0x00FF);
+    if (READ_BIT(instance->SR, USART_SR_RXNE)) {
+        uint8_t data_in = (uint8_t) (instance->DR & 0xFF);
         rb_push(&channel->rb_rx, data_in);
     }
 
-    if (isrflags & USART_SR_TXE) {
+    if (READ_BIT(instance->SR, USART_SR_TXE)) {
         uint8_t data_out;
-        if (rb_pop(&channel->rb_tx, &data_out)) {
-            CLEAR_BIT(instance->CR1, USART_CR1_TXEIE);
+        if (rb_pop(&channel->rb_tx, &data_out) == 1) {
+            CLEAR_BIT(instance->CR1, USART_CR1_TXEIE); // no data available
         } else {
-            instance->DR = data_out & (uint8_t)0x00FF;
+            instance->DR = data_out;
         }
     }
 }
 
-void USART6_IRQHandler() {
-    USARTx_IRQHandler(instance_channels[0], USART6);
-}
-
-void USART3_IRQHandler() {
-    USARTx_IRQHandler(instance_channels[1], USART3);
+void USART1_IRQHandler() {
+    USARTx_IRQHandler(0, USART1);
 }
 
 void USART2_IRQHandler() {
-    USARTx_IRQHandler(instance_channels[2], USART2);
+    USARTx_IRQHandler(1, USART2);
 }
 
-void USART1_IRQHandler() {
-    USARTx_IRQHandler(instance_channels[3], USART1);
+void USART3_IRQHandler() {
+    USARTx_IRQHandler(2, USART3);
+}
+
+void USART6_IRQHandler() {
+    USARTx_IRQHandler(3, USART6);
 }
 
 uint8_t uart_read_byte(uint8_t config) {
