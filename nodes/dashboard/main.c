@@ -129,7 +129,7 @@ void loop(void) {
 	check_neutral_switch();
 	check_water_temp();
 
-	if (HAL_GetTick() - stats.last_receive > 10000 || stats.last_receive == 0) {
+	if (HAL_GetTick() - stats.last_receive > 10000 || stats.receive == 0) {
 	 	com_fail_warning();
 	} else if (oil_pressure) {
 		show_rpm();
