@@ -186,7 +186,8 @@ uint8_t BSP_SD_IsDetected(void)
   __IO uint8_t status = SD_PRESENT;
 
   /* Check SD card detect pin */
-  if(HAL_GPIO_ReadPin(SD_DETECT_GPIO_PORT, SD_DETECT_PIN) != GPIO_PIN_RESET)
+  GPIO_PinState state = HAL_GPIO_ReadPin(SD_DETECT_GPIO_PORT, SD_DETECT_PIN);
+  if(state == GPIO_PIN_RESET)
   {
     status = SD_NOT_PRESENT;
   }
