@@ -1,6 +1,8 @@
 #ifndef UART_H
 #define UART_H
 
+#include <stdlib.h>
+#include <stdint.h>
 
 #define MAIN_GPS_UART 0
 #define MAIN_EXTERNAL_UART 1
