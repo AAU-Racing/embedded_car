@@ -40,7 +40,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Install arm-none-eabi toolchain
   config.vm.provision "shell",
-    inline: "apt-get -y update && apt-get -y install gcc-arm-none-eabi libnewlib-arm-none-eabi cmake git openocd"
+    inline: "apt-get -y update && apt-get -y install gcc-arm-none-eabi libnewlib-arm-none-eabi cmake git openocd gdb-multiarch"
 
   # configure and make the project so the user is ready to work affter ssh
   config.vm.provision "shell",
